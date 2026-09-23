@@ -45,13 +45,15 @@
         <!--  implicit-по-типу: implicit-версия налезала бы на легаси-флайауты        -->
         <!--  (настройки фрагмента, add-server, backup, тема) и клипала их из-за      -->
         <!--  MaxWidth/паддинга. Тёмная SurfaceHigh (#1A1D21) — на шаг выше карты,     -->
-        <!--  поэтому флайаут поверх карты отделяется; 1px OutlineVariant, радиус 20,  -->
-        <!--  паддинг 16, мягкая тень. Без MaxWidth (контент сам задаёт ширину);       -->
+        <!--  поэтому флайаут поверх карты отделяется; 1px Outline, радиус 20,        -->
+        <!--  паддинг 16. БЕЗ ТЕНИ: флайаут — отдельное окно ровно по карточке, тень   -->
+        <!--  за её краем обрезалась прямоугольником окна и рисовала у скруглённых     -->
+        <!--  углов тёмные квадраты. Без MaxWidth (контент сам задаёт ширину);         -->
         <!--  ScrollViewer + MaxHeight 480 — длинный список апгрейда скроллится.       -->
         <!-- ==================================================================== -->
         <ControlTheme x:Key="IncyFlyoutTheme" TargetType="FlyoutPresenter">
             <Setter Property="Background" Value="{DynamicResource Brush.SurfaceHigh}" />
-            <Setter Property="BorderBrush" Value="{DynamicResource Brush.OutlineVariant}" />
+            <Setter Property="BorderBrush" Value="{DynamicResource Brush.Outline}" />
             <Setter Property="BorderThickness" Value="1" />
             <Setter Property="CornerRadius" Value="{DynamicResource Radius.Card}" />
             <Setter Property="Padding" Value="16" />
@@ -62,7 +64,6 @@
                         Background="{TemplateBinding Background}"
                         BorderBrush="{TemplateBinding BorderBrush}"
                         BorderThickness="{TemplateBinding BorderThickness}"
-                        BoxShadow="0 12 32 0 #66000000"
                         CornerRadius="{TemplateBinding CornerRadius}">
                         <ScrollViewer
                             HorizontalScrollBarVisibility="Disabled"
@@ -1395,9 +1396,11 @@
               НЕ меняй на «50%,50%».  -->
         <Setter Property="RenderTransformOrigin" Value="0.5,0.5" />
     </Style>
-    <!--  Под lite-окном вращение НЕ навешивается (см. SkeletonPulse: гасим на уровне селектора,
-          т.к. конкурирующий стиль не отменяет запущенную анимацию).  -->
-    <Style Selector=":is(Window):not(.lite) Ellipse.Spinner.spinning">
+    <!--  Спиннер крутится и в «Облегчённом режиме». Это не украшение, а знак «идёт работа»: под lite
+          раньше вращение не навешивалось, и на обновлении подписки, пинге и загрузке обновления стояла
+          неподвижная четверть кольца, которая читалась как сломанная. Владелец: «должен крутиться
+          круг». Одна маленькая дуга стоит копейки даже на слабом ПК.  -->
+    <Style Selector="Ellipse.Spinner.spinning">
         <Style.Animations>
             <Animation
                 Duration="0:0:1.1"
@@ -1423,15 +1426,16 @@
     <!--  снимает):                                                                 -->
     <!--   1) Transitions → пусто на ВСЕХ интерактивных элементах: press/hover/     -->
     <!--      reveal/nav-crossfade переключаются МГНОВЕННО, без движения.            -->
-    <!--   2) Циклические keyframe-анимации, ОПРЕДЕЛЁННЫЕ здесь (Ellipse.Spinner.   -->
-    <!--      spinning, :is(Control).SkeletonPulse), гасятся на уровне СЕЛЕКТОРА      -->
-    <!--      выше (:is(Window):not(.lite) …) — под lite не аттачатся.               -->
+    <!--   2) Циклические keyframe-анимации, ОПРЕДЕЛЁННЫЕ здесь                   -->
+    <!--      (:is(Control).SkeletonPulse), гасятся на уровне СЕЛЕКТОРА выше        -->
+    <!--      (:is(Window):not(.lite) …) — под lite не аттачатся. Исключение —      -->
+    <!--      спиннеры (Ellipse.Spinner.spinning): это знак «идёт работа», они       -->
+    <!--      крутятся и под lite.                                                   -->
     <!--                                                                            -->
     <!--  Анимации героя (ConnectArc.spinning / Glow.breathing / Sonar.pulsing /     -->
     <!--  Panel.assembling) гасит сам ConnectHeroView по ReducedMotion (LiteMode),   -->
-    <!--  page-crossfade — MainWindow (PageTransition=null). Локальные копии          -->
-    <!--  Ellipse.Spinner.spinning (LoginView) и StackPanel.SkeletonPulse (BuyView)  -->
-    <!--  живут в тех вью — их класс должен гаситься по LiteMode на стороне вью.      -->
+    <!--  page-crossfade — MainWindow (PageTransition=null). Локальная копия          -->
+    <!--  StackPanel.SkeletonPulse (BuyView) живёт во вью и гасится там по LiteMode.  -->
     <!-- ==================================================================== -->
 
     <!--  Все кнопки (Primary/Tonal/Outlined/Stepper/IconButton*/BackNav/LinkAction/ -->

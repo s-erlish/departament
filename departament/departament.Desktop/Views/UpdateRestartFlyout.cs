@@ -58,7 +58,9 @@ internal static class UpdateRestartFlyout
                     {
                         Classes = { "Subtitle" },
                         TextWrapping = TextWrapping.Wrap,
-                        Text = connected ? L.T("Update_ConfirmConnected") : L.F("Update_ConfirmIdle", offer.Version.ToString()),
+                        // Одна строка на мысль: «откроется в версии …» и, если подключены, «VPN переподключится».
+                        // Длинная фраза переносилась посередине и лесенкой («…откроется уже / в версии»).
+                        Text = L.F(connected ? "Update_ConfirmConnected" : "Update_ConfirmIdle", offer.Version.ToString()),
                     },
                     new Grid
                     {

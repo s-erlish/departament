@@ -179,13 +179,13 @@
         <!--
             Спиннер: дуга ~25% окружности (Ellipse со штрих-пунктиром, приём ConnectHeroView),
             равномерное вращение только с классом .spinning (навешивает code-behind), центр —
-            относительный origin «50%,50%» на самом Ellipse. Под lite keyframe НЕ аттачится
-            (селектор :is(Window):not(.lite) не совпадает) — гасим на уровне СЕЛЕКТОРА.
+            относительный origin «50%,50%» на самом Ellipse. Крутится и под «Облегчённым режимом»:
+            спиннер — знак «идёт работа», а не украшение.
         -->
         <Style Selector="Ellipse.Spinner">
             <Setter Property="IsHitTestVisible" Value="False" />
         </Style>
-        <Style Selector=":is(Window):not(.lite) Ellipse.Spinner.spinning">
+        <Style Selector="Ellipse.Spinner.spinning">
             <Style.Animations>
                 <Animation
                     Easing="LinearEasing"

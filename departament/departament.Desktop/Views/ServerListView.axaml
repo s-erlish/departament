@@ -83,17 +83,14 @@
             <Setter Property="Opacity" Value="0" />
         </Style>
 
-        <!--  Пинг-спиннер: гасим ПОЛНОСТЬЮ вне «теста» и под «Облегчённым режимом».
-              Раньше видимость дуги висела на локальном IsVisible-биндинге (DelayTesting), а вращение
-              гасил только глобальный селектор :is(Window):not(.lite) — под lite оставалась ЗАМЁРЗШАЯ
-              половина кольца. Теперь видимость дуги привязана к ТОМУ ЖЕ рычагу, что и вращение: базово
-              скрыта, показывается лишь пока идёт тест И движение включено. Тот же lever, что у
-              ConnectHeroView (класс .lite на окне) → под lite дуга схлопывается (ничего не видно), и
-              реагирует ЖИВО при переключении режима (класс .lite на окне ставится/снимается на лету).  -->
+        <!--  Пинг-спиннер: базово скрыт, виден и крутится, пока идёт тест (класс .spinning). Под
+              «Облегчённым режимом» тоже: раньше под lite дуга пряталась, и пинг шёл без всякого знака,
+              а ещё раньше стояла замёрзшая половина кольца. Вращение — глобальный Ellipse.Spinner.spinning,
+              он крутит и под lite.  -->
         <Style Selector="Ellipse.Spinner">
             <Setter Property="IsVisible" Value="False" />
         </Style>
-        <Style Selector=":is(Window):not(.lite) Ellipse.Spinner.spinning">
+        <Style Selector="Ellipse.Spinner.spinning">
             <Setter Property="IsVisible" Value="True" />
         </Style>
     </UserControl.Styles>

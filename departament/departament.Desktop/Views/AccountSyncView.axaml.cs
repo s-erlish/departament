@@ -837,9 +837,10 @@ public partial class AccountSyncView : UserControl, ISubPage
 
     private void SetComet(bool on)
     {
-        // За кадром и под «Облегчённым режимом» комета не крутится: анимация, которую никто не
-        // видит, всё равно тикает и жжёт кадры.
-        var live = on && IsVisible && !IsReducedMotion();
+        // За кадром комета не крутится: анимация, которую никто не видит, всё равно тикает и жжёт
+        // кадры. Под «Облегчённым режимом» крутится: кольцо видно и там, а неподвижное читалось как
+        // замёрзший кусок круга.
+        var live = on && IsVisible;
         Comet.IsVisible = on;
         if (live)
         {

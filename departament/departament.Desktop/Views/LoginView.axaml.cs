@@ -422,9 +422,8 @@ public partial class LoginView : UserControl
                 if (_viewBlock == ViewBlock.EmailPending)
                 {
                     // «Отправить снова» с экрана verify-email — остаёмся на месте, крутим кольцо.
-                    var spin = !IsReducedMotion();
-                    SetSpinning(PendingSpinner, spin);
-                    PendingSpinner.Opacity = spin ? 1 : 0;
+                    SetSpinning(PendingSpinner, true);
+                    PendingSpinner.Opacity = 1;
                 }
                 else
                 {
@@ -506,9 +505,8 @@ public partial class LoginView : UserControl
                 if (_viewBlock == ViewBlock.EmailPending)
                 {
                     // «Отправить снова» — остаёмся на экране ожидания и крутим кольцо, как у регистрации.
-                    var spin = !IsReducedMotion();
-                    SetSpinning(PendingSpinner, spin);
-                    PendingSpinner.Opacity = spin ? 1 : 0;
+                    SetSpinning(PendingSpinner, true);
+                    PendingSpinner.Opacity = 1;
                 }
                 else
                 {
@@ -667,7 +665,7 @@ public partial class LoginView : UserControl
         _errandBusy = busy;
         ErrandSpinner.IsVisible = busy;
         ErrandButtonLabel.Opacity = busy ? 0 : 1;
-        SetSpinning(ErrandSpinner, busy && !IsReducedMotion());
+        SetSpinning(ErrandSpinner, busy);
         UpdateErrandGate();
     }
 
@@ -832,13 +830,9 @@ public partial class LoginView : UserControl
         var onSite = busy && !_twoFaVisible;
         var on2Fa = busy && _twoFaVisible;
 
-        // Under reduced-motion/lite the inline arc can't rotate (its keyframe is gated off by
-        // :is(Window):not(.lite)), so a hidden label + a frozen dashed ring reads as broken. Keep the
-        // label and skip the spinner entirely — the button is already disabled (dimmed) via the gates
-        // below, which conveys "busy" without any motion.
-        var lite = IsReducedMotion();
-        var showSiteSpin = onSite && !lite;
-        var show2FaSpin = on2Fa && !lite;
+        // The inline arc spins in lite mode too: a busy spinner is state, not decoration.
+        var showSiteSpin = onSite;
+        var show2FaSpin = on2Fa;
 
         SiteSpinner.IsVisible = showSiteSpin;
         SetSpinning(SiteSpinner, showSiteSpin);
@@ -856,9 +850,8 @@ public partial class LoginView : UserControl
     private void SetRegisterBusy(bool busy)
     {
         _registerBusy = busy;
-        // Как и site-спиннер: под reduced-motion/lite дугу не крутим (её keyframe выключен селектором),
-        // просто держим лейбл и заблокированную (притушенную) кнопку.
-        var showSpin = busy && !IsReducedMotion();
+        // Как и site-спиннер: дуга крутится и под «Облегчённым режимом».
+        var showSpin = busy;
         RegisterSpinner.IsVisible = showSpin;
         SetSpinning(RegisterSpinner, showSpin);
         RegisterButtonLabel.IsVisible = !showSpin;
@@ -1009,9 +1002,9 @@ public partial class LoginView : UserControl
 
         // Кольцо крутится там, где приложение ДЕЙСТВИТЕЛЬНО ждёт ответа: verify-email опрашивает вход,
         // хэндофф гасит код, привязка и смена — профиль. magic/reset ничего не опрашивают, у них
-        // спокойное статичное «отправлено» (дуга скрыта, трек и конверт остаются). Под lite дуги нет.
-        var spin = kind is PendingKind.Verify or PendingKind.Handoff or PendingKind.Link or PendingKind.Change
-            && !IsReducedMotion();
+        // спокойное статичное «отправлено» (дуга скрыта, трек и конверт остаются). Под lite дуга тоже
+        // крутится: это знак ожидания, а не украшение.
+        var spin = kind is PendingKind.Verify or PendingKind.Handoff or PendingKind.Link or PendingKind.Change;
         SetSpinning(PendingSpinner, spin);
         PendingSpinner.Opacity = spin ? 1 : 0;
     }
