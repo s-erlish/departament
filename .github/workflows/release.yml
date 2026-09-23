@@ -1,0 +1,128 @@
+name: Выпуск departament для ПК
+
+# Выпуск программы: сборка из исходников s-erlish/v2rayN (общий departament-build.yml) и релиз здесь,
+# на странице программы. Отсюда программа и обновляется: она читает выпуски только этого репозитория.
+#
+# Исходники и сама сборка берутся из s-erlish/v2rayN на закреплённом коммите (SOURCE_SHA ниже и тот
+# же коммит в строке uses работы build): выпуск собирается ровно из того, что проверено.
+#
+# Как выпустить версию X.Y.Z:
+#   • положить её описание release-notes/vX.Y.Z.md в main (для свежих исходников — вместе с новым
+#     закреплённым коммитом);
+#   • или Actions → «Выпуск departament для ПК» → Run workflow: версия и, при нужде, коммит исходников.
+# Опубликованный выпуск не пересобирается и не подменяется: люди, возможно, уже качают его файлы.
+# Для исправления нужна новая версия.
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: Версия X.Y.Z (или X.Y.Z-rc.N для предварительного выпуска)
+        required: true
+        type: string
+      source_ref:
+        description: Коммит или ветка s-erlish/v2rayN
+        required: false
+        type: string
+        default: 802f9737792c2ae39375ef42c45a44dbb8d66226
+  push:
+    branches:
+      - main
+    paths:
+      - 'release-notes/v*.md'
+
+permissions:
+  contents: read
+
+env:
+  SOURCE_SHA: 802f9737792c2ae39375ef42c45a44dbb8d66226
+
+concurrency:
+  group: release
+  cancel-in-progress: false
+
+jobs:
+  plan:
+    runs-on: ubuntu-latest
+    outputs:
+      go: ${{ steps.plan.outputs.go }}
+      version: ${{ steps.plan.outputs.version }}
+      source_ref: ${{ steps.plan.outputs.source_ref }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - id: plan
+        env:
+          GH_TOKEN: ${{ github.token }}
+          IN_VERSION: ${{ inputs.version }}
+          IN_SOURCE: ${{ inputs.source_ref }}
+          BEFORE: ${{ github.event.before }}
+        run: |
+          set -euo pipefail
+          if [ "$GITHUB_EVENT_NAME" = "workflow_dispatch" ]; then
+            version="$IN_VERSION"
+            source="${IN_SOURCE:-$SOURCE_SHA}"
+          else
+            # Версия — из описания, которое добавил или изменил этот пуш (самая новая, если их несколько).
+            base="$BEFORE"
+            if [ -z "$base" ] || [ "$base" = "0000000000000000000000000000000000000000" ]; then base="$(git rev-list --max-parents=0 HEAD | tail -1)"; fi
+            version="$(git diff --name-only --diff-filter=AM "$base" HEAD -- 'release-notes/v*.md' | sed -n 's#^release-notes/v\(.*\)\.md$#\1#p' | sort -V | tail -1)"
+            source="$SOURCE_SHA"
+          fi
+          echo "go=false" >> "$GITHUB_OUTPUT"
+          if [ -z "$version" ]; then echo "::notice::No release notes changed"; exit 0; fi
+          if ! [[ "$version" =~ ^[0-9]+\.[0-9]+\.[0-9]+(-rc\.[0-9]+)?$ ]]; then echo "::error::Version '$version' is not X.Y.Z or X.Y.Z-rc.N"; exit 1; fi
+          if [ ! -f "release-notes/v$version.md" ]; then echo "::error::release-notes/v$version.md is missing: write the release notes first"; exit 1; fi
+          if gh release view "v$version" >/dev/null 2>&1; then echo "::notice::Release v$version already exists; nothing to do"; exit 0; fi
+          {
+            echo "go=true"
+            echo "version=$version"
+            echo "source_ref=$source"
+          } >> "$GITHUB_OUTPUT"
+          echo "Release v$version from s-erlish/v2rayN@$source"
+
+  build:
+    needs: plan
+    if: needs.plan.outputs.go == 'true'
+    # Тот же коммит, что SOURCE_SHA: сюда выражения не подставляются.
+    uses: s-erlish/v2rayN/.github/workflows/departament-build.yml@802f9737792c2ae39375ef42c45a44dbb8d66226
+    with:
+      source_ref: ${{ needs.plan.outputs.source_ref }}
+      version: ${{ needs.plan.outputs.version }}
+      package_release: true
+
+  release:
+    needs: [plan, build]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          sparse-checkout: release-notes
+
+      - uses: actions/download-artifact@v4
+        with:
+          name: release-assets
+
+      - name: Publish release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          VERSION: ${{ needs.build.outputs.version }}
+          PRERELEASE: ${{ needs.build.outputs.prerelease }}
+          SOURCE_SHA: ${{ needs.build.outputs.source_sha }}
+        run: |
+          set -euo pipefail
+          sha256sum -c departament-windows-x64.zip.sha256
+          body="$RUNNER_TEMP/notes.md"
+          {
+            cat "release-notes/v$VERSION.md"
+            printf '\n---\n\nИсходный код этой сборки: [s-erlish/v2rayN@%s](https://github.com/s-erlish/v2rayN/commit/%s). Программа основана на [v2rayN](https://github.com/2dust/v2rayN) и распространяется по лицензии GPL-3.0.\n' "${SOURCE_SHA::8}" "$SOURCE_SHA"
+          } > "$body"
+          flags=()
+          [ "$PRERELEASE" = "true" ] && flags+=(--prerelease)
+          gh release create "v$VERSION" departament-setup.exe departament-windows-x64.zip departament-windows-x64.zip.sha256 \
+            --title "departament для ПК $VERSION" --notes-file "$body" "${flags[@]}"
+          echo "Released: $(gh release view "v$VERSION" --json url -q .url)" >> "$GITHUB_STEP_SUMMARY"
