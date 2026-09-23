@@ -188,8 +188,9 @@
             </Border>
 
             <!--  ==================== Программы ====================
-                  Плитка с инициалом, имя, исполняемый файл, чекбокс. Подпись — имя файла целиком;
-                  если оно не влезло, срезается ОНО, а не заголовок строки.  -->
+                  Плитка с настоящей иконкой программы (на Windows; нет иконки — инициал), имя,
+                  исполняемый файл, чекбокс. Подпись — имя файла целиком; если оно не влезло,
+                  срезается ОНО, а не заголовок строки.  -->
             <TextBlock x:Name="txtProgramsLabel" Classes="SubGroupLabel" />
             <Border Classes="SubCard" x:Name="AppsCard">
                 <ItemsControl x:Name="listApps">
@@ -199,8 +200,19 @@
                                 <Border Classes="SubDivider" IsVisible="{Binding ShowDivider}" />
                                 <Border Classes="SubRow tap" Tapped="OnAppRowTapped">
                                     <Grid ColumnDefinitions="Auto,*,Auto">
+                                        <!--  Иконка 24 в плитке 40 — та же сетка, что у глифов
+                                              остальных строк. Пока иконка не пришла или её нет,
+                                              в плитке буква.  -->
                                         <Border Grid.Column="0" Classes="SubTile">
-                                            <TextBlock Text="{Binding Letter}" />
+                                            <Panel>
+                                                <TextBlock IsVisible="{Binding !HasIcon}" Text="{Binding Letter}" />
+                                                <Image
+                                                    Width="24"
+                                                    Height="24"
+                                                    IsVisible="{Binding HasIcon}"
+                                                    RenderOptions.BitmapInterpolationMode="HighQuality"
+                                                    Source="{Binding Icon}" />
+                                            </Panel>
                                         </Border>
                                         <StackPanel
                                             Grid.Column="1"
@@ -228,6 +240,38 @@
                     </ItemsControl.ItemTemplate>
                 </ItemsControl>
             </Border>
+
+            <!--  ==================== Страницы ====================
+                  По восемь программ: на Windows процессов за сотню, и список в одну ленту приходилось
+                  листать до самого низа. Восемь строк вместе с переключателем помещаются в окно высотой
+                  600 целиком. Места под номера — всегда семь («1 … 4 5 6 … 14»), поэтому ряд не меняет
+                  ширину и стрелки не уезжают из-под курсора. Одна страница — переключателя нет.  -->
+            <StackPanel
+                x:Name="Pager"
+                Margin="0,10,0,0"
+                HorizontalAlignment="Center"
+                IsVisible="False"
+                Orientation="Horizontal"
+                Spacing="4">
+                <Button
+                    x:Name="btnPagePrev"
+                    AutomationProperties.Name="{loc:T PerApp_PagePrev}"
+                    Classes="SubPage"
+                    ToolTip.Tip="{loc:T PerApp_PagePrev}">
+                    <PathIcon Data="{DynamicResource Geo.Sub.Back}" />
+                </Button>
+                <StackPanel
+                    x:Name="PagerSlots"
+                    Orientation="Horizontal"
+                    Spacing="4" />
+                <Button
+                    x:Name="btnPageNext"
+                    AutomationProperties.Name="{loc:T PerApp_PageNext}"
+                    Classes="SubPage"
+                    ToolTip.Tip="{loc:T PerApp_PageNext}">
+                    <PathIcon Data="{DynamicResource Geo.Sub.Chevron}" />
+                </Button>
+            </StackPanel>
 
             <!--  Пустое состояние списка — вместо пустой карточки, которая читается как поломка.  -->
             <Border x:Name="AppsEmpty" Classes="SubEmpty" IsVisible="False">

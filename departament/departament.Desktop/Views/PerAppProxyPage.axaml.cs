@@ -2,6 +2,7 @@ using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Diagnostics;
 using System.Runtime.CompilerServices;
+using Avalonia.Automation;
 using Avalonia.Platform.Storage;
 using departament.Desktop.Common;
 
@@ -31,6 +32,9 @@ namespace departament.Desktop.Views;
 /// поштучно. Два набора, а не один: задержка и магазин — разные решения, и решение про цены не должно
 /// ехать на тумблере, который чинит пинг.
 ///
+/// Список программ — по страницам (<see cref="PageSize"/>), у каждой строки настоящая иконка программы
+/// (<see cref="AppIconLoader"/>, только Windows; без неё — буква). Иконки грузятся для видимой страницы.
+///
 /// Уход со страницы (стрелка «назад») сохраняет и применяет, затем поднимает <see cref="BackRequested"/>.
 /// </summary>
 public partial class PerAppProxyPage : UserControl, ISubPage
@@ -44,9 +48,26 @@ public partial class PerAppProxyPage : UserControl, ISubPage
     private const int ModeExcept = 0;
     private const int ModeOnly = 1;
 
+    // Восемь строк вместе с переключателем страниц помещаются в окно высотой 600 целиком.
+    private const int PageSize = 8;
+
+    // Мест под номера в переключателе: «1 … 4 5 6 … 14».
+    private const int PageSlotCount = 7;
+
+    // Пропуск в ряду номеров («…»).
+    private const int PageGap = -1;
+
     private readonly Config _config;
     private readonly ObservableCollection<AppItem> _all = new();
     private bool _saved;
+
+    // То, что прошло поиск, и открытая страница в нём (с нуля).
+    private List<AppItem> _shown = new();
+    private int _page;
+    private readonly Button[] _pageSlots = new Button[PageSlotCount];
+
+    // Высота полной страницы, снятая с живой разметки (см. BuildPager).
+    private double _fullPageHeight;
 
     //  Тумблеры наборов сейчас приводятся в согласие с галочками — их собственные события в этот
     //  момент не команда пользователя, а эхо. См. SyncPresetSwitches.
@@ -63,6 +84,7 @@ public partial class PerAppProxyPage : UserControl, ISubPage
         btnBack.Click += async (_, _) => await SaveAndBackAsync();
         RowRefresh.Tapped += (_, _) => LoadProcesses();
         RowAddExe.Tapped += async (_, _) => await AddExeAsync();
+        BuildPager();
         txtFilter.GetObservable(TextBox.TextProperty).Subscribe(_ => ApplyFilter());
 
         switchEnabled.IsChecked = _config.UiItem.PerAppProxyEnabled;
@@ -245,17 +267,22 @@ public partial class PerAppProxyPage : UserControl, ISubPage
                 try
                 {
                     var name = p.ProcessName;
-                    if (name.IsNullOrEmpty() || items.ContainsKey(name))
+                    if (name.IsNullOrEmpty())
                     {
                         continue;
                     }
-                    string? path = null;
-                    try { path = p.MainModule?.FileName; } catch { }
+                    if (items.TryGetValue(name, out var known))
+                    {
+                        // Выбранная раньше и сейчас запущенная: строка уже есть, но без пути — а по
+                        // нему берётся иконка.
+                        known.Path ??= AppIconLoader.ProcessPath(p);
+                        continue;
+                    }
                     items[name] = new AppItem
                     {
                         Identifier = name,
                         Display = name,
-                        Path = path,
+                        Path = AppIconLoader.ProcessPath(p),
                         IsChecked = selected.Contains(name),
                     };
                 }
@@ -274,26 +301,184 @@ public partial class PerAppProxyPage : UserControl, ISubPage
         SyncPresetSwitches();
     }
 
+    /// <summary>Новый поиск или новый состав списка — снова с первой страницы.</summary>
     private void ApplyFilter()
     {
         var q = txtFilter.Text?.Trim();
-        var shown = q.IsNullOrEmpty()
+        _shown = q.IsNullOrEmpty()
             ? _all.ToList()
             : _all.Where(x => (x.Display?.Contains(q!, StringComparison.OrdinalIgnoreCase) ?? false)
                            || (x.Identifier?.Contains(q!, StringComparison.OrdinalIgnoreCase) ?? false))
                   .ToList();
+        _page = 0;
+        ShowPage();
+    }
+
+    private int PageCount => Math.Max(1, (_shown.Count + PageSize - 1) / PageSize);
+
+    private void ShowPage()
+    {
+        _page = Math.Clamp(_page, 0, PageCount - 1);
+        var rows = _shown.Skip(_page * PageSize).Take(PageSize).ToList();
 
         // Разделитель рисует сама строка, поэтому у ПЕРВОЙ его быть не должно — иначе под шапкой
         // карточки появляется лишняя линия.
-        for (var i = 0; i < shown.Count; i++)
+        for (var i = 0; i < rows.Count; i++)
         {
-            shown[i].ShowDivider = i > 0;
+            rows[i].ShowDivider = i > 0;
         }
 
-        listApps.ItemsSource = shown;
-        AppsCard.IsVisible = shown.Count > 0;
-        AppsEmpty.IsVisible = shown.Count == 0;
+        listApps.ItemsSource = rows;
+        // Неполная последняя страница держит высоту полной: иначе карточка становилась короче,
+        // переключатель уезжал вверх из-под курсора, а окно ещё и прокручивалось.
+        listApps.MinHeight = PageCount > 1 ? _fullPageHeight : 0;
+        AppsCard.IsVisible = rows.Count > 0;
+        AppsEmpty.IsVisible = rows.Count == 0;
         txtProgramsLabel.Text = $"{L.T("PerApp_Programs")} · {L.F("PerApp_Chosen", _all.Count(x => x.IsChecked))}";
+        UpdatePager();
+        LoadIcons(rows);
+    }
+
+    private void GoToPage(int page)
+    {
+        if (page == _page || page < 0 || page >= PageCount)
+        {
+            return;
+        }
+        _page = page;
+        ShowPage();
+    }
+
+    /// <summary>Семь мест под номера создаются один раз и дальше только переподписываются: пересоздание
+    /// на каждом шаге сбрасывало бы фокус клавиатуры с нажатой кнопки.</summary>
+    private void BuildPager()
+    {
+        // Полная страница бывает всегда, когда страниц больше одной, — первая. Её высоту и держит
+        // последняя. Снимается с разметки, а не считается: строка выше своего минимума (плитка 40 и
+        // поля), и число в коде разошлось бы с ней при первой правке стиля.
+        listApps.SizeChanged += (_, e) =>
+        {
+            if (listApps.ItemsSource is List<AppItem> { Count: PageSize })
+            {
+                _fullPageHeight = e.NewSize.Height;
+            }
+        };
+        btnPagePrev.Click += (_, _) => GoToPage(_page - 1);
+        btnPageNext.Click += (_, _) => GoToPage(_page + 1);
+        for (var i = 0; i < PageSlotCount; i++)
+        {
+            var slot = new Button { Content = new TextBlock() };
+            slot.Classes.Add("SubPage");
+            slot.Click += (sender, _) =>
+            {
+                if ((sender as Button)?.Tag is int page)
+                {
+                    GoToPage(page);
+                }
+            };
+            _pageSlots[i] = slot;
+            PagerSlots.Children.Add(slot);
+        }
+    }
+
+    private void UpdatePager()
+    {
+        var pages = PageCount;
+        Pager.IsVisible = pages > 1;
+        if (pages <= 1)
+        {
+            return;
+        }
+        btnPagePrev.IsEnabled = _page > 0;
+        btnPageNext.IsEnabled = _page < pages - 1;
+
+        var slots = PageSlots(_page, pages);
+        for (var i = 0; i < PageSlotCount; i++)
+        {
+            var button = _pageSlots[i];
+            if (i >= slots.Count)
+            {
+                button.IsVisible = false;
+                continue;
+            }
+            var page = slots[i];
+            var gap = page == PageGap;
+            button.IsVisible = true;
+            button.Tag = gap ? null : page;
+            ((TextBlock)button.Content!).Text = gap ? "…" : (page + 1).ToString(CultureInfo.InvariantCulture);
+            // Пропуск — не кнопка: не нажимается и не берёт фокус.
+            button.IsHitTestVisible = !gap;
+            button.Focusable = !gap;
+            button.Classes.Set("current", page == _page);
+            AutomationProperties.SetName(button, gap ? string.Empty : L.F("PerApp_PageN", page + 1));
+        }
+    }
+
+    /// <summary>
+    /// Номера страниц в ряду: все, если их не больше семи; иначе первая, последняя, текущая с соседями
+    /// и «…» на месте пропуска. Мест всегда семь — у первой и последних страниц соседей добирается
+    /// с одной стороны.
+    /// </summary>
+    private static List<int> PageSlots(int page, int pages)
+    {
+        if (pages <= PageSlotCount)
+        {
+            return Enumerable.Range(0, pages).ToList();
+        }
+        if (page <= 3)
+        {
+            return [0, 1, 2, 3, 4, PageGap, pages - 1];
+        }
+        if (page >= pages - 4)
+        {
+            return [0, PageGap, pages - 5, pages - 4, pages - 3, pages - 2, pages - 1];
+        }
+        return [0, PageGap, page - 1, page, page + 1, PageGap, pages - 1];
+    }
+
+    /// <summary>
+    /// Иконки только для видимой страницы и каждой строке один раз. Размер — в пикселях экрана
+    /// (24 точки × масштаб), поэтому до появления страницы в окне масштаб неизвестен и загрузка
+    /// ждёт <see cref="OnAttachedToVisualTree"/>.
+    /// </summary>
+    private void LoadIcons(IEnumerable<AppItem> rows)
+    {
+        if (!AppIconLoader.IsSupported || TopLevel.GetTopLevel(this) is not { } top)
+        {
+            return;
+        }
+        var size = (int)Math.Round(24 * top.RenderScaling);
+        foreach (var row in rows)
+        {
+            if (row.IconRequested || row.IconPath.IsNullOrEmpty())
+            {
+                continue;
+            }
+            row.IconRequested = true;
+            var load = AppIconLoader.LoadAsync(row.IconPath!, size);
+            // Уже разобранная иконка ставится сразу, без кадра с буквой: иначе при возврате на
+            // страницу плитки мигали бы.
+            if (load.IsCompletedSuccessfully)
+            {
+                row.Icon = load.Result;
+            }
+            else
+            {
+                _ = SetIconAsync(row, load);
+            }
+        }
+    }
+
+    private static async Task SetIconAsync(AppItem row, Task<Bitmap?> load)
+    {
+        // Продолжение возвращается в поток интерфейса: загрузку просили из него.
+        row.Icon = await load;
+    }
+
+    protected override void OnAttachedToVisualTree(VisualTreeAttachmentEventArgs e)
+    {
+        base.OnAttachedToVisualTree(e);
+        LoadIcons(_shown.Skip(_page * PageSize).Take(PageSize));
     }
 
     private void OnAppRowTapped(object? sender, TappedEventArgs e)
@@ -460,9 +645,36 @@ public partial class PerAppProxyPage : UserControl, ISubPage
         private bool _isChecked;
         private bool _showDivider;
 
+        private Bitmap? _icon;
+
         public string Identifier { get; set; } = string.Empty;
         public string? Display { get; set; }
         public string? Path { get; set; }
+
+        /// <summary>Файл, из которого берётся иконка: .exe, добавленный вручную, или путь запущенного
+        /// процесса. У невыбранной и незапущенной программы (строки наборов) его нет — там буква.</summary>
+        public string? IconPath => IsPathLike(Identifier) ? Identifier : Path;
+
+        /// <summary>Загрузка уже просилась — чтобы листание туда-обратно не просило снова.</summary>
+        public bool IconRequested { get; set; }
+
+        /// <summary>Настоящая иконка программы. Пока её нет, в плитке буква.</summary>
+        public Bitmap? Icon
+        {
+            get => _icon;
+            set
+            {
+                if (ReferenceEquals(_icon, value))
+                {
+                    return;
+                }
+                _icon = value;
+                PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(Icon)));
+                PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(HasIcon)));
+            }
+        }
+
+        public bool HasIcon => _icon is not null;
 
         /// <summary>
         /// Вторая строка — ТОЛЬКО когда ей есть что добавить. У запущенной программы имя процесса и

@@ -1,4 +1,7 @@
-<Styles xmlns="https://github.com/avaloniaui" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+<Styles
+    xmlns="https://github.com/avaloniaui"
+    xmlns:cm="clr-namespace:departament.Desktop.Common"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
     <!--
         ============================================================================================
         ЕДИНОЕ ЛЕКАЛО ПОДЭКРАНОВ (screens.md «Подэкраны», tokens.md «Строка настроек»/«Скругления»)
@@ -211,8 +214,9 @@
         <Setter Property="VerticalAlignment" Value="Center" />
         <Setter Property="Foreground" Value="{DynamicResource Brush.OnSurfaceVariant}" />
     </Style>
-    <!--  Плитка с буквой (список программ): та же плитка, инициал 15/700.  -->
-    <Style Selector="Border.SubTile > TextBlock">
+    <!--  Плитка с буквой (список программ): та же плитка, инициал 15/700. Вторая форма селектора —
+          плитка программы, где буква и настоящая иконка лежат в одной панели и видна одна из них.  -->
+    <Style Selector="Border.SubTile > TextBlock, Border.SubTile > Panel > TextBlock">
         <Setter Property="FontFamily" Value="{DynamicResource Font.Grotesk}" />
         <Setter Property="FontWeight" Value="Bold" />
         <Setter Property="FontSize" Value="15" />
@@ -473,5 +477,91 @@
         <Setter Property="LineHeight" Value="20" />
         <Setter Property="TextTrimming" Value="CharacterEllipsis" />
         <Setter Property="Foreground" Value="{DynamicResource Brush.OnSurfaceVariant}" />
+    </Style>
+
+    <!--  ==================== Переключатель страниц ====================
+          Круг 36: стрелки 14 — как у «назад», номера 14/600 гротеском с моноширинными цифрами, чтобы
+          ряд не вздрагивал при смене номеров. Подложки при наведении НЕТ ни в одном состоянии, как у
+          стрелки «назад»: наведение проявляет номер цветом, а не зажигает круг. Текущая страница —
+          заливка выбора и акцентная цифра, та же пара, что у выбранного сервера. Нажатие — прогиб 0.90.  -->
+    <Style Selector="Button.SubPage">
+        <Setter Property="Width" Value="36" />
+        <Setter Property="Height" Value="36" />
+        <Setter Property="MinWidth" Value="0" />
+        <Setter Property="MinHeight" Value="0" />
+        <Setter Property="Padding" Value="0" />
+        <Setter Property="VerticalAlignment" Value="Center" />
+        <Setter Property="HorizontalContentAlignment" Value="Center" />
+        <Setter Property="VerticalContentAlignment" Value="Center" />
+        <Setter Property="Background" Value="Transparent" />
+        <Setter Property="BorderThickness" Value="0" />
+        <Setter Property="Cursor" Value="Arrow" />
+        <Setter Property="CornerRadius" Value="18" />
+        <Setter Property="RenderTransformOrigin" Value="50%,50%" />
+        <Setter Property="RenderTransform" Value="scale(1)" />
+        <!--  Цифры на время прогиба — на своём слое, иначе на возврате они перескакивают по пикселям
+              (то же, что у Button.IconButton40).  -->
+        <Setter Property="cm:PressFeedback.Composited" Value="True" />
+        <Setter Property="Transitions">
+            <Transitions>
+                <TransformOperationsTransition Duration="0:0:0.09" Property="RenderTransform" />
+            </Transitions>
+        </Setter>
+        <Setter Property="FocusAdorner">
+            <FocusAdornerTemplate>
+                <Border
+                    Margin="-2"
+                    AdornerLayer.IsClipEnabled="False"
+                    BorderBrush="{DynamicResource Brush.Accent}"
+                    BorderThickness="2"
+                    CornerRadius="20" />
+            </FocusAdornerTemplate>
+        </Setter>
+    </Style>
+    <Style Selector="Button.SubPage /template/ ContentPresenter#PART_ContentPresenter">
+        <Setter Property="Background" Value="Transparent" />
+        <Setter Property="CornerRadius" Value="18" />
+    </Style>
+    <Style Selector="Button.SubPage:pointerover /template/ ContentPresenter#PART_ContentPresenter">
+        <Setter Property="Background" Value="Transparent" />
+    </Style>
+    <Style Selector="Button.SubPage:pressed /template/ ContentPresenter#PART_ContentPresenter">
+        <Setter Property="Background" Value="Transparent" />
+    </Style>
+    <Style Selector="Button.SubPage:pressed">
+        <Setter Property="RenderTransform" Value="scale(0.90)" />
+    </Style>
+    <Style Selector="Button.SubPage:disabled">
+        <Setter Property="Opacity" Value="0.38" />
+    </Style>
+    <Style Selector="Button.SubPage TextBlock">
+        <Setter Property="FontFamily" Value="{DynamicResource Font.Numeric}" />
+        <Setter Property="FontFeatures" Value="tnum,lnum" />
+        <Setter Property="FontSize" Value="14" />
+        <Setter Property="FontWeight" Value="SemiBold" />
+        <Setter Property="HorizontalAlignment" Value="Center" />
+        <Setter Property="VerticalAlignment" Value="Center" />
+        <Setter Property="Foreground" Value="{DynamicResource Brush.OnSurfaceVariant}" />
+    </Style>
+    <Style Selector="Button.SubPage PathIcon">
+        <Setter Property="Width" Value="14" />
+        <Setter Property="Height" Value="14" />
+        <Setter Property="HorizontalAlignment" Value="Center" />
+        <Setter Property="VerticalAlignment" Value="Center" />
+        <Setter Property="Foreground" Value="{DynamicResource Brush.OnSurfaceVariant}" />
+    </Style>
+    <Style Selector="Button.SubPage:pointerover TextBlock">
+        <Setter Property="Foreground" Value="{DynamicResource Brush.OnSurface}" />
+    </Style>
+    <Style Selector="Button.SubPage:pointerover PathIcon">
+        <Setter Property="Foreground" Value="{DynamicResource Brush.OnSurface}" />
+    </Style>
+    <!--  Текущая — после правил наведения и нажатия: при равных селекторах побеждает последнее.  -->
+    <Style Selector="Button.SubPage.current /template/ ContentPresenter#PART_ContentPresenter">
+        <Setter Property="Background" Value="{DynamicResource Brush.SelectedFill}" />
+    </Style>
+    <Style Selector="Button.SubPage.current TextBlock">
+        <Setter Property="FontWeight" Value="Bold" />
+        <Setter Property="Foreground" Value="{DynamicResource Brush.AccentText}" />
     </Style>
 </Styles>

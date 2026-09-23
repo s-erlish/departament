@@ -180,6 +180,9 @@ public sealed partial class L
         Add("PerApp_EmptyTitle", "Программы не найдены", "No programs found");
         Add("PerApp_EmptyText", "Измените запрос или добавьте .exe вручную.", "Change the query or add an .exe manually.");
         Add("PerApp_Chosen", "Выбрано {0}", "{0} selected");
+        Add("PerApp_PagePrev", "Предыдущая страница", "Previous page");
+        Add("PerApp_PageNext", "Следующая страница", "Next page");
+        Add("PerApp_PageN", "Страница {0}", "Page {0}");
 
         // ── Локальный прокси ──
         Add("LocalProxy_Intro", "Доступ для программ на этом компьютере", "Access for programs on this computer");

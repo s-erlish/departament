@@ -38,9 +38,14 @@
             <Setter Property="Foreground" Value="{DynamicResource Brush.RedText}" />
         </Style>
 
-        <!--  Заголовок состояния — ступень Title (16/700): это главное содержание экрана, а не подпись строки.  -->
+        <!--  Заголовок состояния — ступень Title (16/700): это главное содержание экрана, а не подпись строки.
+              Шрифт — основной текстовый (Font.Body), тот же, что у строк и кнопок экрана, а не гротеск ступени
+              Title: в Space Grotesk нет кириллицы, и русский заголовок рисовал запасной шрифт системы
+              (в Windows — Segoe UI) — другой, чем «Отменить» под ним. Строка 24, а не 20: в строке 20 у
+              запасного шрифта опускался текст и обрезались хвосты «р» и «у» («Скачиваем версию 1.0.3…»).  -->
         <Style Selector="TextBlock.StatusTitle">
-            <Setter Property="LineHeight" Value="20" />
+            <Setter Property="FontFamily" Value="{DynamicResource Font.Body}" />
+            <Setter Property="LineHeight" Value="24" />
             <Setter Property="TextWrapping" Value="Wrap" />
         </Style>
 
