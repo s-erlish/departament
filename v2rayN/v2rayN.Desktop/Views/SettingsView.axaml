@@ -1,0 +1,945 @@
+<UserControl
+    x:Class="v2rayN.Desktop.Views.SettingsView"
+    xmlns="https://github.com/avaloniaui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:loc="clr-namespace:v2rayN.Desktop.Common"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:views="clr-namespace:v2rayN.Desktop.Views"
+    xmlns:vms="clr-namespace:v2rayN.Desktop.ViewModels"
+    x:DataType="vms:SettingsViewModel"
+    Design.DataContext="{x:Static vms:SettingsViewModel.Design}"
+    TextOptions.TextRenderingMode="Antialias"
+    mc:Ignorable="d">
+
+    <!--
+        ВКЛАДКА «НАСТРОЙКИ» (блок 9a). Шесть разделов, состав строк — screens.md «Вкладка Настройки».
+        ЗАГОЛОВКА СВЕРХУ НЕТ: раздел уже назван в навигации, второй раз его называть нечем.
+        Колонка 760 по центру; на любой ширине окна раскладка одна, меняются только поля.
+
+        ГЕОМЕТРИЯ СТРОКИ (tokens.md «Строка настроек»): высота от 56, плитка 40 со скруглением 10,
+        глиф 22, отступ до текста 16, заголовок 13.5/1.35, подпись 12, значение 12.5, шеврон 18,
+        разделитель НА ВСЮ ШИРИНУ карточки перед каждой строкой кроме первой.
+
+        ЕДИНАЯ ВЫСОТА — не «получилась», а ЗАДАНА, двумя замками сразу (оба дефекта известны по
+        Android-стороне этого же продукта, где строки разъехались):
+          1) содержимое строки лежит в Grid ФИКСИРОВАННОЙ высоты 40 (= плитка). Плитка — самый
+             высокий элемент строки, поэтому высота строки = 40 + 9 + 9 = 58 у ВСЕХ строк без
+             исключения: с подписью и без, с тумблером, со значением, с окошком;
+          2) подпись НЕ ПЕРЕНОСИТСЯ (NoWrap + многоточие). Вторая строка подписи — первая из двух
+             причин разъехавшихся высот на Android; здесь она невозможна.
+        Вторая причина там — у Material-тумблера минимальная высота больше плитки. Здешний
+        ToggleSwitch.Row — трек 46×28, ниже плитки 40, и ему дополнительно снят MinHeight (см. стиль
+        RowSwitch), так что и он высоту строки поднять не может.
+
+        ОТКЛИК НА НАЖАТИЕ. У строки настроек его НЕТ, кроме ховера — так в прототипе: класс `.srow`
+        несёт только `:hover` с фоном ховера, тогда как прогиб 0.985 живёт на `.row`
+        (Главная, Аккаунт). Разница не случайна: строка настроек — ЯКОРЬ раскрытого окошка, а окошко
+        лежит внутри неё, и любой масштаб на строке масштабировал бы вместе с ней и окошко. motion.md
+        про это прямо говорит: «Масштаб не использовать — от него текст внутри дёргается». Поэтому
+        единая лестница (GlobalStyles → cm:PressFeedback на Border.SettingRow) здесь ГАСИТСЯ одним
+        сеттером ниже; сама лестница и её потребители на других экранах не тронуты.
+
+        ОКОШКО У ЗНАЧЕНИЯ. Восемь строк (Режим · DNS · Пинг · Число Mux · Оформление · Язык ·
+        Масштаб · Автообновление) отдают правую половину общему views:ValuePicker — он несёт
+        значение, каретку и сам ValuePopup. Своего окошка этот экран не заводит. Контракт компонента
+        исполняется здесь: карточка НЕ обрезает содержимое (ClipToBounds=False), а скругление
+        крайних строк считает ValuePopup.RowCorners в code-behind.
+    -->
+
+    <UserControl.Resources>
+        <!--  Токены tokens.md, которых нет в GlobalResources (файл занят другим агентом — заявка
+              на промоушен в отчёте). Держим локально, чтобы вкладка совпадала с прототипом:
+              «плитка 10» и «карточка 16» (в ветке Radius.Tile 12 и Radius.Card 20).  -->
+        <CornerRadius x:Key="Radius.SetTile">10</CornerRadius>
+        <CornerRadius x:Key="Radius.SetCard">16</CornerRadius>
+
+        <!--  Векторные глифы 22. Плитки НЕЙТРАЛЬНЫЕ у всех строк без исключения — в прототипе цветной
+              плитки в настройках нет ни одной, и «одна синяя строка» была бы иерархией на пустом месте.  -->
+        <!--  Щит-контур (ic_shield_outline) — F0 = evenOdd, чтобы получить обводку.  -->
+        <StreamGeometry x:Key="Geo.Set.Shield">F0 M12,2.2 L19.6,5.2 L19.6,11.4 C19.6,16.1 15.9,19.9 12,21.8 C8.1,19.9 4.4,16.1 4.4,11.4 L4.4,5.2 Z M12,4.7 L17.2,6.8 L17.2,11.4 C17.2,14.9 14.7,17.9 12,19.3 C9.3,17.9 6.8,14.9 6.8,11.4 L6.8,6.8 Z</StreamGeometry>
+        <!--  Сетка приложений (ic_per_apps_24dp)  -->
+        <StreamGeometry x:Key="Geo.Set.Grid">M4,8h4L8,4L4,4v4zM10,20h4v-4h-4v4zM4,20h4v-4L4,16v4zM4,14h4v-4L4,10v4zM10,14h4v-4h-4v4zM16,4v4h4L20,4h-4zM10,8h4L14,4h-4v4zM16,14h4v-4h-4v4zM16,20h4v-4h-4v4z</StreamGeometry>
+        <!--  Глобус (ic_globe_24dp)  -->
+        <StreamGeometry x:Key="Geo.Set.Globe">M12,2C6.48,2 2,6.48 2,12s4.48,10 10,10 10,-4.48 10,-10S17.52,2 12,2zM11,19.93c-3.95,-0.49 -7,-3.85 -7,-7.93 0,-0.62 0.08,-1.21 0.21,-1.79L9,15v1c0,1.1 0.9,2 2,2v1.93zM17.9,17.39c-0.26,-0.81 -1,-1.39 -1.9,-1.39h-1v-3c0,-0.55 -0.45,-1 -1,-1H8v-2h2c0.55,0 1,-0.45 1,-1V7h2c1.1,0 2,-0.9 2,-2v-0.41c2.93,1.19 5,4.06 5,7.41 0,2.08 -0.8,3.97 -2.1,5.39z</StreamGeometry>
+        <!--  Щит-персона (ic_privacy_24dp, viewport 1024)  -->
+        <StreamGeometry x:Key="Geo.Set.Privacy">M471.5,77.5a128,128 0,0 1,72.1 -2.6l8.9,2.6 256,85.3a128,128 0,0 1,87.3 113.6l0.3,7.8L896,512c0,101.6 -44.5,186 -103.2,253.1l-8.1,9 -12.1,12.8a618.2,618.2 0,0 1,-25 24.2l-12.8,11.4 -13,11a839.3,839.3 0,0 1,-127.7 86.5l-19.5,10.5 -17.5,9a101.4,101.4 0,0 1,-90.5 0l-18.9,-9.6c-40.1,-21.1 -93.9,-53.2 -145.9,-96.3l-12.9,-11 -12.8,-11.4a618.2,618.2 0,0 1,-24.9 -24.2l-12.1,-12.8 -8.1,-9c-55.9,-63.9 -98.9,-143.4 -102.9,-238.6L128,512L128,284.2A128,128 0,0 1,208.2 165.5l7.3,-2.7 256,-85.3zM512,661.3c-80.2,0 -151.1,40.3 -193.4,101.7 62,57.2 132.2,97.2 176.6,119a37.4,37.4 0,0 0,33.7 0c44.4,-21.9 114.6,-61.9 176.6,-119A234.4,234.4 0,0 0,512 661.3zM491.8,138.2l-256,85.3A64,64 0,0 0,192 284.2L192,512c0,78.5 32.9,146.4 81.5,204.2A298.2,298.2 0,0 1,512 597.3a298.2,298.2 0,0 1,238.5 118.8C799.1,658.4 832,590.5 832,512L832,284.2a64,64 0,0 0,-43.8 -60.7l-256,-85.3a64,64 0,0 0,-40.4 0zM512,298.7a128,128 0,1 1,0 256,128 128,0 0,1 0,-256zM512,362.7a64,64 0,1 0,0 128,64 64,0 0,0 0,-128z</StreamGeometry>
+        <!--  Пинг / радар (ic_ping_24dp)  -->
+        <StreamGeometry x:Key="Geo.Set.Ping">M12,11c-1.1,0 -2,0.9 -2,2s0.9,2 2,2 2,-0.9 2,-2 -0.9,-2 -2,-2zM18,13c0,-3.31 -2.69,-6 -6,-6s-6,2.69 -6,6c0,2.22 1.21,4.15 3,5.19l1,-1.74c-1.19,-0.7 -2,-1.97 -2,-3.45 0,-2.21 1.79,-4 4,-4s4,1.79 4,4c0,1.48 -0.81,2.75 -2,3.45l1,1.74c1.79,-1.04 3,-2.97 3,-5.19zM12,3C6.48,3 2,7.48 2,13c0,3.7 2.01,6.92 4.99,8.65l1,-1.73C5.61,18.53 4,15.96 4,13c0,-4.42 3.58,-8 8,-8s8,3.58 8,8c0,2.96 -1.61,5.53 -4,6.92l1,1.73c2.98,-1.73 5,-4.95 5,-8.65 0,-5.52 -4.48,-10 -10,-10z</StreamGeometry>
+        <!--  Роутер (ic_hub_local_proxy)  -->
+        <StreamGeometry x:Key="Geo.Set.Router">M20.2,5.9l0.8,-0.8C19.6,3.7 17.8,3 16,3s-3.6,0.7 -5,2.1l0.8,0.8C13,4.8 14.5,4.2 16,4.2s3,0.6 4.2,1.7zM19.3,6.7c-0.8,-0.8 -2.1,-1.4 -3.3,-1.4s-2.5,0.5 -3.3,1.4l0.8,0.8c0.6,-0.6 1.6,-1 2.5,-1s1.9,0.4 2.5,1l0.8,-0.8zM19,13h-2V9h-2v4H5c-1.1,0 -2,0.9 -2,2v4c0,1.1 0.9,2 2,2h14c1.1,0 2,-0.9 2,-2v-4c0,-1.1 -0.9,-2 -2,-2zM8,18H6v-2h2v2zM11.5,18h-2v-2h2v2zM15,18h-2v-2h2v2z</StreamGeometry>
+        <!--  Mux — два канала в одной стойке (ic_lp_http), тот же глиф, что у строки «Мультиплексирование»
+              на Android. Раньше здесь стоял сплошной круг: в плитке он читался как заглушка на месте
+              пропавшей иконки, а не как знак.  -->
+        <StreamGeometry x:Key="Geo.Set.Mux">M20,13H4c-0.55,0 -1,0.45 -1,1v6c0,0.55 0.45,1 1,1h16c0.55,0 1,-0.45 1,-1v-6c0,-0.55 -0.45,-1 -1,-1zM7,19c-0.83,0 -1.5,-0.67 -1.5,-1.5S6.17,16 7,16s1.5,0.67 1.5,1.5S7.83,19 7,19zM20,3H4c-0.55,0 -1,0.45 -1,1v6c0,0.55 0.45,1 1,1h16c0.55,0 1,-0.45 1,-1V4c0,-0.55 -0.45,-1 -1,-1zM7,9c-0.83,0 -1.5,-0.67 -1.5,-1.5S6.17,6 7,6s1.5,0.67 1.5,1.5S7.83,9 7,9z</StreamGeometry>
+        <!--  Скорость / спидометр (ic_speed_24dp)  -->
+        <StreamGeometry x:Key="Geo.Set.Speed">M20.38,8.57l-1.23,1.85a8,8 0 0,1 -0.22,7.58H5.07A8,8 0 0,1 15.58,6.85l1.85,-1.23A10,10 0 0,0 3.35,19a2,2 0 0,0 1.72,1h13.85a2,2 0 0,0 1.74,-1 10,10 0 0,0 -0.27,-10.44z M10.59,15.41a2,2 0 0,0 2.83,0l5.66,-8.49 -8.49,5.66a2,2 0 0,0 0,2.83z</StreamGeometry>
+        <!--  Фрагментация / код (ic_source_code_24dp, viewport 1024). Он же у «Журнала» — как в прототипе.  -->
+        <StreamGeometry x:Key="Geo.Set.Fragment">M469.2,802.1l-81.7,-24.6L554.8,221.9l81.7,24.6L469.2,802.1zM362.7,654.5l-124.7,-141.7 124.8,-143.5 -64.4,-56 -173.8,199.8 174,197.7 64.1,-56.3zM899.4,513.1l-173.8,-199.8 -64.4,56 124.8,143.5 -124.7,141.7 64.1,56.4 174,-197.7z</StreamGeometry>
+        <!--  Шеврон-вправо (ic_chevron_right) — ТОЛЬКО у строк-навигаций.  -->
+        <StreamGeometry x:Key="Geo.Set.Chevron">M8.6,4.6L7.2,6l6,6l-6,6l1.4,1.4L16,12z</StreamGeometry>
+        <!--  Масштаб / размер интерфейса (format_size)  -->
+        <StreamGeometry x:Key="Geo.Set.Scale">M9,4v3h5v12h3V7h5V4H9zM3,12h3v7h3v-7h3V9H3v3z</StreamGeometry>
+        <!--  Палитра (ic_palette_24dp)  -->
+        <StreamGeometry x:Key="Geo.Set.Palette">M12,2C6.49,2 2,6.49 2,12s4.49,10 10,10c1.38,0 2.5,-1.12 2.5,-2.5 0,-0.61 -0.23,-1.2 -0.64,-1.67 -0.08,-0.1 -0.13,-0.21 -0.13,-0.33 0,-0.28 0.22,-0.5 0.5,-0.5H16c3.31,0 6,-2.69 6,-6 0,-4.96 -4.49,-9 -10,-9zM17.5,13c-0.83,0 -1.5,-0.67 -1.5,-1.5S16.67,10 17.5,10s1.5,0.67 1.5,1.5 -0.67,1.5 -1.5,1.5zM14.5,9C13.67,9 13,8.33 13,7.5S13.67,6 14.5,6 16,6.67 16,7.5 15.33,9 14.5,9zM5,11.5C5,10.67 5.67,10 6.5,10S8,10.67 8,11.5 7.33,13 6.5,13 5,12.33 5,11.5zM11,7.5C11,8.33 10.33,9 9.5,9S8,8.33 8,7.5 8.67,6 9.5,6 11,6.67 11,7.5z</StreamGeometry>
+        <!--  Питание / запуск (ic_power_settings)  -->
+        <StreamGeometry x:Key="Geo.Set.Power">M13,3h-2v10h2V3zM17.83,5.17l-1.42,1.42C17.99,7.86 19,9.81 19,12c0,3.87 -3.13,7 -7,7s-7,-3.13 -7,-7c0,-2.19 1.01,-4.14 2.58,-5.42L6.17,5.17C4.23,6.82 3,9.26 3,12c0,4.97 4.03,9 9,9s9,-4.03 9,-9c0,-2.74 -1.23,-5.18 -3.17,-6.83z</StreamGeometry>
+        <!--  Обновление (ic_refresh_24dp)  -->
+        <!--  «Скрыть значок в трее»: тот же перечёркнутый глаз, что у поля пароля
+              (Geo.Login.EyeOff) — одна семья, один вес, одно значение «спрятать».
+              Раньше здесь стоял Geo.Set.Power, тот же самый, что у соседней строки
+              «Запуск с системой»: два соседних тумблера с одинаковым глифом, причём
+              к питанию значок в трее отношения не имеет. Повторённая иконка ничего не
+              сообщает — а сообщать нечего значит украшение.  -->
+        <StreamGeometry x:Key="Geo.Set.HideTray">M12,7c2.76,0 5,2.24 5,5 0,0.65 -0.13,1.26 -0.36,1.83l2.92,2.92c1.51,-1.26 2.7,-2.89 3.43,-4.75 -1.73,-4.39 -6,-7.5 -11,-7.5 -1.4,0 -2.74,0.25 -3.98,0.7l2.16,2.16C10.74,7.13 11.35,7 12,7zM2,4.27l2.28,2.28 0.46,0.46C3.08,8.3 1.78,10.02 1,12c1.73,4.39 6,7.5 11,7.5 1.55,0 3.03,-0.3 4.38,-0.84l0.42,0.42L19.73,22 21,20.73 3.27,3 2,4.27zM7.53,9.8l1.55,1.55c-0.05,0.21 -0.08,0.43 -0.08,0.65 0,1.66 1.34,3 3,3 0.22,0 0.44,-0.03 0.65,-0.08l1.55,1.55c-0.67,0.33 -1.41,0.53 -2.2,0.53 -2.76,0 -5,-2.24 -5,-5 0,-0.79 0.2,-1.53 0.53,-2.2zM11.84,9.02l3.15,3.15 0.02,-0.16c0,-1.66 -1.34,-3 -3,-3l-0.17,0.01z</StreamGeometry>
+        <!--  «Обход локальной сети»: устройства, а не глобус. Глобус стоял и здесь, и на
+              соседней строке «IPv6» — два подряд одинаковых глифа, из которых ни один не
+              называл свою строку. Глобус остаётся у IPv6 (адресация в интернете) и у
+              «Языка» (общепринятое значение), а здесь глиф повторяет подпись строки:
+              «прямой доступ к УСТРОЙСТВАМ в локальной сети». Тот же путь, что у строки
+              «Устройства» на вкладке «Аккаунт» — одна семья, один вес.  -->
+        <StreamGeometry x:Key="Geo.Set.Lan">M4,6h18V4H4c-1.1,0 -2,0.9 -2,2v11H0v3h14v-3H4V6zM23,8h-6c-0.55,0 -1,0.45 -1,1v10c0,0.55 0.45,1 1,1h6c0.55,0 1,-0.45 1,-1V9c0,-0.55 -0.45,-1 -1,-1zM22,18h-4v-8h4v8z</StreamGeometry>
+        <StreamGeometry x:Key="Geo.Set.Refresh">M17.65,6.35C16.2,4.9 14.21,4 12,4c-4.42,0 -7.99,3.58 -7.99,8s3.57,8 7.99,8c3.73,0 6.84,-2.55 7.73,-6h-2.08c-0.82,2.33 -3.04,4 -5.65,4 -3.31,0 -6,-2.69 -6,-6s2.69,-6 6,-6c1.66,0 3.14,0.69 4.22,1.78L13,11h7V4l-2.35,2.35z</StreamGeometry>
+        <!--  Маршрутизация (ic_routing_24dp, viewport 1024)  -->
+        <StreamGeometry x:Key="Geo.Set.Routing">M740,161a112.1,112.1 0,0 0,-33.5 218.9v95.9L320,602.4L320,318.1a112.1,112.1 0,1 0,-148 -106.1c0,49.3 31.8,91 76,106.1v387.9a112.1,112.1 0,1 0,148 106.1c0,-49.2 -31.8,-91 -76,-106.1v-27.8l423.5,-138.7a50.6,50.6 0,0 0,34.9 -48.2L778.4,378.2c42.9,-15.8 73.6,-57 73.6,-105.2 0,-61.8 -50.2,-112 -112,-112zM236,212a48,48 0,1 1,96 0,48 48,0 0,1 -96,0zM332,812a48,48 0,1 1,-96 0,48 48,0 0,1 96,0zM740,321a48,48 0,1 1,0 -96,48 48,0 0,1 0,96z</StreamGeometry>
+        <!--  Файл (ic_file_24dp, viewport 1024)  -->
+        <StreamGeometry x:Key="Geo.Set.File">M537,85.3A85.3,85.3 0,0 1,597.3 110.3L828.3,341.3A85.3,85.3 0,0 1,853.3 401.7L853.3,810.7a128,128 0,0 1,-128 128L298.7,938.7a128,128 0,0 1,-128 -128L170.7,213.3a128,128 0,0 1,128 -128zM537,170.7L298.7,170.7a42.7,42.7 0,0 0,-42.7 42.7v597.3a42.7,42.7 0,0 0,42.7 42.7h426.7a42.7,42.7 0,0 0,42.7 -42.7L768,401.7L537,170.7zM512,384a42.7,42.7 0,0 1,42.4 37.7L554.7,426.7v85.3h85.3a42.7,42.7 0,0 1,5 85L640,597.3h-85.3v85.3a42.7,42.7 0,0 1,-85 5L469.3,682.7v-85.3L384,597.3a42.7,42.7 0,0 1,-5 -85L384,512h85.3v-85.3a42.7,42.7 0,0 1,42.7 -42.7z</StreamGeometry>
+        <!--  О приложении / инфо (ic_about_24dp, viewport 1024)  -->
+        <StreamGeometry x:Key="Geo.Set.About">M810.7,206.3A426.7,426.7 0,1 0,512 938.7h5.5A426.7,426.7 0,0 0,810.7 206.3zM771.8,765A360.1,360.1 0,0 1,517.1 874.7L512,874.7a362.7,362.7 0,0 1,-4.9 -725.3h3.4a362.7,362.7 0,0 1,261.3 615.7zM547.2,390a57.4,57.4 0,0 0,62.3 -55.3,39.3 39.3,0 0,0 -45,-42.7 58.9,58.9 0,0 0,-64 54.6c-1.7,26.9 13.9,43.3 46.7,43.3zM548.3,663.5c-5.5,0 -7.9,-7.3 -2.3,-28.2l31.1,-118c11.7,-42.7 7.9,-71.3 -15.8,-71.3 -28.4,0 -94.7,28.4 -152.5,76.4l11.7,19.4a181.3,181.3 0,0 1,56.1 -24.7c5.5,0 4.7,7.3 0,25.2l-27.3,112.2c-16.6,64 0,77.7 24.5,77.7s85.3,-21.3 141,-77.7l-13.4,-17.9a122.7,122.7 0,0 1,-53.1 26.9z</StreamGeometry>
+        <!--  Резервное копирование (ic_backup_24dp, viewport 1024)  -->
+        <StreamGeometry x:Key="Geo.Set.Backup">M864,192L704,192L704,96c0,-17.7 -14.3,-32 -32,-32L352,64c-9,0 -17.2,3.7 -22.9,9.7L137.7,265.1c-6,5.8 -9.7,14 -9.7,22.9v512c0,17.7 14.3,32 32,32h160v96c0,17.7 14.3,32 32,32h512c17.7,0 32,-14.3 32,-32L896,224c0,-17.7 -14.3,-32 -32,-32zM320,173.2L320,256h-82.8l82.8,-82.8zM192,768L192,320h160c17.7,0 32,-14.3 32,-32L384,128h256v64h-96c-9,0 -17.2,3.7 -22.9,9.7L329.7,393.1c-6,5.8 -9.7,14 -9.7,22.9v352L192,768zM512,301.2L512,384h-82.8l82.8,-82.8zM832,896L384,896L384,448h160c17.7,0 32,-14.3 32,-32L576,256h256v640z</StreamGeometry>
+        <!--  Схемы URL / ссылка (ic_hub_url_scheme)  -->
+        <StreamGeometry x:Key="Geo.Set.UrlScheme">M3.9,12c0,-1.71 1.39,-3.1 3.1,-3.1h4V7H7c-2.76,0 -5,2.24 -5,5s2.24,5 5,5h4v-1.9H7c-1.71,0 -3.1,-1.39 -3.1,-3.1zM8,13h8v-2H8v2zM17,7h-4v1.9h4c1.71,0 3.1,1.39 3.1,3.1s-1.39,3.1 -3.1,3.1h-4V17h4c2.76,0 5,-2.24 5,-5s-2.24,-5 -5,-5z</StreamGeometry>
+
+        <!--  ==================== ТУМБЛЕР СТРОКИ ====================
+              tokens.md «Тумблер»: 46×28, скругление 14, обводка 2.
+                · выключен — трек «вариант поверхности» с контуром, бегунок 14, ход 5, цвет
+                  приглушённых чернил;
+                · включён  — трек и контур акцентные, бегунок 20, ход 20, белый.
+              Обводка входит в габарит (box-sizing: border-box в прототипе), поэтому ход бегунка
+              отсчитывается от ВНУТРЕННЕЙ кромки: 5 и 20 — координаты внутри поля 42×24.
+              Всё движение 220 мс ease-out-quart (motion.md «Тумблер»): трек, контур, положение
+              и РАЗМЕР бегунка.
+
+              Почему не общий ToggleSwitch.iOS: там трек 52×32, бегунок 26 постоянного размера и
+              без обводки — другая фигура. Прототип держит ОДИН тумблер на все экраны, поэтому
+              правильное место этой ControlTheme — Assets/GlobalResources.axaml рядом с
+              ToggleSwitch.iOS (файл занят другим агентом — заявка на промоушен в отчёте). До тех
+              пор она живёт здесь и покрывает шесть тумблеров этой вкладки.
+
+              Габарит трека НЕИЗМЕНЕН — его можно ставить прямо в шаблоне. Всё, что переключается
+              состоянием (цвета, размер и ход бегунка), задаётся ТОЛЬКО селекторами: значение,
+              записанное в шаблоне, стало бы локальным и перебило бы стиль :checked.  -->
+        <ControlTheme x:Key="ToggleSwitch.Row" TargetType="ToggleSwitch">
+            <Setter Property="Cursor" Value="Arrow" />
+            <Setter Property="HorizontalAlignment" Value="Left" />
+            <Setter Property="MinWidth" Value="0" />
+            <Setter Property="MinHeight" Value="0" />
+            <Setter Property="Padding" Value="0" />
+            <Setter Property="Template">
+                <ControlTemplate>
+                    <Border
+                        x:Name="track"
+                        Width="46"
+                        Height="28"
+                        BorderThickness="2"
+                        CornerRadius="14">
+                        <Border.Transitions>
+                            <Transitions>
+                                <BrushTransition
+                                    Duration="0:0:0.22"
+                                    Easing="{StaticResource Ease.OutQuart}"
+                                    Property="Background" />
+                                <BrushTransition
+                                    Duration="0:0:0.22"
+                                    Easing="{StaticResource Ease.OutQuart}"
+                                    Property="BorderBrush" />
+                            </Transitions>
+                        </Border.Transitions>
+                        <!--  PART_MovingKnobs / PART_SwitchKnob — обязательные части ToggleSwitch (AVLN2205).  -->
+                        <Panel x:Name="PART_MovingKnobs">
+                            <Panel
+                                x:Name="PART_SwitchKnob"
+                                HorizontalAlignment="Left"
+                                VerticalAlignment="Center">
+                                <Panel.Transitions>
+                                    <Transitions>
+                                        <TransformOperationsTransition
+                                            Duration="0:0:0.22"
+                                            Easing="{StaticResource Ease.OutQuart}"
+                                            Property="RenderTransform" />
+                                        <DoubleTransition
+                                            Duration="0:0:0.22"
+                                            Easing="{StaticResource Ease.OutQuart}"
+                                            Property="Width" />
+                                        <DoubleTransition
+                                            Duration="0:0:0.22"
+                                            Easing="{StaticResource Ease.OutQuart}"
+                                            Property="Height" />
+                                    </Transitions>
+                                </Panel.Transitions>
+                                <Ellipse x:Name="knobFill">
+                                    <Ellipse.Transitions>
+                                        <Transitions>
+                                            <BrushTransition
+                                                Duration="0:0:0.22"
+                                                Easing="{StaticResource Ease.OutQuart}"
+                                                Property="Fill" />
+                                        </Transitions>
+                                    </Ellipse.Transitions>
+                                </Ellipse>
+                            </Panel>
+                        </Panel>
+                    </Border>
+                </ControlTemplate>
+            </Setter>
+
+            <!--  ВЫКЛЮЧЕН  -->
+            <Style Selector="^ /template/ Border#track">
+                <Setter Property="Background" Value="{DynamicResource Brush.SurfaceVariant}" />
+                <Setter Property="BorderBrush" Value="{DynamicResource Brush.Outline}" />
+            </Style>
+            <Style Selector="^ /template/ Panel#PART_SwitchKnob">
+                <Setter Property="Width" Value="14" />
+                <Setter Property="Height" Value="14" />
+                <Setter Property="RenderTransform" Value="translateX(5px)" />
+            </Style>
+            <Style Selector="^ /template/ Ellipse#knobFill">
+                <Setter Property="Fill" Value="{DynamicResource Brush.OnSurfaceVariant}" />
+            </Style>
+
+            <!--  ВКЛЮЧЁН  -->
+            <Style Selector="^:checked /template/ Border#track">
+                <Setter Property="Background" Value="{DynamicResource Brush.Accent}" />
+                <Setter Property="BorderBrush" Value="{DynamicResource Brush.Accent}" />
+            </Style>
+            <Style Selector="^:checked /template/ Panel#PART_SwitchKnob">
+                <Setter Property="Width" Value="20" />
+                <Setter Property="Height" Value="20" />
+                <Setter Property="RenderTransform" Value="translateX(20px)" />
+            </Style>
+            <Style Selector="^:checked /template/ Ellipse#knobFill">
+                <Setter Property="Fill" Value="White" />
+            </Style>
+
+            <!--  Выключенных тумблеров в этой вкладке сейчас нет; состояние держим ради полноты.  -->
+            <Style Selector="^:disabled">
+                <Setter Property="Opacity" Value="0.38" />
+            </Style>
+        </ControlTheme>
+
+    </UserControl.Resources>
+
+    <UserControl.Styles>
+        <!--  Border.SettingRow (минимальная высота, ховер, кольцо фокуса, прогиб 0.985 через
+              cm:PressFeedback) живёт в GlobalStyles. Здесь — только то, чем эта вкладка от него
+              отличается, и её собственные потомки-селекторы.  -->
+
+        <!--  Вертикальный паддинг 9 вместо 12: 40 (плитка) + 9 + 9 = 58 — высота строки прототипа.
+              При 12 строка выросла бы до 64 и вкладка стала бы на треть экрана длиннее. Эта вкладка —
+              ЕДИНСТВЕННЫЙ потребитель Border.SettingRow во всём приложении (проверено), поэтому
+              локальная правка ничего больше не задевает; заявка на перенос 16,9 в GlobalStyles — в отчёте.
+
+              ПРОГИБ СНЯТ (NaN): см. «ОТКЛИК НА НАЖАТИЕ» в шапке файла. Прототип не гнёт `.srow`, а
+              масштаб на строке-якоре растянул бы и раскрытое окошко — запрещено motion.md. Ховер и
+              кольцо фокуса из GlobalStyles остаются; лестница на других экранах не тронута.
+              Одна строка, чтобы вернуть: убрать сеттер ниже.  -->
+        <Style Selector="Border.SettingRow">
+            <Setter Property="Padding" Value="16,9" />
+            <Setter Property="loc:PressFeedback.Scale" Value="NaN" />
+            <!--  ...но отклик на нажатие строке нужен — фоном (Brush.PressBg). Пока гасился только
+                  масштаб, вместе с ним отключалась подписка на указатель, и строка не отвечала на
+                  нажатие вообще. Ink разводит эти две вещи: класс .pressed вешается, трансформа
+                  по-прежнему нет.  -->
+            <Setter Property="loc:PressFeedback.Ink" Value="True" />
+        </Style>
+
+        <!--  Содержимое строки — фиксированные 40 (первый замок единой высоты, см. шапку файла).  -->
+        <Style Selector="Border.SettingRow > Grid">
+            <Setter Property="Height" Value="{DynamicResource Size.Tile}" />
+        </Style>
+
+        <!--  Разделитель 1px НА ВСЮ ШИРИНУ карточки (tokens.md). Не инсет: в прототипе линия у строк
+              настроек идёт от края до края, инсет 72 — только у строк подэкранов.  -->
+        <Style Selector="Border.SettingDivider">
+            <Setter Property="Height" Value="1" />
+            <Setter Property="Background" Value="{DynamicResource Brush.OutlineVariant}" />
+        </Style>
+
+        <!--  Плитка 40 со скруглением 10 (tokens.md), глиф 22 по центру.  -->
+        <Style Selector="Border.SetTile">
+            <Setter Property="Width" Value="{DynamicResource Size.Tile}" />
+            <Setter Property="Height" Value="{DynamicResource Size.Tile}" />
+            <Setter Property="CornerRadius" Value="{DynamicResource Radius.SetTile}" />
+            <Setter Property="Background" Value="{DynamicResource Brush.Tile.Neutral}" />
+            <Setter Property="VerticalAlignment" Value="Center" />
+        </Style>
+        <Style Selector="Border.SetTile > PathIcon">
+            <Setter Property="Width" Value="{DynamicResource Size.Glyph}" />
+            <Setter Property="Height" Value="{DynamicResource Size.Glyph}" />
+            <Setter Property="HorizontalAlignment" Value="Center" />
+            <Setter Property="VerticalAlignment" Value="Center" />
+            <Setter Property="Foreground" Value="{DynamicResource Brush.OnSurfaceVariant}" />
+        </Style>
+
+        <!--  Текстовый блок строки: 16 до текста, 8 до правой половины, ничего не переносится.  -->
+        <Style Selector="StackPanel.RowText">
+            <Setter Property="Margin" Value="16,0,8,0" />
+            <Setter Property="VerticalAlignment" Value="Center" />
+        </Style>
+
+        <!--  Заголовок строки 13.5/1.35 (tokens.md «Строка настроек»). Одна строка с многоточием:
+              длинное имя деградирует в «…», а не наезжает на значение и не режется по букве.  -->
+        <Style Selector="TextBlock.RowTitle">
+            <Setter Property="FontSize" Value="13.5" />
+            <Setter Property="LineHeight" Value="18" />
+            <Setter Property="Foreground" Value="{DynamicResource Brush.OnSurface}" />
+            <Setter Property="TextWrapping" Value="NoWrap" />
+            <Setter Property="TextTrimming" Value="CharacterEllipsis" />
+        </Style>
+
+        <!--  Подпись 12/1.35. NoWrap — ВТОРОЙ замок единой высоты: перенос подписи на вторую строку
+              и есть первая из двух причин разъехавшихся высот на Android-стороне.  -->
+        <Style Selector="TextBlock.RowSub">
+            <Setter Property="Margin" Value="0,3,0,0" />
+            <Setter Property="FontSize" Value="12" />
+            <Setter Property="LineHeight" Value="16" />
+            <Setter Property="Foreground" Value="{DynamicResource Brush.OnSurfaceVariant}" />
+            <Setter Property="TextWrapping" Value="NoWrap" />
+            <Setter Property="TextTrimming" Value="CharacterEllipsis" />
+        </Style>
+
+        <!--  Значение строки-НАВИГАЦИИ 12.5, приглушённое (у строк с окошком значение полной яркости —
+              это разница между «значение живёт там» и «значение меняется здесь», её ведёт ValuePicker).  -->
+        <Style Selector="TextBlock.RowNavValue">
+            <Setter Property="FontSize" Value="12.5" />
+            <Setter Property="Foreground" Value="{DynamicResource Brush.OnSurfaceVariant}" />
+            <Setter Property="VerticalAlignment" Value="Center" />
+            <Setter Property="TextAlignment" Value="Right" />
+            <Setter Property="MaxWidth" Value="170" />
+            <Setter Property="TextWrapping" Value="NoWrap" />
+            <Setter Property="TextTrimming" Value="CharacterEllipsis" />
+        </Style>
+
+        <!--  Шеврон 18 — ТОЛЬКО у строк-навигаций (тап открывает суб-страницу). Каретка строк с
+              окошком принадлежит ValuePicker, здесь её нет.  -->
+        <Style Selector="PathIcon.Chevron">
+            <!--  14, не 18: PathIcon заливает чернилами весь бокс, и 18 читались слишком жирным
+                  шевроном. В прототипе бокс 18, а сам глиф внутри мелкий.  -->
+            <Setter Property="Width" Value="14" />
+            <Setter Property="Height" Value="14" />
+            <Setter Property="Foreground" Value="{DynamicResource Brush.OnSurfaceVariant}" />
+            <Setter Property="VerticalAlignment" Value="Center" />
+            <Setter Property="Margin" Value="4,0,0,0" />
+        </Style>
+
+        <!--  Заголовок раздела 15/700 sentence-case, паддинг 16/4/8 (прототип). НЕ мелкий ALL-CAPS.  -->
+        <Style Selector="TextBlock.SettingsSection">
+            <Setter Property="FontSize" Value="15" />
+            <Setter Property="Margin" Value="4,16,4,8" />
+        </Style>
+
+        <!--  Карточка раздела: скругление 16, БЕЗ внутреннего паддинга и БЕЗ обрезки содержимого.
+              ClipToBounds=False — контракт «окошка у значения»: обрезающая карточка срезала бы окошко
+              нижней кромкой. Раз карточка больше не маскирует углы, скругление крайних строк считает
+              ValuePopup.RowCorners (code-behind).  -->
+        <Style Selector="Border.SetCard">
+            <Setter Property="Background" Value="{DynamicResource Brush.Surface}" />
+            <Setter Property="BorderBrush" Value="{DynamicResource Brush.OutlineVariant}" />
+            <Setter Property="BorderThickness" Value="1" />
+            <Setter Property="CornerRadius" Value="{DynamicResource Radius.SetCard}" />
+            <Setter Property="Padding" Value="0" />
+            <Setter Property="ClipToBounds" Value="False" />
+            <!--  Нижнего поля у карточки НЕТ: зазор до следующего раздела даёт верхний отступ 16 его
+                  заголовка (прототип: padding:16px 4px 8px у заголовка, у карточки полей нет).
+                  Собственное поле 8 добавляло бы к нему второй зазор — 24 вместо 16.  -->
+            <Setter Property="Margin" Value="0" />
+        </Style>
+
+        <!--  Тумблер строки. MinHeight=0 — второй из двух известных источников неравных высот
+              (у Material-тумблера он больше плитки). Здесь трек 46×28 < плитки 40, и снятый MinHeight
+              гарантирует, что тумблер не поднимет строку ни при какой теме.
+              Focusable/IsTabStop=False — таб-стоп и Enter/Space принадлежат самой СТРОКЕ.  -->
+        <Style Selector="ToggleSwitch.RowSwitch">
+            <Setter Property="VerticalAlignment" Value="Center" />
+            <Setter Property="MinHeight" Value="0" />
+            <Setter Property="Margin" Value="8,0,0,0" />
+            <Setter Property="Focusable" Value="False" />
+            <Setter Property="IsTabStop" Value="False" />
+        </Style>
+
+        <!--  Правая половина строк с окошком.  -->
+        <Style Selector="views|ValuePicker">
+            <Setter Property="VerticalAlignment" Value="Center" />
+        </Style>
+    </UserControl.Styles>
+
+    <!--  Прозрачный фон: общий Incy-градиент рисуется под хостом страниц (MainWindow), показываем его.  -->
+    <ScrollViewer
+        Background="Transparent"
+        HorizontalScrollBarVisibility="Disabled"
+        VerticalScrollBarVisibility="Auto">
+
+        <!--  Колонка 760 по центру (прототип: max-width 760, внутренние поля 20). Заголовка сверху нет.
+
+              Выравнивание — Stretch, а НЕ Center: при Center Avalonia отдаёт панели её собственную
+              желаемую ширину, и колонка сжималась по самой длинной строке (карточки выходили ~430
+              вместо 720, а вкладка — узкой лентой посреди экрана). Stretch + MaxWidth даёт ровно
+              то, что нужно: ширина 720, а остаток свободного места делится поровну — то есть та же
+              центровка, но колонка честно занимает свою ширину.
+
+              720, а не 760, потому что в прототипе 760 — это ВНЕШНИЙ габарит колонки ВМЕСТЕ с
+              полями по 20 (`max-width:760;padding:0 20px`), то есть карточки внутри — 720. В
+              Avalonia Margin лежит СНАРУЖИ MaxWidth, поэтому ту же геометрию даёт 720 + поля 20.  -->
+        <StackPanel
+            MaxWidth="720"
+            Margin="20,14,20,20"
+            HorizontalAlignment="Stretch">
+
+            <!--  ==================== ПОДКЛЮЧЕНИЕ ====================  -->
+            <TextBlock Classes="SectionHeader SettingsSection" Text="{loc:T Settings_SecConnection}" />
+
+            <Border x:Name="CardConnection" Classes="SetCard">
+                <StackPanel>
+
+                    <!--  Режим → окошко: TUN · Только прокси  -->
+                    <Border x:Name="RowMode" Classes="SettingRow">
+                        <Grid ColumnDefinitions="Auto,*,Auto">
+                            <Border Grid.Column="0" Classes="SetTile">
+                                <PathIcon Data="{StaticResource Geo.Set.Shield}" />
+                            </Border>
+                            <StackPanel Grid.Column="1" Classes="RowText">
+                                <TextBlock Classes="RowTitle" Text="{loc:T Settings_Mode}" />
+                            </StackPanel>
+                            <views:ValuePicker
+                                x:Name="PickMode"
+                                Grid.Column="2"
+                                Anchor="{Binding #RowMode}"
+                                Options="{Binding ModeOptions}"
+                                SelectedIndex="{Binding ModeIndex, Mode=TwoWay}" />
+                        </Grid>
+                    </Border>
+
+                    <Border Classes="SettingDivider" />
+
+                    <!--  Прокси по приложениям → подэкран, значение приглушено  -->
+                    <Border x:Name="RowPerApp" Classes="SettingRow">
+                        <Grid ColumnDefinitions="Auto,*,Auto,Auto">
+                            <Border Grid.Column="0" Classes="SetTile">
+                                <PathIcon Data="{StaticResource Geo.Set.Grid}" />
+                            </Border>
+                            <StackPanel Grid.Column="1" Classes="RowText">
+                                <TextBlock Classes="RowTitle" Text="{loc:T Settings_PerApp}" />
+                            </StackPanel>
+                            <TextBlock
+                                Grid.Column="2"
+                                Classes="RowNavValue"
+                                Text="{Binding PerAppText}" />
+                            <PathIcon
+                                Grid.Column="3"
+                                Classes="Chevron"
+                                Data="{StaticResource Geo.Set.Chevron}" />
+                        </Grid>
+                    </Border>
+
+                    <Border Classes="SettingDivider" />
+
+                    <!--  Обход локальной сети + тумблер  -->
+                    <Border x:Name="RowBypassLan" Classes="SettingRow">
+                        <Grid ColumnDefinitions="Auto,*,Auto">
+                            <Border Grid.Column="0" Classes="SetTile">
+                                <PathIcon Data="{StaticResource Geo.Set.Lan}" />
+                            </Border>
+                            <StackPanel Grid.Column="1" Classes="RowText">
+                                <TextBlock Classes="RowTitle" Text="{loc:T Settings_BypassLan}" />
+                                <TextBlock Classes="RowSub" Text="{loc:T Settings_BypassLanHint}" />
+                            </StackPanel>
+                            <ToggleSwitch
+                                x:Name="SwitchBypassLan"
+                                Grid.Column="2"
+                                Classes="RowSwitch"
+                                IsChecked="{Binding BypassLan, Mode=TwoWay}"
+                                Theme="{StaticResource ToggleSwitch.Row}" />
+                        </Grid>
+                    </Border>
+
+                    <Border Classes="SettingDivider" />
+
+                    <!--  IPv6 + тумблер  -->
+                    <Border x:Name="RowIpv6" Classes="SettingRow">
+                        <Grid ColumnDefinitions="Auto,*,Auto">
+                            <Border Grid.Column="0" Classes="SetTile">
+                                <PathIcon Data="{StaticResource Geo.Set.Globe}" />
+                            </Border>
+                            <StackPanel Grid.Column="1" Classes="RowText">
+                                <TextBlock Classes="RowTitle" Text="IPv6" />
+                                <TextBlock Classes="RowSub" Text="{loc:T Settings_Ipv6Hint}" />
+                            </StackPanel>
+                            <ToggleSwitch
+                                x:Name="SwitchIpv6"
+                                Grid.Column="2"
+                                Classes="RowSwitch"
+                                IsChecked="{Binding EnableIpv6, Mode=TwoWay}"
+                                Theme="{StaticResource ToggleSwitch.Row}" />
+                        </Grid>
+                    </Border>
+
+                    <Border Classes="SettingDivider" />
+
+                    <!--  DNS → окошко (решение координатора: прототип объявляет строку как pop, ширина 236).
+                          Пресеты — реальные адреса движка (Global.DomainRemoteDNSAddress), см. VM.  -->
+                    <Border x:Name="RowDns" Classes="SettingRow">
+                        <Grid ColumnDefinitions="Auto,*,Auto">
+                            <Border Grid.Column="0" Classes="SetTile">
+                                <PathIcon Data="{StaticResource Geo.Set.Privacy}" />
+                            </Border>
+                            <StackPanel Grid.Column="1" Classes="RowText">
+                                <TextBlock Classes="RowTitle" Text="DNS" />
+                            </StackPanel>
+                            <views:ValuePicker
+                                x:Name="PickDns"
+                                Grid.Column="2"
+                                Anchor="{Binding #RowDns}"
+                                Options="{Binding DnsOptions}"
+                                SelectedIndex="{Binding DnsIndex, Mode=TwoWay}" />
+                        </Grid>
+                    </Border>
+
+                    <Border Classes="SettingDivider" />
+
+                    <!--  Пинг → окошко (решение координатора; ширина 246).  -->
+                    <Border x:Name="RowPingMethod" Classes="SettingRow">
+                        <Grid ColumnDefinitions="Auto,*,Auto">
+                            <Border Grid.Column="0" Classes="SetTile">
+                                <PathIcon Data="{StaticResource Geo.Set.Ping}" />
+                            </Border>
+                            <StackPanel Grid.Column="1" Classes="RowText">
+                                <TextBlock Classes="RowTitle" Text="{loc:T Settings_Ping}" />
+                            </StackPanel>
+                            <views:ValuePicker
+                                x:Name="PickPing"
+                                Grid.Column="2"
+                                Anchor="{Binding #RowPingMethod}"
+                                Options="{Binding PingOptions}"
+                                SelectedIndex="{Binding PingIndex, Mode=TwoWay}" />
+                        </Grid>
+                    </Border>
+
+                    <Border Classes="SettingDivider" />
+
+                    <!--  Локальный прокси → подэкран (screens.md: «Порт и SOCKS5-авторизация»).
+                          Раньше строка раскрывала инлайн-панель — той панели больше нет: подэкран
+                          LocalProxyPage в ветке появился и, в отличие от панели, не даёт менять порт
+                          на живом туннеле. Шеврон обычный, статичный: строка уходит, а не раскрывает.  -->
+                    <Border x:Name="RowLocalProxy" Classes="SettingRow">
+                        <Grid ColumnDefinitions="Auto,*,Auto">
+                            <Border Grid.Column="0" Classes="SetTile">
+                                <PathIcon Data="{StaticResource Geo.Set.Router}" />
+                            </Border>
+                            <StackPanel Grid.Column="1" Classes="RowText">
+                                <TextBlock Classes="RowTitle" Text="{loc:T Settings_LocalProxy}" />
+                                <TextBlock Classes="RowSub" Text="{loc:T Settings_LocalProxyHint}" />
+                            </StackPanel>
+                            <PathIcon
+                                Grid.Column="2"
+                                Classes="Chevron"
+                                Data="{StaticResource Geo.Set.Chevron}" />
+                        </Grid>
+                    </Border>
+
+                </StackPanel>
+            </Border>
+
+            <!--  ==================== ОБХОД БЛОКИРОВОК ====================  -->
+            <TextBlock Classes="SectionHeader SettingsSection" Text="{loc:T Settings_SecBypass}" />
+
+            <Border x:Name="CardBypass" Classes="SetCard">
+                <StackPanel>
+
+                    <!--  Мультиплексирование (Mux) + тумблер  -->
+                    <Border x:Name="RowMux" Classes="SettingRow">
+                        <Grid ColumnDefinitions="Auto,*,Auto">
+                            <Border Grid.Column="0" Classes="SetTile">
+                                <PathIcon Data="{StaticResource Geo.Set.Mux}" />
+                            </Border>
+                            <StackPanel Grid.Column="1" Classes="RowText">
+                                <TextBlock Classes="RowTitle" Text="{loc:T Settings_Mux}" />
+                                <TextBlock Classes="RowSub" Text="{loc:T Settings_MuxHint}" />
+                            </StackPanel>
+                            <ToggleSwitch
+                                x:Name="SwitchMux"
+                                Grid.Column="2"
+                                Classes="RowSwitch"
+                                IsChecked="{Binding MuxEnabled, Mode=TwoWay}"
+                                Theme="{StaticResource ToggleSwitch.Row}" />
+                        </Grid>
+                    </Border>
+
+                    <!--  ЗАВИСИМАЯ СТРОКА: «Число соединений Mux» существует только при включённом Mux.
+                          Разделитель уезжает ВМЕСТЕ с ней (иначе при выключенном Mux остались бы две
+                          линии подряд), поэтому оба лежат в одной группе, которую и раскрывает
+                          code-behind по высоте за 320 мс (motion.md «Зависимая строка»).  -->
+                    <StackPanel x:Name="MuxCountGroup" IsVisible="False">
+                        <Border Classes="SettingDivider" />
+                        <Border x:Name="RowMuxCount" Classes="SettingRow">
+                            <Grid ColumnDefinitions="Auto,*,Auto">
+                                <Border Grid.Column="0" Classes="SetTile">
+                                    <PathIcon Data="{StaticResource Geo.Set.Speed}" />
+                                </Border>
+                                <StackPanel Grid.Column="1" Classes="RowText">
+                                    <TextBlock Classes="RowTitle" Text="{loc:T Settings_MuxCount}" />
+                                </StackPanel>
+                                <views:ValuePicker
+                                    x:Name="PickMuxCount"
+                                    Grid.Column="2"
+                                    Anchor="{Binding #RowMuxCount}"
+                                    Options="{Binding MuxCountOptions}"
+                                    SelectedIndex="{Binding MuxCountIndex, Mode=TwoWay}" />
+                            </Grid>
+                        </Border>
+                    </StackPanel>
+
+                    <Border Classes="SettingDivider" />
+
+                    <!--  Фрагментация пакетов + тумблер  -->
+                    <Border x:Name="RowFragment" Classes="SettingRow">
+                        <Grid ColumnDefinitions="Auto,*,Auto">
+                            <Border Grid.Column="0" Classes="SetTile">
+                                <PathIcon Data="{StaticResource Geo.Set.Fragment}" />
+                            </Border>
+                            <StackPanel Grid.Column="1" Classes="RowText">
+                                <TextBlock Classes="RowTitle" Text="{loc:T Settings_Fragment}" />
+                                <TextBlock Classes="RowSub" Text="{loc:T Settings_FragmentHint}" />
+                            </StackPanel>
+                            <ToggleSwitch
+                                x:Name="SwitchFragment"
+                                Grid.Column="2"
+                                Classes="RowSwitch"
+                                IsChecked="{Binding FragmentEnabled, Mode=TwoWay}"
+                                Theme="{StaticResource ToggleSwitch.Row}" />
+                        </Grid>
+                    </Border>
+
+                </StackPanel>
+            </Border>
+
+            <!--  ==================== ПРОИЗВОДИТЕЛЬНОСТЬ ====================  -->
+            <TextBlock Classes="SectionHeader SettingsSection" Text="{loc:T Settings_SecPerformance}" />
+
+            <Border x:Name="CardPerformance" Classes="SetCard">
+                <StackPanel>
+
+                    <!--  Облегчённый режим гасит ВСЁ движение приложения: прогиб строк, окошко,
+                          раскрытие зависимой строки, кольцо, переходы вкладок (общий MotionState).  -->
+                    <Border x:Name="RowLiteMode" Classes="SettingRow">
+                        <Grid ColumnDefinitions="Auto,*,Auto">
+                            <Border Grid.Column="0" Classes="SetTile">
+                                <PathIcon Data="{StaticResource Geo.Set.Speed}" />
+                            </Border>
+                            <StackPanel Grid.Column="1" Classes="RowText">
+                                <TextBlock Classes="RowTitle" Text="{loc:T Settings_LiteMode}" />
+                                <TextBlock Classes="RowSub" Text="{loc:T Settings_LiteModeHint}" />
+                            </StackPanel>
+                            <ToggleSwitch
+                                x:Name="SwitchLiteMode"
+                                Grid.Column="2"
+                                Classes="RowSwitch"
+                                IsChecked="{Binding LiteMode, Mode=TwoWay}"
+                                Theme="{StaticResource ToggleSwitch.Row}" />
+                        </Grid>
+                    </Border>
+
+                </StackPanel>
+            </Border>
+
+            <!--  ==================== ИНТЕРФЕЙС ====================  -->
+            <TextBlock Classes="SectionHeader SettingsSection" Text="{loc:T Settings_SecInterface}" />
+
+            <Border x:Name="CardInterface" Classes="SetCard">
+                <StackPanel>
+
+                    <!--  Оформление → окошко из ЧЕТЫРЁХ РАВНЫХ пунктов: Тёмная · Светлая · Чёрно-белая ·
+                          Как в системе. Прежде чёрно-белая была отдельным тумблером-надстройкой над
+                          базой — пятым состоянием, которого в списке нет; теперь пункты взаимоисключающие
+                          (см. SettingsViewModel.SetLook).  -->
+                    <Border x:Name="RowAppearance" Classes="SettingRow">
+                        <Grid ColumnDefinitions="Auto,*,Auto">
+                            <Border Grid.Column="0" Classes="SetTile">
+                                <PathIcon Data="{StaticResource Geo.Set.Palette}" />
+                            </Border>
+                            <StackPanel Grid.Column="1" Classes="RowText">
+                                <TextBlock Classes="RowTitle" Text="{loc:T Settings_Appearance}" />
+                            </StackPanel>
+                            <views:ValuePicker
+                                x:Name="PickLook"
+                                Grid.Column="2"
+                                Anchor="{Binding #RowAppearance}"
+                                Options="{Binding LookOptions}"
+                                SelectedIndex="{Binding LookIndex, Mode=TwoWay}" />
+                        </Grid>
+                    </Border>
+
+                    <Border Classes="SettingDivider" />
+
+                    <!--  Язык → окошко: Системный · Русский · English (живое переключение, без перезапуска)  -->
+                    <Border x:Name="RowLanguage" Classes="SettingRow">
+                        <Grid ColumnDefinitions="Auto,*,Auto">
+                            <Border Grid.Column="0" Classes="SetTile">
+                                <PathIcon Data="{StaticResource Geo.Set.Globe}" />
+                            </Border>
+                            <StackPanel Grid.Column="1" Classes="RowText">
+                                <TextBlock Classes="RowTitle" Text="{loc:T Settings_Language}" />
+                            </StackPanel>
+                            <views:ValuePicker
+                                x:Name="PickLanguage"
+                                Grid.Column="2"
+                                Anchor="{Binding #RowLanguage}"
+                                Options="{Binding LanguageOptions}"
+                                SelectedIndex="{Binding LanguageIndex, Mode=TwoWay}" />
+                        </Grid>
+                    </Border>
+
+                    <Border Classes="SettingDivider" />
+
+                    <!--  Масштаб интерфейса → окошко. Те же значения дают Ctrl +/Ctrl −/Ctrl 0 (ToolTip);
+                          набор досчитывается фактическим фактором, если он набран клавишами.  -->
+                    <Border
+                        x:Name="RowUiScale"
+                        Classes="SettingRow">
+                        <Grid ColumnDefinitions="Auto,*,Auto">
+                            <Border Grid.Column="0" Classes="SetTile">
+                                <PathIcon Data="{StaticResource Geo.Set.Scale}" />
+                            </Border>
+                            <StackPanel Grid.Column="1" Classes="RowText">
+                                <TextBlock Classes="RowTitle" Text="{loc:T Settings_UiScale}" />
+                            </StackPanel>
+                            <views:ValuePicker
+                                x:Name="PickUiScale"
+                                Grid.Column="2"
+                                Anchor="{Binding #RowUiScale}"
+                                Options="{Binding UiScaleOptions}"
+                                SelectedIndex="{Binding UiScaleIndex, Mode=TwoWay}" />
+                        </Grid>
+                    </Border>
+
+                    <Border Classes="SettingDivider" />
+
+                    <!--  Запуск с системой + тумблер  -->
+                    <Border x:Name="RowBoot" Classes="SettingRow">
+                        <Grid ColumnDefinitions="Auto,*,Auto">
+                            <Border Grid.Column="0" Classes="SetTile">
+                                <PathIcon Data="{StaticResource Geo.Set.Power}" />
+                            </Border>
+                            <StackPanel Grid.Column="1" Classes="RowText">
+                                <TextBlock Classes="RowTitle" Text="{loc:T Settings_Autostart}" />
+                                <TextBlock Classes="RowSub" Text="{loc:T Settings_AutostartHint}" />
+                            </StackPanel>
+                            <ToggleSwitch
+                                x:Name="SwitchBoot"
+                                Grid.Column="2"
+                                Classes="RowSwitch"
+                                IsChecked="{Binding AutoStart, Mode=TwoWay}"
+                                Theme="{StaticResource ToggleSwitch.Row}" />
+                        </Grid>
+                    </Border>
+
+                    <Border Classes="SettingDivider" />
+
+                    <!--  Скрыть значок в трее + тумблер. Пакет ставит эту строку на «Локальный
+                          прокси»; владелец вернул её сюда, к автозапуску — оба про поведение
+                          приложения в системе, и искать её тут естественнее.  -->
+                    <Border x:Name="RowTrayIcon" Classes="SettingRow">
+                        <Grid ColumnDefinitions="Auto,*,Auto">
+                            <Border Grid.Column="0" Classes="SetTile">
+                                <PathIcon Data="{StaticResource Geo.Set.HideTray}" />
+                            </Border>
+                            <StackPanel Grid.Column="1" Classes="RowText">
+                                <TextBlock Classes="RowTitle" Text="{loc:T Settings_HideTray}" />
+                                <TextBlock Classes="RowSub" Text="{loc:T Settings_HideTrayHint}" />
+                            </StackPanel>
+                            <ToggleSwitch
+                                x:Name="SwitchTrayIcon"
+                                Grid.Column="2"
+                                Classes="RowSwitch"
+                                IsChecked="{Binding HideTrayIcon, Mode=TwoWay}"
+                                Theme="{StaticResource ToggleSwitch.Row}" />
+                        </Grid>
+                    </Border>
+
+                    
+
+                </StackPanel>
+            </Border>
+
+            <!--  ==================== ПОДПИСКА ====================  -->
+            <TextBlock Classes="SectionHeader SettingsSection" Text="{loc:T Settings_SecSubscription}" />
+
+            <Border x:Name="CardSubscription" Classes="SetCard">
+                <StackPanel>
+
+                    <!--  Автообновление подписки → окошко: 1 час · 3 часа · 6 часов · 12 часов · Выключено  -->
+                    <Border x:Name="RowSubAutoUpdate" Classes="SettingRow">
+                        <Grid ColumnDefinitions="Auto,*,Auto">
+                            <Border Grid.Column="0" Classes="SetTile">
+                                <PathIcon Data="{StaticResource Geo.Set.Refresh}" />
+                            </Border>
+                            <StackPanel Grid.Column="1" Classes="RowText">
+                                <TextBlock Classes="RowTitle" Text="{loc:T Settings_SubAutoUpdate}" />
+                            </StackPanel>
+                            <views:ValuePicker
+                                x:Name="PickAutoUpdate"
+                                Grid.Column="2"
+                                Anchor="{Binding #RowSubAutoUpdate}"
+                                Options="{Binding AutoUpdateOptions}"
+                                SelectedIndex="{Binding AutoUpdateIndex, Mode=TwoWay}" />
+                        </Grid>
+                    </Border>
+
+                    <Border Classes="SettingDivider" />
+
+                    <!--  Маршрутизация → подэкран  -->
+                    <Border x:Name="RowRouting" Classes="SettingRow">
+                        <Grid ColumnDefinitions="Auto,*,Auto">
+                            <Border Grid.Column="0" Classes="SetTile">
+                                <PathIcon Data="{StaticResource Geo.Set.Routing}" />
+                            </Border>
+                            <StackPanel Grid.Column="1" Classes="RowText">
+                                <TextBlock Classes="RowTitle" Text="{loc:T Settings_Routing}" />
+                                <TextBlock Classes="RowSub" Text="{loc:T Settings_RoutingHint}" />
+                            </StackPanel>
+                            <PathIcon
+                                Grid.Column="2"
+                                Classes="Chevron"
+                                Data="{StaticResource Geo.Set.Chevron}" />
+                        </Grid>
+                    </Border>
+
+                    <Border Classes="SettingDivider" />
+
+                    <!--  Файлы ресурсов → подэкран  -->
+                    <Border x:Name="RowAssets" Classes="SettingRow">
+                        <Grid ColumnDefinitions="Auto,*,Auto">
+                            <Border Grid.Column="0" Classes="SetTile">
+                                <PathIcon Data="{StaticResource Geo.Set.File}" />
+                            </Border>
+                            <StackPanel Grid.Column="1" Classes="RowText">
+                                <TextBlock Classes="RowTitle" Text="{loc:T Settings_GeoFiles}" />
+                                <TextBlock Classes="RowSub" Text="{loc:T Settings_GeoFilesHint}" />
+                            </StackPanel>
+                            <PathIcon
+                                Grid.Column="2"
+                                Classes="Chevron"
+                                Data="{StaticResource Geo.Set.Chevron}" />
+                        </Grid>
+                    </Border>
+
+                </StackPanel>
+            </Border>
+
+            <!--  ==================== О ПРИЛОЖЕНИИ ====================  -->
+            <TextBlock Classes="SectionHeader SettingsSection" Text="{loc:T Settings_About}" />
+
+            <Border x:Name="CardAbout" Classes="SetCard">
+                <StackPanel>
+
+                    <!--  Журнал → подэкран  -->
+                    <Border x:Name="RowLog" Classes="SettingRow">
+                        <Grid ColumnDefinitions="Auto,*,Auto">
+                            <Border Grid.Column="0" Classes="SetTile">
+                                <PathIcon Data="{StaticResource Geo.Set.Fragment}" />
+                            </Border>
+                            <StackPanel Grid.Column="1" Classes="RowText">
+                                <TextBlock Classes="RowTitle" Text="{loc:T Settings_Log}" />
+                                <TextBlock Classes="RowSub" Text="{loc:T Settings_LogHint}" />
+                            </StackPanel>
+                            <PathIcon
+                                Grid.Column="2"
+                                Classes="Chevron"
+                                Data="{StaticResource Geo.Set.Chevron}" />
+                        </Grid>
+                    </Border>
+
+                    <Border Classes="SettingDivider" />
+
+                    <!--  Резервное копирование → подэкран  -->
+                    <Border x:Name="RowBackup" Classes="SettingRow">
+                        <Grid ColumnDefinitions="Auto,*,Auto">
+                            <Border Grid.Column="0" Classes="SetTile">
+                                <PathIcon Data="{StaticResource Geo.Set.Backup}" />
+                            </Border>
+                            <StackPanel Grid.Column="1" Classes="RowText">
+                                <TextBlock Classes="RowTitle" Text="{loc:T Settings_Backup}" />
+                                <TextBlock Classes="RowSub" Text="{loc:T Settings_BackupHint}" />
+                            </StackPanel>
+                            <PathIcon
+                                Grid.Column="2"
+                                Classes="Chevron"
+                                Data="{StaticResource Geo.Set.Chevron}" />
+                        </Grid>
+                    </Border>
+
+                    <Border Classes="SettingDivider" />
+
+                    <!--  Схемы URL-адресов → подэкран  -->
+                    <Border x:Name="RowUrlScheme" Classes="SettingRow">
+                        <Grid ColumnDefinitions="Auto,*,Auto">
+                            <Border Grid.Column="0" Classes="SetTile">
+                                <PathIcon Data="{StaticResource Geo.Set.UrlScheme}" />
+                            </Border>
+                            <StackPanel Grid.Column="1" Classes="RowText">
+                                <TextBlock Classes="RowTitle" Text="{loc:T Settings_UrlSchemes}" />
+                                <TextBlock Classes="RowSub" Text="{loc:T Settings_UrlSchemesHint}" />
+                            </StackPanel>
+                            <PathIcon
+                                Grid.Column="2"
+                                Classes="Chevron"
+                                Data="{StaticResource Geo.Set.Chevron}" />
+                        </Grid>
+                    </Border>
+
+                    <Border Classes="SettingDivider" />
+
+                    <!--  О приложении → подэкран  -->
+                    <Border x:Name="RowCheckUpdate" Classes="SettingRow">
+                        <Grid ColumnDefinitions="Auto,*,Auto,Auto">
+                            <Border Grid.Column="0" Classes="SetTile">
+                                <PathIcon Data="{StaticResource Geo.Set.Refresh}" />
+                            </Border>
+                            <StackPanel Grid.Column="1" Classes="RowText">
+                                <TextBlock Classes="RowTitle" Text="{loc:T Settings_CheckUpdate}" />
+                            </StackPanel>
+                            <TextBlock
+                                Grid.Column="2"
+                                Classes="RowNavValue"
+                                Text="{Binding VersionText}" />
+                            <PathIcon
+                                Grid.Column="3"
+                                Classes="Chevron"
+                                Data="{StaticResource Geo.Set.Chevron}" />
+                        </Grid>
+                    </Border>
+
+                    <Border Classes="SettingDivider" />
+
+                    <!--  О приложении → подэкран  -->
+                    <Border x:Name="RowAbout" Classes="SettingRow">
+                        <Grid ColumnDefinitions="Auto,*,Auto">
+                            <Border Grid.Column="0" Classes="SetTile">
+                                <PathIcon Data="{StaticResource Geo.Set.About}" />
+                            </Border>
+                            <StackPanel Grid.Column="1" Classes="RowText">
+                                <TextBlock Classes="RowTitle" Text="{loc:T Settings_About}" />
+                            </StackPanel>
+                            <PathIcon
+                                Grid.Column="2"
+                                Classes="Chevron"
+                                Data="{StaticResource Geo.Set.Chevron}" />
+                        </Grid>
+                    </Border>
+
+                </StackPanel>
+            </Border>
+
+        </StackPanel>
+    </ScrollViewer>
+</UserControl>

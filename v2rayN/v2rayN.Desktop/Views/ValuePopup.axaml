@@ -1,0 +1,176 @@
+<UserControl
+    x:Class="v2rayN.Desktop.Views.ValuePopup"
+    xmlns="https://github.com/avaloniaui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:views="clr-namespace:v2rayN.Desktop.Views"
+    ClipToBounds="False"
+    HorizontalAlignment="Left"
+    VerticalAlignment="Top"
+    mc:Ignorable="d">
+
+    <!--  ClipToBounds=False НА САМОМ КОМПОНЕНТЕ — без него окошко не видно вообще, а не
+          «подрезано снизу». UserControl в Avalonia обрезает содержимое по своим границам, а
+          границы у этого компонента 0×0 by design (он не должен двигать раскладку строки) —
+          то есть клип по нулевому прямоугольнику съедает окошко целиком. Проверено на живом
+          окне: TransformedBounds окошка приходили с Clip 0,0,0,0. То же нужно и любому
+          контейнеру-обёртке нулевого размера — см. ValuePicker.  -->
+
+    <!--  ================================================================================
+          «ОКОШКО У ЗНАЧЕНИЯ» — общий компонент выбора, заменяющий модальные диалоги
+          (порядок работ handoff, п. 6). ОДНА реализация на все вызовы: Режим · DNS · Пинг ·
+          Оформление · Язык · Автообновление · Число Mux · Масштаб · меню «+». Ни один экран
+          не заводит своё окошко и свою анимацию.
+
+          ГЕОМЕТРИЯ (tokens.md «Окошко у значения»): привязано к ПРАВОМУ ВЕРХНЕМУ углу
+          строки-якоря, смещение top 48 / right 10, скругление 14, подложка «popBg»,
+          контур 1, тень 0 22 46 rgba(0,0,0,.5). Пункт: высота от 34, скругление 9,
+          галочка 15. Ширина РАЗНАЯ у каждого вызывающего (196…250) — поэтому она параметр
+          (PopupWidth), а не константа; каталог значений — ValuePopup.Widths.
+
+          ДВИЖЕНИЕ (motion.md «Окошко у значения»): раскрытие — СРЕЗ СВЕРХУ ВНИЗ 260 мс плюс
+          прозрачность 180 мс. МАСШТАБ НЕ ИСПОЛЬЗУЕТСЯ — от него текст внутри дёргается.
+          Реализация среза — рост Height внешней оболочки при НЕПОДВИЖНОМ содержимом,
+          прижатом к верху и обрезанном внутренним клипом: буквы ни разу не смещаются и не
+          масштабируются. Кривые и гашение под «Облегчённым режимом» — в code-behind.
+
+          ПОЧЕМУ НЕ НАСТОЯЩИЙ Popup / OverlayLayer: и тот и другой живут ВЫШЕ
+          LayoutTransformControl «uiScaleHost» (MainWindow.axaml), которым задан in-app zoom
+          интерфейса. Их содержимое не попадает под этот трансформ — окошко рисовалось бы в
+          масштабе 100%, пока экран под ним идёт на 125/150%. Вызывающий «Масштаб интерфейса»
+          показывал бы это в упор. Плюс нативный Popup — отдельное окно ОС: покадровый ресайз
+          сорвал бы срез, а тень и углы дрались бы с декорациями платформы. Компонент живёт
+          В ДЕРЕВЕ приложения, поэтому zoom, темы и DynamicResource работают даром.
+          =================================================================================  -->
+
+    <UserControl.Styles>
+
+        <!--  ОБОЛОЧКА: хром окошка (подложка, контур, скругление, тень). ClipToBounds здесь
+              НЕ ставится: он обрезал бы собственную тень Border'а, которая рисуется ЗА
+              границами. Обрезкой содержимого занят внутренний PART_Clip.
+
+              Подложка — Brush.PopBg, отдельный токен «popBg» прототипа. Он НЕ равен
+              Brush.SurfaceHighest: в тёмной и чёрно-белой они совпадают (#20242B / #282A2E), а
+              в СВЕТЛОЙ окошко белое (#FFFFFF), а не серо-голубое (#E3EAF4) — иначе оно слилось бы
+              с плиткой строки. Скругление 14 берём готовым ключом Radius.Search: tokens.md держит
+              «поле поиска и мелкая карточка 14 · окошко 14» одним значением, второй ключ-двойник
+              заводить незачем.  -->
+        <Style Selector="Border.PopShell">
+            <Setter Property="Background" Value="{DynamicResource Brush.PopBg}" />
+            <Setter Property="BorderBrush" Value="{DynamicResource Brush.Outline}" />
+            <Setter Property="BorderThickness" Value="1" />
+            <Setter Property="CornerRadius" Value="{DynamicResource Radius.Search}" />
+            <Setter Property="Padding" Value="6" />
+            <Setter Property="BoxShadow" Value="0 22 46 0 #80000000" />
+        </Style>
+
+        <!--  ВНУТРЕННИЙ КЛИП: обрезает список пунктов по текущей (анимируемой) высоте
+              оболочки — это и есть «срез». Скругление 8 = 14 внешнего минус 6 паддинга,
+              чтобы клип шёл концентрично хрому. Фона и контура не несёт.  -->
+        <Style Selector="Border.PopClip">
+            <Setter Property="ClipToBounds" Value="True" />
+            <Setter Property="CornerRadius" Value="8" />
+        </Style>
+
+        <!--  ПУНКТ. Кнопка (а не Border) сознательно: только у кнопки есть :pressed,
+              фокус с клавиатуры и активация Enter/Space — окошко обязано быть доступным
+              без мыши. Высота от 34, скругление 9, паддинг 10/4 (прототип).  -->
+        <Style Selector="Button.PopOption">
+            <Setter Property="MinHeight" Value="34" />
+            <Setter Property="Padding" Value="10,4" />
+            <Setter Property="Margin" Value="0" />
+            <Setter Property="CornerRadius" Value="{DynamicResource Radius.PopOption}" />
+            <Setter Property="Background" Value="Transparent" />
+            <Setter Property="BorderThickness" Value="0" />
+            <Setter Property="HorizontalAlignment" Value="Stretch" />
+            <Setter Property="HorizontalContentAlignment" Value="Stretch" />
+            <Setter Property="VerticalContentAlignment" Value="Center" />
+            <Setter Property="Foreground" Value="{DynamicResource Brush.OnSurface}" />
+            <Setter Property="Cursor" Value="Arrow" />
+        </Style>
+
+        <!--  Ховер / press ставятся на PART_ContentPresenter, а не на саму кнопку: тема Semi
+              на :pointerover подменяет фон именно презентера своим токеном, и Setter уровня
+              кнопки до него не достаёт (тот же приём, что глобальный фикс ховера CTA).
+
+              PRESS: здесь ТОЛЬКО цвет. Прогиб 0.975 из motion.md принадлежит ЕДИНОЙ лестнице
+              нажатия в GlobalStyles (владелец — другой агент, блок 3); второй лестницы тут не
+              заводим — локальный Setter был бы специфичнее глобального и перебивал бы его.
+              Заявка на «Button.PopOption → scale(0.975)» — в отчёте.  -->
+        <Style Selector="Button.PopOption:pointerover /template/ ContentPresenter#PART_ContentPresenter">
+            <Setter Property="Background" Value="{DynamicResource Brush.Hover}" />
+        </Style>
+        <Style Selector="Button.PopOption:pressed /template/ ContentPresenter#PART_ContentPresenter">
+            <Setter Property="Background" Value="{DynamicResource Brush.PressBg}" />
+        </Style>
+
+        <!--  ВЫБРАННЫЙ ПУНКТ — «surf3» прототипа, то есть Brush.SurfaceHighest. В тёмной и
+              чёрно-белой он РАВЕН подложке окошка (#20242B / #282A2E), и заливки там не видно:
+              носитель состояния — галочка. В светлой окошко белое, а surf3 серо-голубой — там
+              заливка читается. Так на эталонных кадрах (C_pop_mode_dark/light/mono), и так это
+              и задумано: акцентная подсветка выбранного пункта добавила бы в тёмную тему синеву,
+              которой в прототипе нет.  -->
+        <Style Selector="Button.PopOption.selected /template/ ContentPresenter#PART_ContentPresenter">
+            <Setter Property="Background" Value="{DynamicResource Brush.SurfaceHighest}" />
+        </Style>
+
+        <!--  Текст пункта — 12.5/400 из типографики tokens.md («Значение, пункт окошка»).  -->
+        <Style Selector="TextBlock.PopOptionText">
+            <Setter Property="FontSize" Value="12.5" />
+            <Setter Property="VerticalAlignment" Value="Center" />
+            <Setter Property="TextWrapping" Value="NoWrap" />
+            <Setter Property="TextTrimming" Value="CharacterEllipsis" />
+        </Style>
+
+        <!--  Галочка 15, чернила OnSurface (прототип красит её в «fg»).  -->
+        <Style Selector="PathIcon.PopCheck">
+            <Setter Property="Width" Value="15" />
+            <Setter Property="Height" Value="15" />
+            <Setter Property="Margin" Value="6,0,0,0" />
+            <Setter Property="VerticalAlignment" Value="Center" />
+            <Setter Property="Foreground" Value="{DynamicResource Brush.OnSurface}" />
+        </Style>
+
+    </UserControl.Styles>
+
+    <!--  Canvas — ЕДИНСТВЕННАЯ панель Avalonia, которая раскладывает ребёнка его собственным
+          DesiredSize независимо от своего размера. Именно поэтому окошко может лежать ВНЕ
+          габаритов компонента (сам компонент занимает 0×0 и не двигает раскладку строки),
+          а координаты ставятся Canvas.Left/Top из code-behind по якорю.  -->
+    <Canvas x:Name="PART_Host">
+        <Border
+            x:Name="PART_Shell"
+            Classes="PopShell"
+            Height="0"
+            IsVisible="False"
+            Opacity="0">
+            <Border x:Name="PART_Clip" Classes="PopClip">
+                <ItemsControl
+                    x:Name="PART_Items"
+                    Background="Transparent"
+                    Padding="0"
+                    VerticalAlignment="Top">
+                    <ItemsControl.ItemTemplate>
+                        <DataTemplate x:DataType="views:ValuePopupItem">
+                            <Button Classes="PopOption" Classes.selected="{Binding IsSelected}">
+                                <Grid ColumnDefinitions="*,Auto">
+                                    <TextBlock
+                                        Grid.Column="0"
+                                        Classes="PopOptionText"
+                                        Text="{Binding Text}" />
+                                    <PathIcon
+                                        Grid.Column="1"
+                                        Classes="PopCheck"
+                                        Data="{StaticResource Geo.Check}"
+                                        IsVisible="{Binding IsSelected}" />
+                                </Grid>
+                            </Button>
+                        </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                </ItemsControl>
+            </Border>
+        </Border>
+    </Canvas>
+
+</UserControl>

@@ -1,0 +1,123 @@
+<UserControl
+    x:Class="v2rayN.Desktop.Views.StatusBarView"
+    xmlns="https://github.com/avaloniaui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:dd="clr-namespace:v2rayN.Desktop.DesignData"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:resx="clr-namespace:ServiceLib.Resx;assembly=ServiceLib"
+    xmlns:vms="clr-namespace:ServiceLib.ViewModels;assembly=ServiceLib"
+    x:DataType="vms:StatusBarViewModel"
+    Design.DataContext="{x:Static dd:DesignData.StatusBar}"
+    mc:Ignorable="d">
+    <Grid RowDefinitions="Auto,Auto">
+        <DockPanel Grid.Row="0" Margin="{StaticResource Margin8}">
+            <StackPanel
+                Margin="{StaticResource MarginLr8}"
+                VerticalAlignment="Center"
+                DockPanel.Dock="Right">
+                <TextBlock x:Name="txtSpeedProxyDisplay" HorizontalAlignment="Right" />
+                <Border Margin="1" />
+                <TextBlock x:Name="txtSpeedDirectDisplay" HorizontalAlignment="Right" />
+            </StackPanel>
+
+            <StackPanel
+                Margin="{StaticResource MarginLr8}"
+                VerticalAlignment="Center"
+                DockPanel.Dock="Left">
+                <TextBlock x:Name="txtInboundDisplay" />
+                <Border Margin="1" />
+                <TextBlock x:Name="txtInboundLanDisplay" />
+            </StackPanel>
+
+            <StackPanel
+                x:Name="spEnableTun"
+                Margin="{StaticResource MarginLr8}"
+                VerticalAlignment="Center"
+                DockPanel.Dock="Left"
+                Orientation="Horizontal">
+                <TextBlock
+                    Margin="{StaticResource MarginLr8}"
+                    VerticalAlignment="Center"
+                    Text="{x:Static resx:ResUI.TbEnableTunAs}" />
+                <ToggleSwitch
+                    x:Name="togEnableTun"
+                    Margin="{StaticResource Margin4}"
+                    HorizontalAlignment="Center"
+                    Theme="{DynamicResource SimpleToggleSwitch}" />
+            </StackPanel>
+
+            <StackPanel
+                Margin="{StaticResource MarginLr8}"
+                VerticalAlignment="Center"
+                DockPanel.Dock="Left"
+                Orientation="Horizontal">
+                <ComboBox
+                    x:Name="cmbSystemProxy"
+                    Width="160"
+                    Margin="{StaticResource MarginLr8}">
+                    <ComboBoxItem Content="{x:Static resx:ResUI.menuSystemProxyClear}" />
+                    <ComboBoxItem Content="{x:Static resx:ResUI.menuSystemProxySet}" />
+                    <ComboBoxItem Content="{x:Static resx:ResUI.menuSystemProxyNothing}" />
+                    <ComboBoxItem Content="{x:Static resx:ResUI.menuSystemProxyPac}" />
+                </ComboBox>
+
+                <ComboBox
+                    x:Name="cmbRoutings2"
+                    Width="160"
+                    Margin="{StaticResource MarginLr8}"
+                    DisplayMemberBinding="{Binding Remarks}"
+                    ItemsSource="{Binding RoutingItems}" />
+            </StackPanel>
+
+            <StackPanel Margin="{StaticResource MarginLr8}" VerticalAlignment="Center">
+                <TextBlock x:Name="txtRunningServerDisplay" />
+                <Border Margin="1" />
+                <TextBlock x:Name="txtRunningInfoDisplay" />
+            </StackPanel>
+        </DockPanel>
+
+        <!--  ==================== Режим маршрутизации + эскалация прав (A6-UI) ====================
+              Честно показываем АКТИВНЫЙ режим (RoutingModeDisplay): «Весь трафик · TUN» либо «Через
+              системный прокси». Когда TUN запрошен, но нет прав (TunRequestedButUnavailable) — трафик
+              реально идёт мимо туннеля: показываем предупреждение + CTA перезапуска с правами
+              (RequestTunElevationCmd), а не тихо роняем в system-proxy. Единый тёмный банк-стайл Incy:
+              полная рамка (без side-stripe), один акцент (CTA), sentence-case Russian.  -->
+        <Border
+            Grid.Row="1"
+            Margin="8,0,8,8"
+            Padding="14,12"
+            Background="{DynamicResource Brush.SurfaceHighest}"
+            BorderBrush="{DynamicResource Brush.OutlineVariant}"
+            BorderThickness="1"
+            CornerRadius="{DynamicResource Radius.Chip}">
+            <StackPanel Spacing="10">
+                <StackPanel Orientation="Horizontal" Spacing="8">
+                    <TextBlock
+                        VerticalAlignment="Center"
+                        Classes="Caption"
+                        Text="Режим:" />
+                    <TextBlock
+                        VerticalAlignment="Center"
+                        Classes="Body"
+                        FontWeight="Medium"
+                        Text="{Binding RoutingModeDisplay}"
+                        TextWrapping="Wrap" />
+                </StackPanel>
+
+                <StackPanel IsVisible="{Binding TunRequestedButUnavailable}" Spacing="10">
+                    <TextBlock
+                        Classes="Body"
+                        Foreground="{DynamicResource Brush.OnSurfaceVariant}"
+                        Text="Весь трафик недоступен без прав администратора"
+                        TextWrapping="Wrap" />
+                    <Button
+                        HorizontalAlignment="Left"
+                        Classes="OutlinedAccent"
+                        Command="{Binding RequestTunElevationCmd}"
+                        Content="Перезапустить с правами" />
+                </StackPanel>
+            </StackPanel>
+        </Border>
+    </Grid>
+</UserControl>

@@ -1,0 +1,97 @@
+<UserControl
+    x:Class="v2rayN.Desktop.Views.CompactHomeView"
+    xmlns="https://github.com/avaloniaui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:dd="clr-namespace:v2rayN.Desktop.DesignData"
+    xmlns:loc="clr-namespace:v2rayN.Desktop.Common"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:views="clr-namespace:v2rayN.Desktop.Views"
+    xmlns:vms="clr-namespace:v2rayN.Desktop.ViewModels"
+    d:DesignHeight="820"
+    d:DesignWidth="400"
+    x:DataType="vms:HomeViewModel"
+    Design.DataContext="{x:Static dd:DesignData.Home}"
+    mc:Ignorable="d">
+
+    <!--  ================================================================================
+          КОМПАКТНАЯ «ГЛАВНАЯ» (CA-3) — 1:1 с Android activity_main.xml (телефонный Home).
+          ОДИН вертикальный скролл (mirrors NestedScrollView), сверху вниз:
+            1) чип аккаунта (HomeAccountChip, общий с широкой раскладкой) — БЕЗ «+»;
+            2) большой центр-щит (ConnectHeroView — переиспользуем; стата-строка ↑/аптайм/↓ теперь
+               ВНУТРИ него, под щитом — переехала с верха, где косила на старте);
+            3) подпись состояния/сервера — внутри ConnectHeroView под щитом;
+            4) мета-карта(ы) подписки + одноколоночный список серверов — ServerListView
+               (его внутренний скролл инертен внутри страничного скролла → одна область прокрутки).
+          В компакте «+» (добавить подписку) НЕ показываем вовсе — он живёт только в углу широкой
+          connect-панели. Скролл ограничен *-строкой над нижней навигацией (структурно, не padding-ом).
+          DataContext = ОДИН HomeViewModel (тот же, что широкая раскладка).
+          =================================================================================  -->
+
+    <!--  Анти-перекрытие структурно: контент живёт в *-строке НАД нижней навигацией (BottomNavBar —
+          в своей Auto-строке, см. MainWindow.ApplyLayoutMode), поэтому ScrollViewer физически
+          ограничен полосой над баром и НИЧЕГО не прячется под ним. Нижний padding — лишь маленький
+          зазор, чтобы последняя строка не липла к бару (не «костыль 130» под высоту нав-бара).  -->
+    <!--  Нижний padding — лишь маленький зазор для пустого/короткого состояния: клиренс под ~64px нижнюю
+          навигацию несёт сам ServerListView (его ScrollViewer, 72px снизу — последний элемент страницы),
+          поэтому здесь НЕ дублируем большой инсет (иначе хвост списка «висел» бы в воздухе).  -->
+    <ScrollViewer
+        x:Name="PageScroll"
+        HorizontalScrollBarVisibility="Disabled"
+        Padding="0,8,0,8"
+        VerticalScrollBarVisibility="Auto">
+        <StackPanel>
+
+            <!--  (1) Чип аккаунта — общий HomeAccountChip (сам показывается при входе). Углового «+»
+                  в компакте НЕТ (владелец: пустой «+» вверху выглядел плохо) — добавление подписки
+                  живёт в углу ТОЛЬКО широкой connect-панели (hero corner «+»).  -->
+            <views:HomeAccountChip x:Name="AccountChip" Margin="16,8,16,0" />
+
+            <!--  (1b) Честный баннер режима маршрутизации (A6): виден, только когда запрошен TUN
+                  «весь трафик», но нет прав → трафик реально идёт через системный прокси. Скрытый
+                  StatusBarView (0×0) его не показывал — переносим сюда, в поле зрения. Единый Incy-стиль:
+                  полная рамка (без side-stripe), один акцент (CTA), sentence-case Russian.  -->
+            <Border
+                Margin="16,8,16,0"
+                Padding="14,12"
+                Background="{DynamicResource Brush.SurfaceHighest}"
+                BorderBrush="{DynamicResource Brush.OutlineVariant}"
+                BorderThickness="1"
+                CornerRadius="{DynamicResource Radius.Chip}"
+                IsVisible="{Binding StatusBar.TunRequestedButUnavailable}">
+                <StackPanel Spacing="10">
+                    <TextBlock
+                        Classes="Body"
+                        FontWeight="Medium"
+                        Text="{Binding StatusBar.RoutingModeDisplay}"
+                        TextWrapping="Wrap" />
+                    <TextBlock
+                        Classes="Body"
+                        Foreground="{DynamicResource Brush.OnSurfaceVariant}"
+                        Text="{loc:T Home_TunUnavailable}"
+                        TextWrapping="Wrap" />
+                    <Button
+                        HorizontalAlignment="Left"
+                        Classes="OutlinedAccent"
+                        Command="{Binding StatusBar.RequestTunElevationCmd}"
+                        Content="{loc:T Home_RestartElevated}" />
+                </StackPanel>
+            </Border>
+
+            <!--  (3+4) Герой: щит + подпись + идентичность сервера + пустое состояние (переиспользуем
+                  ConnectHeroView, связываем общим HomeHeroPresenter в code-behind). MinHeight держит
+                  вертикальный воздух вокруг щита, как на телефоне.  -->
+            <!--  Кольцо 190 / диск 138 / щит 64 (tokens.md «Кольцо подключения», узкий) ставит
+                  code-behind через SetHeroSize — в разметке диаметров нет.
+                  Высота ЕСТЕСТВЕННАЯ: прежний MinHeight 440 добавлял к кольцу ~90px пустоты, из-за
+                  чего карточка подписки уезжала за нижний край и «один скролл» начинался с пустого
+                  экрана. Вертикальный воздух даёт отступ 16 сверху / 20 снизу — ровно как в
+                  прототипе (heroPad узкого 16px 12px 20px; боковые 12 несут сами строки списка).  -->
+            <views:ConnectHeroView x:Name="ConnectHero" Margin="0,16,0,20" />
+
+            <!--  (5) Мета-карта(ы) подписки + список серверов (ServerListView). Внутренний скролл
+                  инертен внутри страничного (одна область прокрутки; последняя строка достижима).  -->
+            <views:ServerListView x:Name="ServerList" Margin="0,4,0,0" />
+        </StackPanel>
+    </ScrollViewer>
+</UserControl>

@@ -1,0 +1,334 @@
+<UserControl
+    x:Class="v2rayN.Desktop.Views.AccountSyncView"
+    xmlns="https://github.com/avaloniaui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:loc="clr-namespace:v2rayN.Desktop.Common"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:views="clr-namespace:v2rayN.Desktop.Views"
+    xmlns:vms="clr-namespace:v2rayN.Desktop.ViewModels"
+    d:DesignHeight="630"
+    d:DesignWidth="900"
+    x:DataType="vms:AccountViewModel"
+    mc:Ignorable="d">
+
+    <!--  ================================================================================
+          ЭКРАН ПРОГРУЗКИ (screens.md «Экран прогрузки», motion.md «Поток добавления подписки»).
+
+          Полноэкранный ПРОЗРАЧНЫЙ слой: своего фона нет вовсе, видно непрерывный фон окна
+          (windowShell, плоский Brush.Bg — tokens.md «Плоский фон: подэкраны, оверлеи»). Экран под
+          ним НЕ РЕНДЕРИТСЯ: пока оверлей поднят, 3-way гейт MainWindow держит и «Главную», и
+          начальный экран скрытыми — иначе они просвечивали бы сквозь прозрачный слой.
+
+          Кольцо 132 → заголовок 20/700 → пояснение 13 → полоса прогресса 3 (ширина до 320).
+          Четыре шага, два набора текстов (Telegram / из буфера) — тексты и проценты ведёт
+          code-behind. На шагах 0–2 в кольце крутится КОМЕТА (то же кольцо, окрашенное коническим
+          градиентом — views:CometRing, толщина 2 вместо 2.5 у кнопки подключения), на шаге 3 —
+          сонар, галочка и тост. ИМЯ ПОДПИСКИ НЕ ПОКАЗЫВАЕТСЯ НИГДЕ.
+
+          Ошибка синхронизации (SyncFailed) — ветка, которой у прототипа нет, но которая есть у
+          реального движка: колонка меняется НА МЕСТЕ на «Не удалось синхронизировать» + «Повторить»
+          / «Войти заново». Силуэт кольца тот же, просто оно перестаёт жить.
+          =================================================================================  -->
+
+    <UserControl.Resources>
+        <!--  Галочка шага 3 и тоста (Material «check»).  -->
+        <StreamGeometry x:Key="Geo.Flow.Check">M9,16.2L4.8,12l-1.4,1.4L9,19 21,7l-1.4,-1.4L9,16.2z</StreamGeometry>
+        <!--  Telegram — стоит в кольце на шагах 0–2 потока входа: он объясняет, ЧЕГО ждут.  -->
+        <StreamGeometry x:Key="Geo.Flow.Telegram">M912.2,154A85.3,85.3 0,0 0,853.3 128a85.3,85.3 0,0 0,-33.3 6.8l-708.3,306.8a42.7,42.7 0,0 0,-26.5 42.7V512a42.7,42.7 0,0 0,29.4 42.7L298.7,616.1l55.5,187.3a75.9,75.9 0,0 0,56.3 53.3,62.7 62.7,0 0,0 15.4,0 73.8,73.8 0,0 0,50.8 -20.5l67.8,-64 131.4,103.7a85.3,85.3 0,0 0,90 9.4l14.1,-7.3a88.3,88.3 0,0 0,46.5 -62.7L938.7,235.1a90,90 0,0 0,-26.5 -81.1zM763.7,805.1a25.2,25.2 0,0 1,-12.8 17.5l-14.1,7.3a19.6,19.6 0,0 1,-9 2.1,19.6 19.6,0 0,1 -12.4,-4.7l-160.4,-128a20.9,20.9 0,0 0,-27.7 0l-94.7,89.2a11.1,11.1 0,0 1,-6 2.1V640a21.8,21.8 0,0 1,6.8 -15.8c136.1,-128 217.6,-199.7 266.2,-240.6a15.8,15.8 0,0 0,5.1 -11.1,13.7 13.7,0 0,0 -4.3,-11.1 14.9,14.9 0,0 0,-17.9 -4.3l-322.6,203.5a21.3,21.3 0,0 1,-18.3 0L149.3,494.9l694.2,-301.2a16.6,16.6 0,0 1,7.7 0,22.2 22.2,0 0,1 16.2,7.7 26.9,26.9 0,0 1,6.8 23.5z</StreamGeometry>
+        <!--  Алерт-глиф ветки ошибки (Material warning, контурный — не «заливка красным»).  -->
+        <StreamGeometry x:Key="Geo.SyncAlert">M12,5.99L19.53,19H4.47L12,5.99M12,2L1,21h22L12,2zM13,16h-2v2h2v-2zM13,10h-2v4h2v-4z</StreamGeometry>
+    </UserControl.Resources>
+
+    <UserControl.Styles>
+        <!--  Комета: один оборот 1500 мс, СТРОГО ЛИНЕЙНО (motion.md). Класс вешает code-behind
+              только на шагах 0–2 и только пока оверлей виден — за кадром анимация не тикает.
+              Тот же селектор и тот же темп, что у кометы кнопки подключения: если эти два
+              разойдутся, разойдутся и два «одинаковых» кольца.  -->
+        <Style Selector="views|CometRing.Comet.spinning">
+            <Style.Animations>
+                <Animation
+                    Duration="0:0:1.5"
+                    Easing="LinearEasing"
+                    IterationCount="Infinite">
+                    <KeyFrame Cue="0%">
+                        <Setter Property="RotateTransform.Angle" Value="0" />
+                    </KeyFrame>
+                    <KeyFrame Cue="100%">
+                        <Setter Property="RotateTransform.Angle" Value="360" />
+                    </KeyFrame>
+                </Animation>
+            </Style.Animations>
+        </Style>
+    </UserControl.Styles>
+
+    <!--  Background=Transparent, а не отсутствие фона: прозрачная кисть УЧАСТВУЕТ в хит-тесте, и
+          слой честно перехватывает клики (под ним в этот момент ничего интерактивного и нет, но
+          оверлей не должен «протекать»). Своего цвета слой не рисует — фон окна непрерывен.  -->
+    <Panel Background="Transparent">
+
+        <!--  FlowRoot несёт УХОД оверлея (прозрачность + отдаление до 1.06). Отдельный слой, а не
+              сам UserControl: его Opacity/видимостью распоряжается кроссфейд шелла в MainWindow, и
+              две анимации одного свойства подрались бы.  -->
+        <Panel x:Name="FlowRoot" RenderTransformOrigin="50%,50%">
+
+            <Panel Margin="40,0">
+
+                <!--  ==================== Колонка потока ====================  -->
+                <StackPanel
+                    x:Name="FlowColumn"
+                    HorizontalAlignment="Stretch"
+                    VerticalAlignment="Center">
+
+                    <!--  Кольцо 132. Слои: базовое кольцо (всегда) → комета (шаги 0–2) →
+                          сонар + кольцо подтверждения + галочка (шаг 3) → глиф Telegram.  -->
+                    <Panel
+                        Width="132"
+                        Height="132"
+                        HorizontalAlignment="Center">
+
+                        <!--  Базовое кольцо 1.5 — на нём и лежит комета.  -->
+                        <Ellipse
+                            Width="132"
+                            Height="132"
+                            Stroke="{DynamicResource Brush.Ring.Outer}"
+                            StrokeThickness="1.5" />
+
+                        <!--  КОМЕТА. Не дуга поверх кольца, а ТО ЖЕ кольцо, окрашенное по углу
+                              (CometRing разбирает конический градиент на дуги — в Avalonia
+                              конического градиента нет). Толщина 2 (у кнопки подключения 2.5) —
+                              единственное отличие, так и записано в motion.md.
+                              Центр вращения: относительный origin 50%,50% + RotateTransform БЕЗ
+                              собственного Center — центр задаётся ровно один раз, орбита вместо
+                              вращения невозможна по построению.  -->
+                        <views:CometRing
+                            x:Name="Comet"
+                            Width="132"
+                            Height="132"
+                            Classes="Comet"
+                            IsHitTestVisible="False"
+                            IsVisible="False"
+                            RenderTransformOrigin="50%,50%"
+                            StrokeThickness="2">
+                            <views:CometRing.RenderTransform>
+                                <RotateTransform Angle="0" />
+                            </views:CometRing.RenderTransform>
+                        </views:CometRing>
+
+                        <!--  Сонар шага 3: расходится до 1.55× и гаснет за 600 мс, ОДИН раз.  -->
+                        <Ellipse
+                            x:Name="Sonar"
+                            Width="132"
+                            Height="132"
+                            IsHitTestVisible="False"
+                            IsVisible="False"
+                            Opacity="0"
+                            RenderTransformOrigin="50%,50%"
+                            Stroke="{DynamicResource Brush.Accent}"
+                            StrokeThickness="2" />
+
+                        <!--  Кольцо подтверждения: остаётся стоять после сонара.  -->
+                        <Ellipse
+                            x:Name="DoneRing"
+                            Width="132"
+                            Height="132"
+                            IsHitTestVisible="False"
+                            IsVisible="False"
+                            Stroke="{DynamicResource Brush.Accent}"
+                            StrokeThickness="2" />
+
+                        <!--  Глиф Telegram (шаги 0–2 потока входа) — в фирменном цвете Telegram.  -->
+                        <PathIcon
+                            x:Name="TelegramGlyph"
+                            Width="44"
+                            Height="44"
+                            HorizontalAlignment="Center"
+                            VerticalAlignment="Center"
+                            Data="{StaticResource Geo.Flow.Telegram}"
+                            Foreground="{DynamicResource Brush.Telegram}"
+                            IsVisible="False" />
+
+                        <!--  Галочка шага 3.  -->
+                        <PathIcon
+                            x:Name="CheckGlyph"
+                            Width="46"
+                            Height="46"
+                            HorizontalAlignment="Center"
+                            VerticalAlignment="Center"
+                            Data="{StaticResource Geo.Flow.Check}"
+                            Foreground="{DynamicResource Brush.Accent}"
+                            IsVisible="False"
+                            Opacity="0"
+                            RenderTransformOrigin="50%,50%" />
+                    </Panel>
+
+                    <!--  Заголовок шага 20/700.
+                          LineHeight НЕ задаём числом. Строка гротеска по метрикам гарнитуры = 1.276em,
+                          то есть 25.5 при кегле 20; прежние «25» подпирали её снизу, и у «Добавляем
+                          подписку» срезало глифы. Текст здесь всегда русский, а кириллицы в Space
+                          Grotesk нет — строку рисует запасной Roboto с ДРУГИМИ вертикальными
+                          метриками, поэтому любое подобранное на глаз число снова разошлось бы с
+                          гарнитурой. Натуральная высота строки верна для обеих.  -->
+                    <TextBlock
+                        x:Name="FlowTitle"
+                        Margin="0,26,0,0"
+                        HorizontalAlignment="Stretch"
+                        FontFamily="{DynamicResource Font.Grotesk}"
+                        FontSize="20"
+                        FontWeight="Bold"
+                        Foreground="{DynamicResource Brush.OnSurface}"
+                        TextAlignment="Center"
+                        TextWrapping="Wrap" />
+
+                    <!--  Пояснение шага 13.  -->
+                    <TextBlock
+                        x:Name="FlowNote"
+                        Margin="0,8,0,0"
+                        HorizontalAlignment="Stretch"
+                        FontSize="13"
+                        Foreground="{DynamicResource Brush.OnSurfaceVariant}"
+                        LineHeight="19"
+                        TextAlignment="Center"
+                        TextWrapping="Wrap" />
+
+                    <!--  Полоса прогресса 3, ширина до 320. Заливка едет по ширине 900 мс
+                          ease-out-quart; ширину под текущий процент считает code-behind от живой
+                          ширины дорожки (проценты в раскладке Avalonia не выражаются).  -->
+                    <Border
+                        x:Name="ProgressTrack"
+                        Height="3"
+                        MaxWidth="320"
+                        Margin="0,22,0,0"
+                        HorizontalAlignment="Stretch"
+                        Background="{DynamicResource Brush.SurfaceHighest}"
+                        ClipToBounds="True"
+                        CornerRadius="2">
+                        <Border
+                            x:Name="ProgressFill"
+                            Width="0"
+                            Height="3"
+                            HorizontalAlignment="Left"
+                            Background="{DynamicResource Brush.Accent}"
+                            CornerRadius="2">
+                            <Border.Transitions>
+                                <Transitions>
+                                    <DoubleTransition
+                                        Property="Width"
+                                        Duration="0:0:0.9"
+                                        Easing="{StaticResource Ease.OutQuart}" />
+                                </Transitions>
+                            </Border.Transitions>
+                        </Border>
+                    </Border>
+                </StackPanel>
+
+                <!--  ==================== Колонка ошибки (НА МЕСТЕ, кроссфейд) ====================
+                      Реальный движок умеет не дойти; прототип этого не знает. Кольцо то же, но
+                      мёртвое: ни кометы, ни сонара — «кольцо успокоилось».  -->
+                <StackPanel
+                    x:Name="ErrorColumn"
+                    HorizontalAlignment="Stretch"
+                    IsVisible="False"
+                    Opacity="0"
+                    VerticalAlignment="Center">
+                    <Panel
+                        Width="132"
+                        Height="132"
+                        HorizontalAlignment="Center">
+                        <Ellipse
+                            Width="132"
+                            Height="132"
+                            Stroke="{DynamicResource Brush.Ring.Outer}"
+                            StrokeThickness="1.5" />
+                        <PathIcon
+                            Width="44"
+                            Height="44"
+                            HorizontalAlignment="Center"
+                            VerticalAlignment="Center"
+                            Data="{StaticResource Geo.SyncAlert}"
+                            Foreground="{DynamicResource Brush.Red}" />
+                    </Panel>
+
+                    <!--  Тот же заголовочный уровень, что у колонки потока, — и так же без
+                          числовой высоты строки: она срезала бы глифы (см. выше).  -->
+                    <!--  Тексты и подписи кнопок ставит code-behind: колонка одна, а объяснений два —
+                          оборвалась синхронизация аккаунта или не дошёл вход через Telegram.  -->
+                    <TextBlock
+                        x:Name="ErrorTitle"
+                        Margin="0,26,0,0"
+                        HorizontalAlignment="Stretch"
+                        FontFamily="{DynamicResource Font.Grotesk}"
+                        FontSize="20"
+                        FontWeight="Bold"
+                        Foreground="{DynamicResource Brush.OnSurface}"
+                        Text="{loc:T Account_SyncErrorTitle}"
+                        TextAlignment="Center"
+                        TextWrapping="Wrap" />
+                    <TextBlock
+                        x:Name="ErrorHint"
+                        Margin="0,8,0,0"
+                        HorizontalAlignment="Stretch"
+                        FontSize="13"
+                        Foreground="{DynamicResource Brush.OnSurfaceVariant}"
+                        Text="{loc:T Account_SyncErrorHint}"
+                        TextAlignment="Center"
+                        TextWrapping="Wrap" />
+
+                    <StackPanel
+                        MaxWidth="320"
+                        Margin="0,24,0,0"
+                        HorizontalAlignment="Center"
+                        Spacing="12">
+                        <Button
+                            x:Name="RetryButton"
+                            HorizontalAlignment="Stretch"
+                            Classes="Primary"
+                            Content="{loc:T Account_SyncRetry}" />
+                        <Button
+                            x:Name="ReLoginButton"
+                            HorizontalAlignment="Stretch"
+                            Classes="Tonal"
+                            Content="{loc:T Account_SyncReLogin}" />
+                    </StackPanel>
+                </StackPanel>
+            </Panel>
+
+            <!--  ==================== Тост шага 3 ====================
+                  Обжат по тексту, высота 36, отступы 18, скругление 100, подложка Toast.Bg
+                  (tokens.md «Тост»). Живёт отдельным слоем у нижнего края — колонка при его
+                  появлении не двигается.  -->
+            <Border
+                x:Name="FlowToast"
+                Height="36"
+                Margin="0,0,0,34"
+                Padding="18,0"
+                HorizontalAlignment="Center"
+                VerticalAlignment="Bottom"
+                Background="{DynamicResource Brush.Toast.Bg}"
+                BorderBrush="{DynamicResource Brush.OutlineVariant}"
+                BorderThickness="1"
+                CornerRadius="{DynamicResource Radius.Pill36}"
+                IsHitTestVisible="False"
+                IsVisible="False"
+                Opacity="0">
+                <StackPanel
+                    Orientation="Horizontal"
+                    Spacing="8"
+                    VerticalAlignment="Center">
+                    <PathIcon
+                        Width="15"
+                        Height="15"
+                        VerticalAlignment="Center"
+                        Data="{StaticResource Geo.Flow.Check}"
+                        Foreground="{DynamicResource Brush.Accent}" />
+                    <TextBlock
+                        x:Name="FlowToastText"
+                        VerticalAlignment="Center"
+                        FontSize="12.5"
+                        FontWeight="Medium"
+                        Foreground="{DynamicResource Brush.OnSurface}" />
+                </StackPanel>
+            </Border>
+        </Panel>
+    </Panel>
+</UserControl>

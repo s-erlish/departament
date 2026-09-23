@@ -1,0 +1,634 @@
+<ResourceDictionary
+    xmlns="https://github.com/avaloniaui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:conv="clr-namespace:v2rayN.Desktop.Converters">
+    <!--  departament VPN — server-remark → circular flag image (Assets/Flags/<iso>.png, globe fallback xx.png)  -->
+    <conv:RemarkToFlagConverter x:Key="RemarkToFlag" />
+    <!--  ProfileItemModel → Incy row strings: EConfigType → protocol chip, item → transport line.  -->
+    <conv:ConfigTypeToProtocolConverter x:Key="ConfigTypeToProtocol" />
+    <conv:ProfileTransportConverter x:Key="ProfileTransport" />
+
+    <StreamGeometry x:Key="building_copy">M704 896v80c0 26.51-21.49 48-48 48H112c-26.51 0-48-21.49-48-48V240c0-26.51 21.49-48 48-48h144v592c0 61.758 50.242 112 112 112h336z m0-688V0H368c-26.51 0-48 21.49-48 48v736c0 26.51 21.49 48 48 48h544c26.51 0 48-21.49 48-48V256H752c-26.4 0-48-21.6-48-48z m241.942-62.058L814.058 14.058A48 48 0 0 0 780.118 0H768v192h192v-12.118a48 48 0 0 0-14.058-33.94z</StreamGeometry>
+    <StreamGeometry x:Key="building_ping">M273.28 899.328c-6.4 6.4-16 9.6-25.6 9.6-6.4 0-12.8-3.2-18.56-6.4-102.4-85.76-162.56-209.92-162.56-343.68 0-245.12 200.32-445.44 445.44-445.44s445.44 200.32 445.44 445.44c0 133.76-56.96 257.92-162.56 343.68-12.16 12.8-34.56 9.6-44.16-3.2-12.8-12.8-9.6-35.2 3.2-44.8a377.152 377.152 0 0 0 136.96-292.48c0-209.92-172.16-382.08-382.08-382.08-206.72-3.2-378.88 168.96-378.88 378.88 0 114.56 51.2 222.72 140.16 295.68 12.8 12.8 16 32 3.2 44.8z m394.88-540.8c12.8-12.8 31.36-12.8 44.16 0 12.8 12.8 12.8 32 0 44.8l-138.88 138.88c1.28 5.12 2.56 10.88 2.56 16.64 0 35.2-28.8 64-64 64-5.76 0-11.52-1.28-16.64-2.56l-24.32 24.32c-6.4 6.4-12.8 9.6-22.4 9.6-9.6 0-16-3.2-22.4-9.6-12.8-12.8-12.8-31.36 0-44.16l24.32-24.96a69.76 69.76 0 0 1-1.92-16.64c0-35.2 28.16-63.36 63.36-63.36 5.76 0 11.52 0.64 16.64 1.92z</StreamGeometry>
+
+    <x:Double x:Key="IconButtonWidth">32</x:Double>
+    <x:Double x:Key="IconButtonHeight">32</x:Double>
+
+    <Thickness x:Key="MarginLr4">4,0</Thickness>
+    <Thickness x:Key="Margin4">4</Thickness>
+    <Thickness x:Key="MarginLr8">8,0</Thickness>
+    <Thickness x:Key="MarginTb8">0,8</Thickness>
+    <Thickness x:Key="Margin8">8</Thickness>
+
+    <!-- ==================================================================== -->
+    <!--  departament VPN — Incy design tokens (три темы: Тёмная / Светлая /     -->
+    <!--  Чёрная-AMOLED). Тёмная и Светлая = ThemeVariant Dark/Light (ниже);      -->
+    <!--  Чёрная — ОТДЕЛЬНЫЙ оверлей поверх любой базы (см. App.axaml.cs).        -->
+    <!--  Значения 1:1 из Android res/values(-night) + §3.3 (light column).       -->
+    <!-- ==================================================================== -->
+
+    <!--  АКЦЕНТ — ОДИН НА ВСЕ ТЕМЫ: #1F6FF5 (handoff README, tokens.md). Был #4C8DFF.
+          Сверено по прототипу: #1F6FF5 там есть, #4C8DFF как СПЛОШНОЙ цвет — нет.
+
+          НО КОЛЬЦА И ЗАЛИВКА ВЫБРАННОГО СВЕТЛЕЕ АКЦЕНТА, И ЭТО НАМЕРЕННО. Прототип держит их на
+          rgba(76,141,255,…) — прежнем, более светлом синем — при сплошном акценте #1F6FF5. Это не
+          забытое значение: плёнка из #1F6FF5 на тёмном уходит в грязный синий, а из #4C8DFF
+          читается как свет. Ring.* / SelectedFill / ConnectGlow поэтому НЕ следуют за акцентом.
+
+          Brush.OnAccent переехал в темы: #001433 тёмная / #FFFFFF светлая / #0A0A0B чёрно-белая.  -->
+    <Color x:Key="Color.Accent">#1F6FF5</Color>
+    <SolidColorBrush x:Key="Brush.Accent" Color="{StaticResource Color.Accent}" />
+    <!--  Бегунок включённого тумблера. Белый на тёмной и светлой — там он лежит на синем треке.
+          Объявлен НА КОРНЕВОМ уровне, а не в тематических словарях: чёрно-белый набор кладётся
+          отдельным словарём поверх приложения и тематическим словарям проигрывает — из-за этого
+          в чёрно-белой бегунок оставался белым на белом треке и сливался. С корневым объявлением
+          набор его перекрывает (там он чёрный, #0A0A0B).  -->
+    <SolidColorBrush x:Key="Brush.KnobOn" Color="#FFFFFF" />
+
+    <!--  Плитки иконок: полупрозрачный акцент (общий для light/dark, как Android icon_tile_*).  -->
+    <SolidColorBrush x:Key="Brush.Tile.Blue" Color="#1F6FF5" Opacity="0.20" />
+    <SolidColorBrush x:Key="Brush.Tile.Green" Color="#22C55E" Opacity="0.20" />
+
+    <!--  Акцент темы Semi = наш синий (если Semi берёт по DynamicResource).  -->
+    <SolidColorBrush x:Key="SemiColorPrimary" Color="{StaticResource Color.Accent}" />
+    <SolidColorBrush x:Key="SemiColorPrimaryHover" Color="#4A87F7" />
+    <SolidColorBrush x:Key="SemiColorPrimaryActive" Color="#1657C4" />
+
+    <!-- ==================================================================== -->
+    <!--  ТЕМА-ЗАВИСИМЫЕ ТОКЕНЫ. Каждый Brush.* резолвится по активному          -->
+    <!--  ThemeVariant. Dark = Incy 1:1 (res/values-night); Light = §3.3          -->
+    <!--  (res/values). Оба набора несут ОДИНАКОВЫЙ список ключей. Чёрная-AMOLED  -->
+    <!--  накладывается отдельным оверлеем в коде (App.axaml.cs, ApplyTheme).     -->
+    <!-- ==================================================================== -->
+    <ResourceDictionary.ThemeDictionaries>
+
+        <!--  ТЁМНАЯ (Incy, res/values-night)  -->
+        <ResourceDictionary x:Key="Dark">
+            <SolidColorBrush x:Key="Brush.Bg" Color="#0E1119" />
+            <SolidColorBrush x:Key="Brush.OnAccent" Color="#001433" />
+            <!--  Акцент ДЛЯ ТЕКСТА. Заливки, контуры и глифы берут Brush.Accent, но акцентная
+                  НАДПИСЬ обязана читаться, а тонкие штрихи букв держат контраст хуже плашки:
+                  тёмная карточка #141619: сам акцент #1F6FF5 даёт 4.01 — ниже нормы 4.5, #4C8DFF даёт 5.66.  -->
+            <SolidColorBrush x:Key="Brush.AccentText" Color="#4C8DFF" />
+            <!--  Контур КНОПКИ отличается от контура карточки (tokens.md «Контур кнопки»).  -->
+            <SolidColorBrush x:Key="Brush.ButtonOutline" Color="#3A4150" />
+            <!--  Диск под щитом темнее карточки — кольца лежат на нём.  -->
+            <SolidColorBrush x:Key="Brush.ConnectDisc" Color="#141822" />
+            <SolidColorBrush x:Key="Brush.ShieldOff" Color="#3A4A66" />
+            <SolidColorBrush x:Key="Brush.PressBg" Color="#1E2126" />
+            <SolidColorBrush x:Key="Brush.Yellow" Color="#EAB308" />
+            <SolidColorBrush x:Key="Brush.Telegram" Color="#2AABEE" />
+            <SolidColorBrush x:Key="Brush.PopBg" Color="#20242B" />
+            <SolidColorBrush x:Key="Brush.Surface" Color="#141619" />
+            <SolidColorBrush x:Key="Brush.SurfaceHigh" Color="#1A1D21" />
+            <SolidColorBrush x:Key="Brush.SurfaceVariant" Color="#1E2126" />
+            <SolidColorBrush x:Key="Brush.SurfaceHighest" Color="#20242B" />
+            <SolidColorBrush x:Key="Brush.OnSurface" Color="#F2F4F8" />
+            <SolidColorBrush x:Key="Brush.OnSurfaceVariant" Color="#9BA1AD" />
+            <!--  Затемнённый глиф под ховером иконочной НАВИГАЦИИ: один шаг темнее
+                  OnSurfaceVariant. Мирит с прежним поведением (ховер = затемнение), но
+                  теперь темнеет САМ глиф, а не фон-плитка. Тон ≈ #9BA1AD под чёрным-0.32
+                  скримом (что и красил область глифа раньше). Серый → mono-безопасен.  -->
+            <SolidColorBrush x:Key="Brush.OnSurfaceVariantHover" Color="#6E7480" />
+            <SolidColorBrush x:Key="Brush.Outline" Color="#2A2E36" />
+            <SolidColorBrush x:Key="Brush.OutlineVariant" Color="#20242B" />
+            <SolidColorBrush x:Key="Brush.AccentContainer" Color="#142C52" />
+            <SolidColorBrush x:Key="Brush.OnAccentContainer" Color="#C7DBFF" />
+            <SolidColorBrush x:Key="Brush.Green" Color="#22C55E" />
+            <!--  Зелёный ДЛЯ ТЕКСТА (значение пинга). Отдельно от Brush.Green, которым красятся
+                  плашки и индикаторы: #22C55E на строке даёт 7.95, но у цифр 12.5 Medium штрихи тонкие и цвет читается тускло; #4ADE80 даёт 10.4 и выглядит живым.  -->
+            <SolidColorBrush x:Key="Brush.GreenText" Color="#4ADE80" />
+            <SolidColorBrush x:Key="Brush.Red" Color="#F04452" />
+            <!--  Красный ТЕКСТ на тёмных поверхностях (ошибки входа/синхронизации). Ярче заливки
+                  Brush.Red ради контраста ≥4.5:1: #FF6069 = 6.7:1 на Bg #0A0B0D, ~5.9:1 на Surface
+                  #141619. Brush.Red остаётся для заливок/рамок/глифов, RedText — только для текста.  -->
+            <SolidColorBrush x:Key="Brush.RedText" Color="#FF6069" />
+            <SolidColorBrush x:Key="Brush.Tile.Neutral" Color="#20242B" />
+            <SolidColorBrush x:Key="Brush.Hover" Color="#000000" Opacity="0.32" />
+            <SolidColorBrush x:Key="Brush.Toast.Bg" Color="#20242B" />
+            <RadialGradientBrush x:Key="Brush.HomeGradient"
+                                 Center="50%,30%"
+                                 GradientOrigin="50%,30%"
+                                 RadiusX="75%"
+                                 RadiusY="75%">
+                <GradientStop Offset="0" Color="#151C2B" />
+                <GradientStop Offset="0.55" Color="#0E1119" />
+                <GradientStop Offset="1" Color="#0A0B0D" />
+            </RadialGradientBrush>
+        </ResourceDictionary>
+
+        <!--  СВЕТЛАЯ (§3.3, res/values). Реальные светлые поверхности + тёмные чернила.  -->
+        <ResourceDictionary x:Key="Light">
+            <SolidColorBrush x:Key="Brush.Bg" Color="#F4F7FC" />
+            <SolidColorBrush x:Key="Brush.OnAccent" Color="#FFFFFF" />
+            <!--  Акцент ДЛЯ ТЕКСТА. Заливки, контуры и глифы берут Brush.Accent, но акцентная
+                  НАДПИСЬ обязана читаться, а тонкие штрихи букв держат контраст хуже плашки:
+                  светлая карточка #FFFFFF: акцент даёт 4.52 — впритык, #1A5FD6 даёт 5.75.  -->
+            <SolidColorBrush x:Key="Brush.AccentText" Color="#1A5FD6" />
+            <SolidColorBrush x:Key="Brush.ButtonOutline" Color="#C3CCDC" />
+            <SolidColorBrush x:Key="Brush.ConnectDisc" Color="#FFFFFF" />
+            <SolidColorBrush x:Key="Brush.ShieldOff" Color="#AEB8C8" />
+            <SolidColorBrush x:Key="Brush.PressBg" Color="#E9EEF7" />
+            <SolidColorBrush x:Key="Brush.Yellow" Color="#9A6B00" />
+            <SolidColorBrush x:Key="Brush.Telegram" Color="#2AABEE" />
+            <!--  Светлая: прототип даёт #FFFFFF, не #E3EAF4 из tokens.md. См. заметку в тёмной.  -->
+            <SolidColorBrush x:Key="Brush.PopBg" Color="#FFFFFF" />
+            <SolidColorBrush x:Key="Brush.Surface" Color="#FFFFFF" />
+            <SolidColorBrush x:Key="Brush.SurfaceHigh" Color="#F7F9FD" />
+            <SolidColorBrush x:Key="Brush.SurfaceVariant" Color="#EEF2F9" />
+            <SolidColorBrush x:Key="Brush.SurfaceHighest" Color="#E3EAF4" />
+            <SolidColorBrush x:Key="Brush.OnSurface" Color="#111826" />
+            <SolidColorBrush x:Key="Brush.OnSurfaceVariant" Color="#54607A" />
+            <!--  Ховер иконочной НАВИГАЦИИ на светлой: глиф темнеет на шаг к чернилам
+                  (виден как усиление на светлом фоне), без фон-плитки.  -->
+            <SolidColorBrush x:Key="Brush.OnSurfaceVariantHover" Color="#3C475E" />
+            <SolidColorBrush x:Key="Brush.Outline" Color="#C3CCDC" />
+            <SolidColorBrush x:Key="Brush.OutlineVariant" Color="#DCE3EF" />
+            <SolidColorBrush x:Key="Brush.AccentContainer" Color="#D8E4FF" />
+            <SolidColorBrush x:Key="Brush.OnAccentContainer" Color="#123C82" />
+            <SolidColorBrush x:Key="Brush.Green" Color="#0B7D4A" />
+            <!--  Зелёный ДЛЯ ТЕКСТА (значение пинга). Отдельно от Brush.Green, которым красятся
+                  плашки и индикаторы: на белой карточке тёмно-зелёный и так контрастен — 5.9.  -->
+            <SolidColorBrush x:Key="Brush.GreenText" Color="#0B7D4A" />
+            <SolidColorBrush x:Key="Brush.Red" Color="#C42B32" />
+            <!--  Красный ТЕКСТ на светлых поверхностях. #C42B32 = 5.2:1 на Bg #F4F7FC, 5.6:1 на
+                  Surface #FFFFFF (оба ≥4.5:1) — совпадает с Brush.Red (на светлой он уже тёмный,
+                  отдельный текстовый оттенок не нужен). Ключ существует во ВСЕХ темах ради единого API.  -->
+            <SolidColorBrush x:Key="Brush.RedText" Color="#C42B32" />
+            <SolidColorBrush x:Key="Brush.Tile.Neutral" Color="#E3EAF4" />
+            <SolidColorBrush x:Key="Brush.Hover" Color="#000000" Opacity="0.06" />
+            <SolidColorBrush x:Key="Brush.Toast.Bg" Color="#E3EAF4" />
+            <RadialGradientBrush x:Key="Brush.HomeGradient"
+                                 Center="50%,30%"
+                                 GradientOrigin="50%,30%"
+                                 RadiusX="75%"
+                                 RadiusY="75%">
+                <GradientStop Offset="0" Color="#EEF3FC" />
+                <GradientStop Offset="0.55" Color="#F4F7FC" />
+                <GradientStop Offset="1" Color="#F7F9FD" />
+            </RadialGradientBrush>
+        </ResourceDictionary>
+
+    </ResourceDictionary.ThemeDictionaries>
+
+    <!--  Радиусы  -->
+    <CornerRadius x:Key="Radius.Chip">12</CornerRadius>
+    <CornerRadius x:Key="Radius.Tile">12</CornerRadius>
+    <CornerRadius x:Key="Radius.Card">20</CornerRadius>
+    <CornerRadius x:Key="Radius.Sheet">24,24,0,0</CornerRadius>
+    <!--  ПИЛЮЛЯ В AVALONIA — НЕ CSS. В прототипе стоит border-radius:100px, и браузер
+          подрезает его до идеальной пилюли на любой высоте. Avalonia подрезает радиус по
+          КАЖДОЙ ОСИ ОТДЕЛЬНО: на кнопке 250×50 значение 100 даёт rx=100 / ry=25, то есть
+          эллипс, а не пилюлю. Проверено на живом окне под Xvfb — со 100 кнопки старта
+          вздувались по бокам, с половиной высоты стали пилюлями.
+          Отсюда правило: РАДИУС ПИЛЮЛИ = ПОЛОВИНА ЕЁ ВЫСОТЫ, и на каждую высоту свой токен.
+          Квадратных кнопок (40×40) это не касается — там обе оси равны, и 100 подрезалось
+          до 20 само собой.  -->
+    <CornerRadius x:Key="Radius.Pill50">25</CornerRadius>
+    <CornerRadius x:Key="Radius.Pill44">22</CornerRadius>
+    <CornerRadius x:Key="Radius.Pill40">20</CornerRadius>
+    <CornerRadius x:Key="Radius.Pill36">18</CornerRadius>
+    <CornerRadius x:Key="Radius.Pill32">16</CornerRadius>
+    <CornerRadius x:Key="Radius.Pill30">15</CornerRadius>
+    <!--  Тонкие пилюли: цифра — по МЕНЬШЕЙ стороне. Ползунок полосы прокрутки 6 в покое
+          (8 под курсором), ручка шторки 4 высотой.  -->
+    <CornerRadius x:Key="Radius.Pill6">3</CornerRadius>
+    <CornerRadius x:Key="Radius.Pill4">2</CornerRadius>
+    <!--  Radius.Pill остаётся для круглых 40×40 и как значение по умолчанию для высоты 40.
+          Для любой другой высоты берите токен со своей цифрой, иначе получите эллипс.  -->
+    <CornerRadius x:Key="Radius.Pill">20</CornerRadius>
+
+    <!--  Размерные токены  -->
+    <x:Double x:Key="Size.Tile">40</x:Double>
+    <x:Double x:Key="Size.Glyph">22</x:Double>
+    <x:Double x:Key="Size.Row">56</x:Double>
+
+    <!--  ДВЕ гарнитуры, как требует tokens.md: «Заголовки — гротеск, текст — Roboto».
+          Раньше MainWindow ставил гротеск на КОРЕНЬ окна, и его наследовал весь текст —
+          заголовки и подписи были одной гарнитурой. Теперь корень несёт Font.Body, а гротеск
+          стоит явно на заголовках (SubTitle, SubGroupLabel и ~18 мест в GlobalStyles).  -->
+    <!--  Текст: Roboto (переменный, все веса 100–900 в одном файле)  -->
+    <FontFamily x:Key="Font.Body">avares://departament/Assets/Fonts/Roboto-Var.ttf#Roboto</FontFamily>
+
+    <!--  Шрифт: Space Grotesk (переменный)  -->
+    <FontFamily x:Key="Font.Grotesk">avares://departament/Assets/Fonts/SpaceGrotesk.ttf#Space Grotesk</FontFamily>
+
+    <!--  Шрифт для ЦИФР (баланс · скорость · пинг · цены · трафик · часы аптайма).
+          Отдельного числового .ttf в проекте НЕТ, а сеть недоступна — поэтому берём ТУ ЖЕ
+          гарнитуру Space Grotesk (никаких двух похожих сансов), но как ОТДЕЛЬНЫЙ семантический
+          токен, а огранку фигур даёт сам Space Grotesk своими OpenType-наборами. Потребители
+          ставят FontFamily="{DynamicResource Font.Numeric}" ВМЕСТЕ с
+          FontFeatures="tnum,lnum,zero":
+            · tnum — табличные (моноширинные) цифры: значения не «прыгают» при живом обновлении
+                     (трафик/скорость/пинг/часы), колонки чисел стоят ровно;
+            · lnum — прописные (lining) цифры на одной высоте — ровная строка;
+            · zero — перечёркнутый ноль (0≠O) — техничный, «крафтовый» вид, а не «сухой».
+          Вес держим Medium там, где число несёт акцент. Один источник — раскатывать этим
+          токеном по всем числовым поверхностям приложения.  -->
+    <FontFamily x:Key="Font.Numeric">avares://departament/Assets/Fonts/SpaceGrotesk.ttf#Space Grotesk</FontFamily>
+
+    <!-- ==================================================================== -->
+    <!--  МОУШЕН-ТОКЕНЫ (§1.1–1.2 DESIGN_PLAN — порт res/values/motion.xml +     -->
+    <!--  res/interpolator/*). Единый темп на всё приложение, ТОЛЬКО ease-out,    -->
+    <!--  выход быстрее входа, без bounce/elastic.                                -->
+    <!-- ==================================================================== -->
+
+    <!--  Кривые = SplineEasing 1:1 с Android. НЕ использовать встроенные          -->
+    <!--  QuarticEaseOut/QuinticEaseOut — у них другие контрольные точки.          -->
+    <!--  ease_out_quart (0.25,1,0.5,1): press-feedback, малые оседания.  -->
+    <SplineEasing x:Key="Ease.OutQuart" X1="0.25" Y1="1" X2="0.5" Y2="1" />
+    <!--  ease_out_quint (0.22,1,0.36,1): уверенные reveal/settle, glow, сонар, отпускание диска.  -->
+    <SplineEasing x:Key="Ease.OutQuint" X1="0.22" Y1="1" X2="0.36" Y2="1" />
+    <!--  ease_standard (0.2,0,0,1): argb-tint/crossfade, двусторонние смены состояния, реверс.  -->
+    <SplineEasing x:Key="Ease.Standard" X1="0.2" Y1="0" X2="0" Y2="1" />
+    <!--  ease_out_expo (0.16,1,0.3,1): САМЫЙ решительный ease-out — ЗАРЕЗЕРВИРОВАН под ОДИН момент
+          hand-off auth→home (Dur.Slow 0:0:0.45), чтобы он читался тяжелее рядового таб-свопа.  -->
+    <SplineEasing x:Key="Ease.OutExpo" X1="0.16" Y1="1" X2="0.3" Y2="1" />
+    <!--  Отклик на нажатие. Жили в GlobalStyles рядом с первым потребителем — но это
+          ШКАЛА, а не приём одного стиля: по ней ходят все нажимаемые поверхности.
+          Место шкалы — в каталоге кривых, рядом с остальными четырьмя.  -->
+    <!--  вход нажатия (палец давит) — 70мс  -->
+    <SplineEasing x:Key="Ease.PressIn" X1="0.4" Y1="0" X2="0.6" Y2="1" />
+    <!--  возврат нажатия. Y1=1.25 даёт перелёт 2% от хода на t≈0.70 — «лёгкий»
+          отскок без пружинного звона — 200мс  -->
+    <SplineEasing x:Key="Ease.PressBack" X1="0.34" Y1="1.25" X2="0.64" Y2="1" />
+
+    <!--  Длительности (motion.xml) задаются ЛИТЕРАЛАМИ в Duration="…": XAML-       -->
+    <!--  компилятор Avalonia НЕ поддерживает интринсик x:TimeSpan. Каталог токенов:-->
+    <!--    Dur.Instant  0:0:0      — lite/reduced-motion фолбэк: мгновенный снап            -->
+    <!--    Dur.PressIn  0:0:0.09  — палец-вниз (press_in 90мс)                      -->
+    <!--    Dur.PressOut 0:0:0.16  — отпускание/возврат (press_out 160мс)           -->
+    <!--    Dur.State    0:0:0.22  — смена состояния / tint-crossfade (state 220мс)  -->
+    <!--    Dur.Nav      0:0:0.28  — переезд полоски навигации (nav 280мс)          -->
+    <!--    Dur.Reveal   0:0:0.30  — раскрытие / glow (reveal 300мс)                 -->
+    <!--    Dur.Exit     0:0:0.15  — выход экрана/суб-страницы, короче входа (150мс)  -->
+    <!--    Dur.Shell    0:0:0.20  — кроссфейд 3-путёвого оверлея оболочки (200мс)    -->
+    <!--    Dur.Slow     0:0:0.45  — ОДИН hand-off auth→home, Ease.OutExpo (450мс)    -->
+    <!--    Dur.Stagger  0:0:0.04  — стаггер списка (40мс)                           -->
+    <!--    Dur.Pop      0:0:0.26  — раскрытие окошка у значения, СРЕЗ сверху вниз (260мс)   -->
+    <!--    Dur.PopFade  0:0:0.18  — его же прозрачность (180мс)                          -->
+    <!--    Dur.Emphasis 0:0:0.60  — ОДИН hero-момент: connect-сонар (emphasis 600мс)-->
+    <!--  Реверс отключения = 75% темпа: revState 0:0:0.165 · revReveal 0:0:0.225.  -->
+    <!--  C#-ЗЕРКАЛО этой шкалы (кривые + длительности как TimeSpan) — Common/Motion.cs      -->
+    <!--  (Motion.Dur.* / Motion.Ease.*). Держать синхронно с этой таблицей и Ease.* выше.   -->
+
+    <!-- ==================================================================== -->
+    <!--  НЕДОСТАЮЩИЕ токены мастер-плана §2.4 (добавлено фазой 0 / агент A)     -->
+    <!-- ==================================================================== -->
+
+    <!--  Brush.OnAccentContainer (текст на контейнере акцента: чип протокола, тариф-бейдж,
+          аватар) теперь тема-зависимый — определён в ThemeDictionaries выше.  -->
+
+    <!--  Цветные плитки иконок (настройки/аккаунт): фон 20% + сплошной глиф.
+          blue/green/purple/red/yellow/neutral. purple≡blue, глиф blue/green/purple/red/neutral
+          уже покрыты Accent/Green/Red/OnSurfaceVariant.  -->
+    <SolidColorBrush x:Key="Brush.Tile.Orange" Color="#FB923C" Opacity="0.20" />
+    <SolidColorBrush x:Key="Brush.Tile.Purple" Color="#1F6FF5" Opacity="0.20" />
+    <SolidColorBrush x:Key="Brush.Tile.Red" Color="#F04452" Opacity="0.20" />
+    <SolidColorBrush x:Key="Brush.Tile.Yellow" Color="#EAB308" Opacity="0.20" />
+    <SolidColorBrush x:Key="Brush.Icon.Orange" Color="#FB923C" />
+    <SolidColorBrush x:Key="Brush.Icon.Yellow" Color="#EAB308" />
+
+    <!-- ==================================================================== -->
+    <!--  departament VPN — токены для ПРОДВИНУТЫХ (promoted) компонентов        -->
+    <!--  GlobalStyles: статус-чипы, поля ввода, шит/скрим, тост, опция цены,    -->
+    <!--  деструктив. Значения = Incy 1:1 из локальных копий экранов (Payment    -->
+    <!--  History / Buy / Login / Devices). Промоушен по REVIEW_BACKLOG P1 18.   -->
+    <!-- ==================================================================== -->
+
+    <!--  Заливка выбранного (bg selected: server row / тариф / опция цены):
+          синий акцент @ 12% (#1F = 31/255). Единый токен вместо литерала         -->
+    <SolidColorBrush x:Key="Brush.SelectedFill" Color="#4C8DFF" Opacity="0.12" />
+
+    <!--  ЕДИНЫЙ ХОВЕР (rows / icon-buttons / nav): лёгкое ЗАТЕМНЕНИЕ полупрозрачным
+          чёрным (владелец: «лучше бы оно просто чуть темнело»). Тема-зависимый:
+          тёмная 32%, светлая 6% (чтобы не пережигать светлые поверхности) —
+          определён в ThemeDictionaries выше. Чёрная-оверлей заменяет на белый лифт. -->
+
+    <!--  Деструктив: базовый Red (#F04452) + затемнённый hover/pressed.          -->
+    <Color x:Key="Color.RedPressed">#D93844</Color>
+    <SolidColorBrush x:Key="Brush.RedPressed" Color="{StaticResource Color.RedPressed}" />
+
+    <!--  Статус чипы истории платежей (PaymentsAdapter): текст = полный цвет,
+          фон = тот же цвет @ 18% (0x2E). Один источник на всё приложение.        -->
+    <SolidColorBrush x:Key="Brush.StatusChip.Green" Color="#22C55E" Opacity="0.18" />
+    <SolidColorBrush x:Key="Brush.StatusChip.Orange" Color="#FB923C" Opacity="0.18" />
+    <SolidColorBrush x:Key="Brush.StatusChip.Red" Color="#F04452" Opacity="0.18" />
+    <SolidColorBrush x:Key="Brush.StatusChip.Yellow" Color="#EAB308" Opacity="0.18" />
+
+    <!--  Скрим модалок/шитов (~60% чёрный), общий для всех тем.                   -->
+    <SolidColorBrush x:Key="Brush.Scrim" Color="#000000" Opacity="0.6" />
+
+    <!--  Brush.Toast.Bg (фон тоста = SurfaceHighest) и Brush.HomeGradient
+          (радиальный фон Главной, bg_home_gradient) — тема-зависимые, определены
+          в ThemeDictionaries выше (тёмная #1B2D50→#0A0B0D, светлая #FFFFFF→#DFE6F1;
+          Чёрная-оверлей = почти чёрный радиал).  -->
+
+    <!--  Halo connect-щита (bg_connect_glow, night): #594C8DFF → #264C8DFF → #004C8DFF.  -->
+    <RadialGradientBrush x:Key="Brush.ConnectGlow"
+                         Center="50%,50%"
+                         GradientOrigin="50%,50%"
+                         RadiusX="50%"
+                         RadiusY="50%">
+        <GradientStop Offset="0" Color="#594C8DFF" />
+        <GradientStop Offset="0.5" Color="#264C8DFF" />
+        <GradientStop Offset="1" Color="#004C8DFF" />
+    </RadialGradientBrush>
+
+    <!--  Кольца connect-щита (bg_connect_ring, night): внешнее 1.5px #334C8DFF, внутреннее 2px #804C8DFF.  -->
+    <SolidColorBrush x:Key="Brush.Ring.Outer" Color="#334C8DFF" />
+    <SolidColorBrush x:Key="Brush.Ring.Inner" Color="#804C8DFF" />
+
+    <!--  Дополнительные радиусы  -->
+    <!--  Пункт «окошка у значения». 9, а не Radius.Chip 12: концентрично внутри окошка 14
+          при 6 отступа (14 − 6 ≈ 9), tokens.md «Скругления».  -->
+    <CornerRadius x:Key="Radius.PopOption">9</CornerRadius>
+    <CornerRadius x:Key="Radius.Search">14</CornerRadius>
+
+    <!--  Дополнительный размерный токен: диск connect-героя  -->
+    <x:Double x:Key="Size.ConnectDisc">176</x:Double>
+
+    <!--  Размерные токены §5.3 (promoted компоненты). Все сеточные, без дрейфа.
+          Radius опции/поля = Radius.Search (14); верх шита = Radius.Sheet
+          (24,24,0,0) — отдельные токены не заводим, переиспользуем.              -->
+    <x:Double x:Key="Size.IconButton">40</x:Double>
+    <x:Double x:Key="Size.SubToolbar">56</x:Double>
+    <x:Double x:Key="Size.EmptyIcon">64</x:Double>
+    <x:Double x:Key="Size.EmptyGlyph">32</x:Double>
+    <x:Double x:Key="Size.SheetHandleW">36</x:Double>
+    <x:Double x:Key="Size.SheetHandleH">4</x:Double>
+    <x:Double x:Key="Size.SkeletonCard">76</x:Double>
+
+    <!--  Векторные глифы нав-рейла (порт Android bottom-nav ic_nav_*, Material 24dp, filled)  -->
+    <!--  КАРЕТКА, А НЕ ШЕВРОН, И РАЗНИЦА СМЫСЛОВАЯ: шеврон обещает переход на подэкран,
+          каретка — что значение меняется на месте. Строка с «окошком у значения» носит каретку.  -->
+    <StreamGeometry x:Key="Geo.Caret">M7,10l5,5 5,-5z</StreamGeometry>
+    <StreamGeometry x:Key="Geo.Nav.Home">M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z</StreamGeometry>
+    <StreamGeometry x:Key="Geo.Nav.Settings">M19.14 12.94c.04-.3.06-.61.06-.94 0-.32-.02-.64-.07-.94l2.03-1.58c.18-.14.23-.41.12-.61l-1.92-3.32c-.12-.22-.37-.29-.59-.22l-2.39.96c-.5-.38-1.03-.7-1.62-.94l-.36-2.54c-.04-.24-.24-.41-.48-.41h-3.84c-.24 0-.43.17-.47.41l-.36 2.54c-.59.24-1.13.57-1.62.94l-2.39-.96c-.22-.08-.47 0-.59.22L2.74 8.87c-.12.21-.08.47.12.61l2.03 1.58c-.05.3-.09.63-.09.94s.02.64.07.94l-2.03 1.58c-.18.14-.23.41-.12.61l1.92 3.32c.12.22.37.29.59.22l2.39-.96c.5.38 1.03.7 1.62.94l.36 2.54c.05.24.24.41.48.41h3.84c.24 0 .44-.17.47-.41l.36-2.54c.59-.24 1.13-.56 1.62-.94l2.39.96c.22.08.47 0 .59-.22l1.92-3.32c.12-.22.07-.47-.12-.61l-2.01-1.58zM12 15.6c-1.98 0-3.6-1.62-3.6-3.6s1.62-3.6 3.6-3.6 3.6 1.62 3.6 3.6-1.62 3.6-3.6 3.6z</StreamGeometry>
+    <StreamGeometry x:Key="Geo.Nav.Account">M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z</StreamGeometry>
+    <!--  Общие глифы тулбара/строк (Material 24dp): стрелка «назад» + шеврон вправо.
+          Промоушен дублей из Buy/Login/PaymentHistory. Для back-кнопок и строк значений.  -->
+    <StreamGeometry x:Key="Geo.ChevronRight">M8.6,4.6L7.2,6l6,6l-6,6l1.4,1.4L16,12z</StreamGeometry>
+    <!--  Галочка (Material 24dp «check»): success-момент входа (дуга ожидания достраивается в
+          галочку перед передачей в синхронизацию) + общий индикатор «готово».  -->
+    <StreamGeometry x:Key="Geo.Check">M9 16.17 4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z</StreamGeometry>
+
+    <!-- ====================================================================== -->
+    <!--  iOS-стиль ToggleSwitch (мастер-план §2.4/5.2): трек-пилюля 52×32,        -->
+    <!--  off=SurfaceHighest, on=Accent, белый кнопок, плавный сдвиг 220мс.        -->
+    <!-- ====================================================================== -->
+    <ControlTheme x:Key="ToggleSwitch.iOS" TargetType="ToggleSwitch">
+        <Setter Property="Cursor" Value="Arrow" />
+        <Setter Property="HorizontalAlignment" Value="Left" />
+        <Setter Property="Template">
+            <ControlTemplate>
+                <!--  Геометрия из tokens.md «Тумблер»: трек 46×28, радиус 14, обводка 2.
+                      Было 52×32/16 без обводки — крупнее эталона и без кромки, из-за чего в
+                      светлой теме выключенный тумблер сливался с карточкой.  -->
+                <Border x:Name="track"
+                        Width="46"
+                        Height="28"
+                        Background="{DynamicResource Brush.SurfaceVariant}"
+                        BorderBrush="{DynamicResource Brush.Outline}"
+                        BorderThickness="2"
+                        CornerRadius="14">
+                    <!--  Трек-цвет off↔on = двусторонний кроссфейд Ease.Standard 220мс (был линейный).  -->
+                    <Border.Transitions>
+                        <Transitions>
+                            <BrushTransition Property="Background" Duration="0:0:0.22" Easing="{StaticResource Ease.Standard}" />
+                        </Transitions>
+                    </Border.Transitions>
+                    <!--  PART_MovingKnobs / PART_SwitchKnob — обязательные части ToggleSwitch (AVLN2205).  -->
+                    <!--  Отступ 5 = ход выключенного бегунка (tokens.md).  -->
+                    <Panel x:Name="PART_MovingKnobs" Margin="5,0,0,0">
+                        <Panel x:Name="PART_SwitchKnob"
+                               Width="20"
+                               Height="20"
+                               HorizontalAlignment="Left"
+                               VerticalAlignment="Center">
+                            <!--  Ход кнопки = Ease.OutQuint 220мс (уверенное оседание, без пружины; чуть
+                                  ведёт цвет трека). Трансформ движения (translateX) живёт на этой панели.  -->
+                            <Panel.Transitions>
+                                <Transitions>
+                                    <TransformOperationsTransition Property="RenderTransform" Duration="0:0:0.22" Easing="{StaticResource Ease.OutQuint}" />
+                                </Transitions>
+                            </Panel.Transitions>
+                            <!--  Squash при нажатии масштабирует ТОЛЬКО заливку (knobFill), а не панель с
+                                  translateX — так сжатие не конфликтует с ходом кнопки. Волосяная 0.5px
+                                  обводка даёт кромку на светлом off-треке. Origin = центр (squash из центра).  -->
+                            <!--  Выключенный бегунок 14 и приглушённого цвета; включённый — 20 и
+                                      белый (в чёрно-белой чёрный). Размер меняет :checked ниже.  -->
+                            <Ellipse x:Name="knobFill"
+                                     Width="14"
+                                     Height="14"
+                                     Fill="{DynamicResource Brush.OnSurfaceVariant}"
+                                     RenderTransformOrigin="50%,50%"
+                                     Stroke="#22000000"
+                                     StrokeThickness="0.5">
+                                <Ellipse.Transitions>
+                                    <Transitions>
+                                        <TransformOperationsTransition Property="RenderTransform" Duration="0:0:0.09" Easing="{StaticResource Ease.OutQuart}" />
+                                    </Transitions>
+                                </Ellipse.Transitions>
+                            </Ellipse>
+                        </Panel>
+                    </Panel>
+                </Border>
+            </ControlTemplate>
+        </Setter>
+        <Style Selector="^:checked /template/ Border#track">
+            <Setter Property="Background" Value="{DynamicResource Brush.Accent}" />
+            <Setter Property="BorderBrush" Value="{DynamicResource Brush.Accent}" />
+        </Style>
+        <Style Selector="^:checked /template/ Ellipse#knobFill">
+            <Setter Property="Width" Value="20" />
+            <Setter Property="Height" Value="20" />
+            <Setter Property="Fill" Value="{DynamicResource Brush.KnobOn}" />
+        </Style>
+        <Style Selector="^:checked /template/ Panel#PART_SwitchKnob">
+            <Setter Property="RenderTransform" Value="translateX(17px)" />
+        </Style>
+        <!--  Press-squash кнопки (масштаб заливки 0.9 из центра) — тактильный отклик. Работает и в
+              off, и в on (translateX держит панель-родитель, здесь масштабируется только эллипс).  -->
+        <Style Selector="^:pressed /template/ Ellipse#knobFill">
+            <Setter Property="RenderTransform" Value="scale(0.9)" />
+        </Style>
+        <!--  Disabled: 0.38 (архетип; выключенных тумблеров в настройках сейчас нет). Ввод контрол
+              и так гасит по disabled, поэтому только визуальная прозрачность.  -->
+        <Style Selector="^:disabled">
+            <Setter Property="Opacity" Value="0.38" />
+        </Style>
+    </ControlTheme>
+
+    <!-- ====================================================================== -->
+    <!--  Поле ввода Incy (promoted из LoginView, §2.6/5.4). Замена               -->
+    <!--  Widget.Material3.TextInputLayout.OutlinedBox: фон SurfaceVariant,       -->
+    <!--  1px OutlineVariant, радиус 14 (Radius.Search), фокус = рамка Accent,    -->
+    <!--  плейсхолдер OnSurfaceVariant (контраст 6.2:1). Полная ControlTheme,     -->
+    <!--  чтобы тема Semi не перекрашивала pointerover/focus. Применять:          -->
+    <!--  Theme="{StaticResource TextBox.Incy}". InnerRightContent = слот для     -->
+    <!--  password toggle (глаз) / кнопки копирования.                            -->
+    <!-- ====================================================================== -->
+    <ControlTheme x:Key="TextBox.Incy" TargetType="TextBox">
+        <Setter Property="Background" Value="{DynamicResource Brush.SurfaceVariant}" />
+        <Setter Property="BorderBrush" Value="{DynamicResource Brush.OutlineVariant}" />
+        <Setter Property="BorderThickness" Value="1" />
+        <Setter Property="CornerRadius" Value="{DynamicResource Radius.Search}" />
+        <Setter Property="MinHeight" Value="52" />
+        <Setter Property="Padding" Value="16,0" />
+        <Setter Property="FontSize" Value="15" />
+        <Setter Property="Foreground" Value="{DynamicResource Brush.OnSurface}" />
+        <Setter Property="CaretBrush" Value="{DynamicResource Brush.Accent}" />
+        <Setter Property="SelectionBrush" Value="#334C8DFF" />
+        <Setter Property="SelectionForegroundBrush" Value="{DynamicResource Brush.OnSurface}" />
+        <Setter Property="VerticalContentAlignment" Value="Center" />
+        <Setter Property="Cursor" Value="IBeam" />
+        <Setter Property="Template">
+            <ControlTemplate>
+                <Border
+                    x:Name="PART_BorderElement"
+                    Background="{TemplateBinding Background}"
+                    BorderBrush="{TemplateBinding BorderBrush}"
+                    BorderThickness="{TemplateBinding BorderThickness}"
+                    CornerRadius="{TemplateBinding CornerRadius}">
+                    <Border.Transitions>
+                        <Transitions>
+                            <BrushTransition Property="BorderBrush" Duration="0:0:0.15" />
+                        </Transitions>
+                    </Border.Transitions>
+                    <Grid ColumnDefinitions="*,Auto" Margin="{TemplateBinding Padding}">
+                        <Panel Grid.Column="0" VerticalAlignment="{TemplateBinding VerticalContentAlignment}">
+                            <TextBlock
+                                x:Name="PART_Watermark"
+                                VerticalAlignment="Center"
+                                Foreground="{DynamicResource Brush.OnSurfaceVariant}"
+                                IsVisible="{TemplateBinding Text, Converter={x:Static StringConverters.IsNullOrEmpty}}"
+                                Text="{TemplateBinding Watermark}"
+                                TextAlignment="{TemplateBinding TextAlignment}"
+                                TextWrapping="NoWrap" />
+                            <ScrollViewer
+                                x:Name="PART_ScrollViewer"
+                                HorizontalScrollBarVisibility="Hidden"
+                                VerticalScrollBarVisibility="Disabled">
+                                <TextPresenter
+                                    x:Name="PART_TextPresenter"
+                                    VerticalAlignment="Center"
+                                    CaretBrush="{TemplateBinding CaretBrush}"
+                                    CaretIndex="{TemplateBinding CaretIndex}"
+                                    LineHeight="{TemplateBinding LineHeight}"
+                                    PasswordChar="{TemplateBinding PasswordChar}"
+                                    RevealPassword="{TemplateBinding RevealPassword}"
+                                    SelectionBrush="{TemplateBinding SelectionBrush}"
+                                    SelectionEnd="{TemplateBinding SelectionEnd}"
+                                    SelectionForegroundBrush="{TemplateBinding SelectionForegroundBrush}"
+                                    SelectionStart="{TemplateBinding SelectionStart}"
+                                    Text="{TemplateBinding Text, Mode=TwoWay}"
+                                    TextAlignment="{TemplateBinding TextAlignment}"
+                                    TextWrapping="{TemplateBinding TextWrapping}" />
+                            </ScrollViewer>
+                        </Panel>
+                        <ContentPresenter
+                            Grid.Column="1"
+                            VerticalAlignment="Center"
+                            Content="{TemplateBinding InnerRightContent}" />
+                    </Grid>
+                </Border>
+            </ControlTemplate>
+        </Setter>
+        <Style Selector="^:pointerover /template/ Border#PART_BorderElement">
+            <Setter Property="BorderBrush" Value="{DynamicResource Brush.Outline}" />
+        </Style>
+        <Style Selector="^:focus /template/ Border#PART_BorderElement">
+            <Setter Property="BorderBrush" Value="{DynamicResource Brush.Accent}" />
+        </Style>
+        <Style Selector="^:disabled">
+            <Setter Property="Opacity" Value="0.38" />
+        </Style>
+    </ControlTheme>
+
+    <!-- ====================================================================== -->
+    <!--  Компактное поле ввода Incy (promoted из SettingsView TextBox.IncyField). -->
+    <!--  Осознанный вариант ПЛОТНОСТИ рядом с TextBox.Incy (52h): recessed        -->
+    <!--  SurfaceHigh, высота 44, паддинг 12,0. Радиус СВЕДЁН 12→14 (Radius.Search) -->
+    <!--  к единой шкале полей ввода (SearchPill / PriceOption / TextBox.Incy = 14) -->
+    <!--  — конец дрейфа radius 12 vs 14 (REVIEW_VISUAL L9). Добавлен :disabled     -->
+    <!--  (opacity 0.38) как у TextBox.Incy — раньше у поля его не было. Полная      -->
+    <!--  ControlTheme, чтобы Semi не перекрашивал фон/фокус. Применять:            -->
+    <!--  Theme="{StaticResource TextBox.IncyField}".                              -->
+    <!-- ====================================================================== -->
+    <ControlTheme x:Key="TextBox.IncyField" TargetType="TextBox">
+        <Setter Property="Background" Value="{DynamicResource Brush.SurfaceHigh}" />
+        <Setter Property="BorderBrush" Value="{DynamicResource Brush.OutlineVariant}" />
+        <Setter Property="BorderThickness" Value="1" />
+        <Setter Property="CornerRadius" Value="{DynamicResource Radius.Search}" />
+        <Setter Property="MinHeight" Value="44" />
+        <Setter Property="Padding" Value="12,0" />
+        <Setter Property="FontSize" Value="15" />
+        <Setter Property="Foreground" Value="{DynamicResource Brush.OnSurface}" />
+        <Setter Property="CaretBrush" Value="{DynamicResource Brush.Accent}" />
+        <Setter Property="SelectionBrush" Value="#334C8DFF" />
+        <Setter Property="SelectionForegroundBrush" Value="{DynamicResource Brush.OnSurface}" />
+        <Setter Property="VerticalContentAlignment" Value="Center" />
+        <Setter Property="Cursor" Value="IBeam" />
+        <Setter Property="Template">
+            <ControlTemplate>
+                <Border
+                    x:Name="PART_BorderElement"
+                    Background="{TemplateBinding Background}"
+                    BorderBrush="{TemplateBinding BorderBrush}"
+                    BorderThickness="{TemplateBinding BorderThickness}"
+                    CornerRadius="{TemplateBinding CornerRadius}">
+                    <Border.Transitions>
+                        <Transitions>
+                            <BrushTransition Property="BorderBrush" Duration="0:0:0.15" />
+                        </Transitions>
+                    </Border.Transitions>
+                    <Grid Margin="{TemplateBinding Padding}" ColumnDefinitions="*,Auto">
+                        <Panel Grid.Column="0" VerticalAlignment="{TemplateBinding VerticalContentAlignment}">
+                            <TextBlock
+                                x:Name="PART_Watermark"
+                                VerticalAlignment="Center"
+                                Foreground="{DynamicResource Brush.OnSurfaceVariant}"
+                                IsVisible="{TemplateBinding Text, Converter={x:Static StringConverters.IsNullOrEmpty}}"
+                                Text="{TemplateBinding Watermark}"
+                                TextAlignment="{TemplateBinding TextAlignment}"
+                                TextWrapping="NoWrap" />
+                            <ScrollViewer
+                                x:Name="PART_ScrollViewer"
+                                HorizontalScrollBarVisibility="Hidden"
+                                VerticalScrollBarVisibility="Disabled">
+                                <TextPresenter
+                                    x:Name="PART_TextPresenter"
+                                    VerticalAlignment="Center"
+                                    CaretBrush="{TemplateBinding CaretBrush}"
+                                    CaretIndex="{TemplateBinding CaretIndex}"
+                                    PasswordChar="{TemplateBinding PasswordChar}"
+                                    RevealPassword="{TemplateBinding RevealPassword}"
+                                    SelectionBrush="{TemplateBinding SelectionBrush}"
+                                    SelectionEnd="{TemplateBinding SelectionEnd}"
+                                    SelectionForegroundBrush="{TemplateBinding SelectionForegroundBrush}"
+                                    SelectionStart="{TemplateBinding SelectionStart}"
+                                    Text="{TemplateBinding Text, Mode=TwoWay}"
+                                    TextAlignment="{TemplateBinding TextAlignment}"
+                                    TextWrapping="{TemplateBinding TextWrapping}" />
+                            </ScrollViewer>
+                        </Panel>
+                        <ContentPresenter
+                            Grid.Column="1"
+                            VerticalAlignment="Center"
+                            Content="{TemplateBinding InnerRightContent}" />
+                    </Grid>
+                </Border>
+            </ControlTemplate>
+        </Setter>
+        <Style Selector="^:pointerover /template/ Border#PART_BorderElement">
+            <Setter Property="BorderBrush" Value="{DynamicResource Brush.Outline}" />
+        </Style>
+        <Style Selector="^:focus /template/ Border#PART_BorderElement">
+            <Setter Property="BorderBrush" Value="{DynamicResource Brush.Accent}" />
+        </Style>
+        <Style Selector="^:disabled">
+            <Setter Property="Opacity" Value="0.38" />
+        </Style>
+    </ControlTheme>
+</ResourceDictionary>

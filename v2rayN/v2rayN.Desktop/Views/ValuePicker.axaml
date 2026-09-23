@@ -1,0 +1,105 @@
+<UserControl
+    x:Class="v2rayN.Desktop.Views.ValuePicker"
+    xmlns="https://github.com/avaloniaui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:views="clr-namespace:v2rayN.Desktop.Views"
+    ClipToBounds="False"
+    mc:Ignorable="d">
+
+    <!--  ================================================================================
+          ПРАВАЯ ЧАСТЬ СТРОКИ С ОКОШКОМ: значение + каретка + само окошко (ValuePopup).
+          Отдельный компонент, потому что motion.md вешает на СТРОКУ два поведения, которые
+          иначе каждый экран написал бы по-своему:
+            · каретка поворачивается на 180° за 300 мс;
+            · значение гаснет до приглушённого, пока окошко открыто (и это ЕДИНСТВЕННОЕ
+              место, где значение строки с окошком идёт полным контрастом в покое —
+              прототип: «valueFg = открыто ? fg2 : fg»).
+          Экраны получают их даром и не заводят своих аниматоров.
+
+          Якорь окошка — ВСЯ СТРОКА (Anchor), а не этот компонент: смещения top 48 / right 10
+          из tokens.md отсчитываются от правого верхнего угла строки. Нажатие тоже принадлежит
+          строке (56dp — цель для мыши и таб-стоп), поэтому обработчик строки зовёт Toggle().
+          =================================================================================  -->
+
+    <!--  Каретка (треугольник вниз) берётся ГЛОБАЛЬНЫМ ключом Geo.Caret: он отличается от
+          Geo.ChevronRight намеренно — шеврон значит «уходит на подэкран», каретка значит
+          «значение меняется здесь». Локальной копии глифа тут нет.  -->
+
+    <UserControl.Styles>
+
+        <!--  Значение 12.5/400 (tokens.md «Значение, пункт окошка»). В покое — полные чернила,
+              пока окошко открыто — приглушённые, кроссфейд 200 мс (прототип).  -->
+        <Style Selector="TextBlock.PickerValue">
+            <Setter Property="FontSize" Value="12.5" />
+            <Setter Property="VerticalAlignment" Value="Center" />
+            <Setter Property="TextAlignment" Value="Right" />
+            <Setter Property="TextWrapping" Value="NoWrap" />
+            <Setter Property="TextTrimming" Value="CharacterEllipsis" />
+            <Setter Property="MaxWidth" Value="170" />
+            <Setter Property="Foreground" Value="{DynamicResource Brush.OnSurface}" />
+        </Style>
+        <Style Selector="TextBlock.PickerValue.dim">
+            <Setter Property="Foreground" Value="{DynamicResource Brush.OnSurfaceVariant}" />
+        </Style>
+        <!--  Транзишены навешиваются только НЕ под «Облегчённым режимом» — приём скроллбара
+              и CTA из GlobalStyles: гасим на уровне селектора, а не сеттером внутри.  -->
+        <Style Selector=":is(Window):not(.lite) TextBlock.PickerValue">
+            <Setter Property="Transitions">
+                <Transitions>
+                    <BrushTransition Duration="0:0:0.2" Property="Foreground" />
+                </Transitions>
+            </Setter>
+        </Style>
+
+        <!--  Каретка 14, поворот 180° за 300 мс (motion.md). В tokens.md стоит «шеврон 18», но там
+              это размер БОКСА: в прототипе внутри него сидит мелкий треугольник. PathIcon же
+              растягивает чернила на весь бокс, поэтому 18 давали «огромную толстую» каретку
+              (владелец). 14 — та же величина, что у прочих глифов действий.  -->
+        <Style Selector="PathIcon.PickerCaret">
+            <Setter Property="Width" Value="14" />
+            <Setter Property="Height" Value="14" />
+            <Setter Property="Margin" Value="4,0,0,0" />
+            <Setter Property="VerticalAlignment" Value="Center" />
+            <Setter Property="Foreground" Value="{DynamicResource Brush.OnSurfaceVariant}" />
+            <Setter Property="RenderTransformOrigin" Value="50%,50%" />
+            <Setter Property="RenderTransform" Value="rotate(0deg)" />
+        </Style>
+        <Style Selector="PathIcon.PickerCaret.open">
+            <Setter Property="RenderTransform" Value="rotate(180deg)" />
+        </Style>
+        <Style Selector=":is(Window):not(.lite) PathIcon.PickerCaret">
+            <Setter Property="Transitions">
+                <Transitions>
+                    <TransformOperationsTransition
+                        Duration="0:0:0.3"
+                        Easing="{StaticResource Ease.OutQuart}"
+                        Property="RenderTransform" />
+                </Transitions>
+            </Setter>
+        </Style>
+
+    </UserControl.Styles>
+
+    <Grid ColumnDefinitions="*,Auto">
+        <TextBlock
+            x:Name="PART_Value"
+            Grid.Column="0"
+            Classes="PickerValue" />
+        <PathIcon
+            x:Name="PART_Caret"
+            Grid.Column="1"
+            Classes="PickerCaret"
+            Data="{StaticResource Geo.Caret}" />
+
+        <!--  Окошко лежит В ЭТОЙ ЖЕ ячейке и занимает 0×0 (внутри у него Canvas), поэтому
+              ничего в строке не двигает. Ширину, якорь, список и выбор ставит code-behind.  -->
+        <views:ValuePopup
+            x:Name="PART_Popup"
+            Grid.Column="1"
+            HorizontalAlignment="Left"
+            VerticalAlignment="Top" />
+    </Grid>
+
+</UserControl>

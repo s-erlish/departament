@@ -1,0 +1,142 @@
+<UserControl
+    x:Class="v2rayN.Desktop.Views.GeoFilesPage"
+    xmlns="https://github.com/avaloniaui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:loc="clr-namespace:v2rayN.Desktop.Common"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    d:DesignWidth="800"
+    d:DesignHeight="620"
+    mc:Ignorable="d">
+
+    <!--  Фон НЕ задан: подэкран прозрачный, шелл под ним погашен (ApplySubPageShellGate).  -->
+
+    <UserControl.Styles>
+        <StyleInclude Source="avares://departament/Assets/SubScreenStyles.axaml" />
+    </UserControl.Styles>
+
+    <ScrollViewer HorizontalScrollBarVisibility="Disabled" VerticalScrollBarVisibility="Auto">
+        <!--  Колонка подэкрана: карточки 720 + поля по 20 = внешний габарит 760, как в прототипе
+              (`max-width:760;padding:0 20px`). В Avalonia Margin лежит СНАРУЖИ MaxWidth, поэтому
+              ту же геометрию даёт 720 + поля 20 — ровно как в колонке вкладки настроек, чтобы
+              карточки не меняли ширину при входе в подэкран.
+              Выравнивание Stretch, а НЕ Center — см. SubScreenStyles.axaml, «Ширина колонки»:
+              Center отдаёт панели её желаемую ширину, и карточка съёживается по самой длинной
+              строке, у каждого экрана до своей.  -->
+        <StackPanel
+            MaxWidth="720"
+            Margin="20,10,20,20"
+            HorizontalAlignment="Stretch">
+
+            <!--  Отступ 2 сверху — из прототипа (`padding:2px 0 0` у строки заголовка поверх
+                  `padding:10px 0 20px` у самой прокрутки). Без него шапка садится на 2 выше эталона:
+                  замер по кадру — центр стрелки «назад» 69.5 вместо 71.5.  -->
+            <StackPanel
+                Margin="0,2,0,0"
+                Orientation="Horizontal"
+                Spacing="10">
+                <Button
+                    x:Name="btnBack"
+                    Classes="SubBack">
+                    <PathIcon
+                        Width="22"
+                        Height="22"
+                        Data="{DynamicResource Geo.Sub.Back}"
+                        Foreground="{DynamicResource Brush.OnSurface}" />
+                </Button>
+                <TextBlock Classes="SubTitle" Text="{loc:T Settings_GeoFiles}" />
+            </StackPanel>
+            <!--  Пояснения под заголовком тут нет: на этом экране его нет и в эталонном кадре.
+                  «Geo-базы для маршрутизации» уже сказано подписью строки, из которой сюда пришли —
+                  повторять её первой строкой экрана значит объяснять то, что человек только что прочитал.  -->
+
+            <!--  ==================== Источник ====================
+                  Источник показан значением, а не выбором: ветка качает базы одним фиксированным
+                  адресом (UpdateService), выбора источников в ней нет. Строка с шевроном обещала бы
+                  экран, которого не существует.  -->
+            <TextBlock Classes="SubGroupLabel" Text="{loc:T Geo_Source}" />
+            <Border Classes="SubCard">
+                <Border Classes="SubRow">
+                    <Grid ColumnDefinitions="Auto,*,Auto">
+                        <Border Grid.Column="0" Classes="SubTile">
+                            <PathIcon Data="{DynamicResource Geo.Sub.Globe}" />
+                        </Border>
+                        <TextBlock
+                            Grid.Column="1"
+                            Margin="16,0,12,0"
+                            VerticalAlignment="Center"
+                            Classes="SubName"
+                            Text="{loc:T Geo_SourceRow}" />
+                        <TextBlock
+                            x:Name="txtSource"
+                            Grid.Column="2"
+                            Classes="SubValue strong" />
+                    </Grid>
+                </Border>
+            </Border>
+
+            <!--  ==================== Файлы ====================
+                  Размер и дата — подписью строки, «Обновить» — значением акцентом. Одна кнопка на
+                  оба файла: движок качает их одним вызовом UpdateGeoFileAll, и две отдельные
+                  кнопки обещали бы раздельное обновление, которого нет.  -->
+            <TextBlock Classes="SubGroupLabel" Text="{loc:T Geo_Files}" />
+            <Border Classes="SubCard">
+                <StackPanel>
+                    <Border
+                        x:Name="RowGeosite"
+                        Classes="SubRow tap"
+                        CornerRadius="15,15,0,0">
+                        <Grid ColumnDefinitions="Auto,*,Auto">
+                            <Border Grid.Column="0" Classes="SubTile">
+                                <PathIcon Data="{DynamicResource Geo.Sub.File}" />
+                            </Border>
+                            <StackPanel
+                                Grid.Column="1"
+                                Margin="16,0,12,0"
+                                VerticalAlignment="Center">
+                                <TextBlock Classes="SubName" Text="geosite.dat" />
+                                <TextBlock x:Name="txtGeosite" Classes="SubSub" />
+                            </StackPanel>
+                            <TextBlock
+                                x:Name="txtGeositeAction"
+                                Grid.Column="2"
+                                Classes="SubValue accent"
+                                Text="{loc:T Geo_Update}" />
+                        </Grid>
+                    </Border>
+
+                    <Border Classes="SubDivider" />
+                    <Border
+                        x:Name="RowGeoip"
+                        Classes="SubRow tap"
+                        CornerRadius="0,0,15,15">
+                        <Grid ColumnDefinitions="Auto,*,Auto">
+                            <Border Grid.Column="0" Classes="SubTile">
+                                <PathIcon Data="{DynamicResource Geo.Sub.File}" />
+                            </Border>
+                            <StackPanel
+                                Grid.Column="1"
+                                Margin="16,0,12,0"
+                                VerticalAlignment="Center">
+                                <TextBlock Classes="SubName" Text="geoip.dat" />
+                                <TextBlock x:Name="txtGeoip" Classes="SubSub" />
+                            </StackPanel>
+                            <TextBlock
+                                x:Name="txtGeoipAction"
+                                Grid.Column="2"
+                                Classes="SubValue accent"
+                                Text="{loc:T Geo_Update}" />
+                        </Grid>
+                    </Border>
+                </StackPanel>
+            </Border>
+
+            <!--  Сноска о ходе загрузки. Скрыта, пока молчит: пустой TextBlock занимает высоту строки
+                  и раздвигает экран невидимым отступом (видимость ведёт SetStatus).  -->
+            <TextBlock
+                x:Name="txtStatus"
+                Classes="SubFoot"
+                IsVisible="False" />
+        </StackPanel>
+    </ScrollViewer>
+</UserControl>

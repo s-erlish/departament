@@ -1,0 +1,252 @@
+<UserControl
+    x:Class="v2rayN.Desktop.Views.HomeView"
+    xmlns="https://github.com/avaloniaui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:dd="clr-namespace:v2rayN.Desktop.DesignData"
+    xmlns:loc="clr-namespace:v2rayN.Desktop.Common"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:views="clr-namespace:v2rayN.Desktop.Views"
+    xmlns:vms="clr-namespace:v2rayN.Desktop.ViewModels"
+    x:DataType="vms:HomeViewModel"
+    Design.DataContext="{x:Static dd:DesignData.Home}"
+    mc:Ignorable="d">
+
+    <UserControl.Resources>
+        <!--  «+» (ic_add) — тот же путь, что в прототипе.  -->
+        <StreamGeometry x:Key="Home.Plus">M19,13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z</StreamGeometry>
+        <!--  Буфер обмена (ic_content_paste) — «Добавить из буфера обмена».  -->
+        <StreamGeometry x:Key="Home.Clipboard">M19,2h-4.18C14.4,0.84 13.3,0 12,0S9.6,0.84 9.18,2H5C3.9,2 3,2.9 3,4v16c0,1.1 0.9,2 2,2h14c1.1,0 2,-0.9 2,-2V4c0,-1.1 -0.9,-2 -2,-2zM12,2c0.55,0 1,0.45 1,1s-0.45,1 -1,1 -1,-0.45 -1,-1 0.45,-1 1,-1zM19,20H5V4h2v3h10V4h2v16z</StreamGeometry>
+        <!--  Сетка QR (ic_grid) — «Добавить по QR-коду».  -->
+        <StreamGeometry x:Key="Home.Qr">M4,4h6v6H4V4zM14,4h6v6h-6V4zM4,14h6v6H4v-6zM14,14h6v6h-6v-6z</StreamGeometry>
+    </UserControl.Resources>
+
+    <UserControl.Styles>
+        <!--  Пункт меню добавления: высота от 38, скругление 9 (tokens.md «Окошко у значения»).
+              Отклик — общий: шаг фона под курсором, прогиб содержимого под нажатием (PressFeedback),
+              никакого ripple.  -->
+        <Style Selector="Border.AddMenuItem">
+            <Setter Property="MinHeight" Value="38" />
+            <Setter Property="Padding" Value="10,4" />
+            <Setter Property="CornerRadius" Value="9" />
+            <Setter Property="Background" Value="Transparent" />
+            <Setter Property="Cursor" Value="Arrow" />
+            <Setter Property="loc:PressFeedback.Scale" Value="0.975" />
+        </Style>
+        <Style Selector="Border.AddMenuItem:pointerover">
+            <Setter Property="Background" Value="{DynamicResource Brush.Hover}" />
+        </Style>
+        <Style Selector="Border.AddMenuItem.pressed">
+            <Setter Property="Background" Value="{DynamicResource Brush.PressBg}" />
+        </Style>
+    </UserControl.Styles>
+
+    <!--  Фон НЕ задан: окно рисует радиальный градиент ОДИН раз на всё (MainWindow, chromeRoot).
+          Свой градиент здесь считался бы от СВОИХ границ и расходился с окном на стыке.  -->
+    <Border>
+        <Panel>
+
+            <!--  Двухпанельная раскладка: ЛЕВО (440) | 1px разделитель | ПРАВО (остаток).
+                  Отступы левой колонки 14/10/14/14, правой 16 (tokens.md «Главная»).
+                  ЧИТАТЬ ПО-CSS: 14 сверху · 10 СПРАВА · 14 снизу · 14 слева — правый отступ
+                  УЖЕ, потому что колонку справа закрывает разделитель. В Avalonia порядок
+                  Thickness иной (лево,верх,право,низ), поэтому здесь «14,14,10,14», а не
+                  «14,10,14,14»: последнее давало 10 сверху и 14 справа — карточка подписки
+                  вставала на 4 выше эталона, а список отходил от разделителя на 4 дальше.  -->
+            <Grid ColumnDefinitions="440,1,*">
+
+                <!--  ЛЕВАЯ колонка: чип аккаунта (сверху, только при входе) + единый список
+                      подписок→серверов. Каждая подписка — отдельная секция: её карточка
+                      (SubscriptionMetaView как header) бесшовно продолжается в свои серверы.  -->
+                <Grid
+                    Grid.Column="0"
+                    Margin="14,14,10,14"
+                    MinWidth="380"
+                    RowDefinitions="Auto,*">
+
+                    <!--  Чип аккаунта (CA-1): ОДНО определение (HomeAccountChip), общее с CompactHomeView.
+                          Виден только при входе (сам управляет видимостью по AccountSession); тап →
+                          событие AccountRequested, здесь превращаем в клик по «Аккаунт» рейла.  -->
+                    <!--  Плашка тянется во всю ширину колонки (владелец: «расширь до конца»).
+                          Правый отступ 44 раньше резервировал место под «+», но «+» живёт в правой
+                          панели и над плашкой не проходит.  -->
+                    <views:HomeAccountChip
+                        x:Name="AccountChip"
+                        Grid.Row="0"
+                        Margin="0,0,0,10" />
+
+                    <!--  Единый список подписок→серверов (карточка подписки = её header).  -->
+                    <views:ServerListView x:Name="ServerList" Grid.Row="1" />
+                </Grid>
+
+                <!--  Вертикальный разделитель 1px  -->
+                <Border Grid.Column="1" Background="{DynamicResource Brush.OutlineVariant}" />
+
+                <!--  ПРАВАЯ колонка: кольцо со щитом → пилюля статуса → скорости и таймер → флаг
+                      и имя сервера. Сверху — честный баннер режима маршрутизации (A6): виден, только
+                      когда запрошен TUN «весь трафик», но нет прав, поэтому трафик реально идёт через
+                      системный прокси.  -->
+                <!--  Баннер оставляет справа место под «+» угла окна. «+» лежит ПОВЕРХ колонок (см. ниже)
+                      и занимает 14 (отступ от края) + 38 (кнопка) по ширине и 6..44 по высоте, а баннер
+                      начинается на 16 сверху — то есть в той же полосе. Без зазора кнопка садилась
+                      прямо на правый верхний угол баннера. 48 = 14 + 38 + 12 (зазор) − 16 (поле
+                      колонки): правая кромка баннера встаёт в 12 левее кнопки при любой ширине окна.  -->
+                <DockPanel Grid.Column="2" Margin="16">
+                    <Border
+                        DockPanel.Dock="Top"
+                        Margin="0,0,48,12"
+                        Padding="14,12"
+                        Background="{DynamicResource Brush.SurfaceHighest}"
+                        BorderBrush="{DynamicResource Brush.OutlineVariant}"
+                        BorderThickness="1"
+                        CornerRadius="{DynamicResource Radius.Chip}"
+                        IsVisible="{Binding StatusBar.TunRequestedButUnavailable}">
+                        <StackPanel Spacing="10">
+                            <TextBlock
+                                Classes="Body"
+                                FontWeight="Medium"
+                                Text="{Binding StatusBar.RoutingModeDisplay}"
+                                TextWrapping="Wrap" />
+                            <TextBlock
+                                Classes="Body"
+                                Foreground="{DynamicResource Brush.OnSurfaceVariant}"
+                                Text="{loc:T Home_TunUnavailable}"
+                                TextWrapping="Wrap" />
+                            <Button
+                                HorizontalAlignment="Left"
+                                Classes="OutlinedAccent"
+                                Command="{Binding StatusBar.RequestTunElevationCmd}"
+                                Content="{loc:T Home_RestartElevated}" />
+                        </StackPanel>
+                    </Border>
+
+                    <views:ConnectHeroView x:Name="ConnectHero" />
+                </DockPanel>
+            </Grid>
+
+            <!--  ==================== «+» — ПРАВЫЙ ВЕРХНИЙ УГОЛ ОКНА ====================
+                  screens.md: кнопка 38 в правом верхнем углу, по нажатию поворачивается на 45°
+                  и раскрывает меню 250. Живёт НАД обеими колонками (Panel поверх Grid), а не
+                  внутри правой панели: «угол окна» — это угол окна, а не угол кольца.
+
+                  Раскрытие — СРЕЗ сверху вниз (clip) + прозрачность, как у окошка у значения
+                  (motion.md «Окошко у значения»): масштаб не используем, от него дёргается текст.  -->
+            <Panel
+                Margin="0,6,14,0"
+                HorizontalAlignment="Right"
+                VerticalAlignment="Top">
+                <!--  ВЫРАВНИВАНИЕ ОБЯЗАТЕЛЬНО. Panel раскладывает детей по своей ПОЛНОЙ ширине, а её
+                      задаёт самый широкий ребёнок — меню (250). Кнопка без HorizontalAlignment
+                      считается Stretch, а Stretch с заданной шириной Avalonia ЦЕНТРУЕТ: «+» уезжал
+                      на (250−38)/2 = 106 левее угла окна (снято на живом окне). Прижимаем вправо и
+                      вверх — тогда правая кромка кнопки совпадает с правой кромкой меню, и обе стоят
+                      в 14 от края окна, как в эталоне.  -->
+                <Button
+                    x:Name="AddButton"
+                    Width="38"
+                    Height="38"
+                    HorizontalAlignment="Right"
+                    VerticalAlignment="Top"
+                    Classes="IconButton40"
+                    Click="OnAddButtonClick">
+                    <PathIcon
+                        x:Name="AddGlyph"
+                        Width="25"
+                        Height="25"
+                        Data="{StaticResource Home.Plus}"
+                        Foreground="{DynamicResource Brush.OnSurface}"
+                        RenderTransformOrigin="50%,50%" />
+                </Button>
+
+                <!--  Меню добавления (250): подложка окошка, контур 1, скругление 14.
+                      Лежит ПОД кнопкой в дереве, но смещено вниз margin-ом, поэтому кнопка
+                      остаётся кликабельной, пока меню открыто.  -->
+                <Border
+                    x:Name="AddMenu"
+                    Width="250"
+                    Margin="0,42,0,0"
+                    Padding="6"
+                    HorizontalAlignment="Right"
+                    VerticalAlignment="Top"
+                    Background="{DynamicResource Brush.SurfaceHighest}"
+                    BorderBrush="{DynamicResource Brush.Outline}"
+                    BorderThickness="1"
+                    BoxShadow="0 22 46 0 #80000000"
+                    CornerRadius="14"
+                    IsHitTestVisible="False"
+                    Opacity="0">
+                    <StackPanel>
+                        <Border
+                            x:Name="AddFromClipboard"
+                            Classes="AddMenuItem"
+                            PointerReleased="OnAddClipboard">
+                            <StackPanel Orientation="Horizontal" Spacing="12">
+                                <PathIcon
+                                    Width="18"
+                                    Height="18"
+                                    VerticalAlignment="Center"
+                                    Data="{StaticResource Home.Clipboard}"
+                                    Foreground="{DynamicResource Brush.OnSurfaceVariant}" />
+                                <TextBlock
+                                    VerticalAlignment="Center"
+                                    Classes="Body"
+                                    FontSize="12.5"
+                                    Text="{loc:T Common_AddFromClipboard}" />
+                            </StackPanel>
+                        </Border>
+                        <Border
+                            x:Name="AddByQr"
+                            Classes="AddMenuItem"
+                            PointerReleased="OnAddQr">
+                            <StackPanel Orientation="Horizontal" Spacing="12">
+                                <PathIcon
+                                    Width="18"
+                                    Height="18"
+                                    VerticalAlignment="Center"
+                                    Data="{StaticResource Home.Qr}"
+                                    Foreground="{DynamicResource Brush.OnSurfaceVariant}" />
+                                <TextBlock
+                                    VerticalAlignment="Center"
+                                    Classes="Body"
+                                    FontSize="12.5"
+                                    Text="{loc:T Common_AddViaQr}" />
+                            </StackPanel>
+                        </Border>
+                    </StackPanel>
+                </Border>
+            </Panel>
+
+            <!--  ==================== ТОСТ ====================
+                  Подтверждение пинга и обновления подписки (motion.md): обжат по тексту, высота 36,
+                  отступы 18, скругление «пилюля», подложка окошка. Выезжает снизу 280 мс, уходит сам
+                  через ~3 с. Клик сквозной — тост ничего не перекрывает.
+
+                  ПИЛЮЛЯ = ПОЛОВИНА ВЫСОТЫ, а не 100. В CSS браузер сам подрезает border-radius до
+                  идеальной пилюли; Avalonia режет радиус ПО КАЖДОЙ ОСИ ОТДЕЛЬНО, поэтому 100 на
+                  тосте 300×36 дало бы rx=100 / ry=18 — эллипс, вздутый по бокам. Radius.Pill36 = 18.  -->
+            <Border
+                x:Name="Toast"
+                Height="36"
+                Margin="0,0,0,20"
+                Padding="18,0"
+                HorizontalAlignment="Center"
+                VerticalAlignment="Bottom"
+                Background="{DynamicResource Brush.SurfaceHighest}"
+                BorderBrush="{DynamicResource Brush.Outline}"
+                BorderThickness="1"
+                CornerRadius="{DynamicResource Radius.Pill36}"
+                IsHitTestVisible="False"
+                IsVisible="False"
+                Opacity="0">
+                <TextBlock
+                    x:Name="ToastText"
+                    MaxWidth="420"
+                    VerticalAlignment="Center"
+                    Classes="Body"
+                    FontSize="13"
+                    Text=""
+                    TextTrimming="CharacterEllipsis" />
+            </Border>
+        </Panel>
+    </Border>
+</UserControl>

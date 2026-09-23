@@ -1,0 +1,238 @@
+<UserControl
+    x:Class="v2rayN.Desktop.Views.PaymentHistoryView"
+    xmlns="https://github.com/avaloniaui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:loc="clr-namespace:v2rayN.Desktop.Common"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:vms="clr-namespace:v2rayN.Desktop.ViewModels"
+    x:DataType="vms:PaymentHistoryViewModel"
+    d:DesignWidth="900"
+    d:DesignHeight="720"
+    mc:Ignorable="d">
+
+    <!--
+        Подэкран «История платежей» (screens.md «История платежей · Все ваши операции»).
+
+        ЕДИНОЕ ЛЕКАЛО подэкранов (Assets/SubScreenStyles.axaml): кнопка назад 40 со смещением −8 →
+        заголовок 22/700 → пояснение 13 → карточка 16 со строками 56. Строка: плитка 40 с глифом
+        истории 22 · название · подпись «09.08.2026 · Оплачено» · справа сумма.
+
+        Что изменилось против прежней версии и ПОЧЕМУ: был бесшовный тулбар с Headline и колонка 560
+        со своей карточной геометрией — два разных лекала на один и тот же тип экрана. Теперь
+        подэкран собран тем же лекалом, что «Устройства», «Купить подписку» и одиннадцать подэкранов
+        настроек, и колонка равна эталонной (760 всего, контент 720). Статус-чипы сняты: на эталонных
+        кадрах статус — часть подписи, а не цветная плашка; цвет остался ТОЛЬКО у неуспеха, где он
+        несёт смысл, а не украшает.
+
+        Фон НЕ задан: подэкран прозрачный, под ним непрерывный фон окна (шелл погашен хостом).
+        DATA-DRIVEN: строки из GET /client/payments через PaymentHistoryViewModel.
+    -->
+
+    <UserControl.Resources>
+        <!--  Глиф истории (Material history 24dp; порт Android drawable/ic_acc_history).  -->
+        <StreamGeometry x:Key="Geo.Pay.History">M13,3c-4.97,0 -9,4.03 -9,9H1l3.89,3.89 0.07,0.14L9,12H6c0,-3.87 3.13,-7 7,-7s7,3.13 7,7 -3.13,7 -7,7c-1.93,0 -3.68,-0.79 -4.94,-2.06l-1.42,1.42C8.27,19.99 10.51,21 13,21c4.97,0 9,-4.03 9,-9s-4.03,-9 -9,-9zM12,8v5l4.28,2.54 0.72,-1.21 -3.5,-2.08V8H12z</StreamGeometry>
+    </UserControl.Resources>
+
+    <UserControl.Styles>
+        <StyleInclude Source="avares://departament/Assets/SubScreenStyles.axaml" />
+
+        <!--  Разделитель рисуется НАД каждой строкой, у первой он гасится: у PaymentRow нет флага
+              «я не первая», а ItemsControl индекс знает сам. Иначе над первой строкой легла бы
+              вторая линия поверх границы карточки.  -->
+        <Style Selector="ItemsControl.SubRows ContentPresenter:nth-child(1) Border.SubDivider">
+            <Setter Property="IsVisible" Value="False" />
+        </Style>
+
+        <!--  Неуспех красит ВСЮ подпись целиком, а не одно слово внутри неё: подпись — один
+              TextBlock (иначе строка разъезжается), а красная строка «17.08.2026 · Ошибка»
+              читается ровно так же ясно, как красное слово. Успех и обработка остаются
+              приглушёнными — как на эталонных кадрах.  -->
+        <Style Selector="TextBlock.SubSub.bad">
+            <Setter Property="Foreground" Value="{DynamicResource Brush.RedText}" />
+        </Style>
+    </UserControl.Styles>
+
+    <ScrollViewer HorizontalScrollBarVisibility="Disabled" VerticalScrollBarVisibility="Auto">
+        <!--  Колонка ЛЕКАЛА: MaxWidth 720 + поля 20, внешний габарит 760 (SubScreenStyles,
+        «Ширина колонки»). В Avalonia Margin лежит СНАРУЖИ MaxWidth, поэтому «760» из макета
+        пишется числом 720 — стояло 760, и карточка истории была на 40 шире, чем у соседних
+        подэкранов. Замер эталона E_payments_dark.png: карточка 720…2160 из 2732 = ровно 720.
+        БЕЗ HorizontalAlignment="Center": у Center StackPanel сжимается по содержимому, и экран
+        с короткими строками получает колонку уже соседних.  -->
+        <StackPanel
+            MaxWidth="720"
+            Margin="20,10,20,20">
+
+            <!--  ==================== Лекало: назад 40 (−8) → заголовок 22/700 → пояснение 13 ====================  -->
+            <StackPanel Orientation="Horizontal" Spacing="10">
+                <Button
+                    AutomationProperties.Name="{loc:T Common_Back}"
+                    Classes="SubBack"
+                    Click="OnBackClick">
+                    <PathIcon
+                        Width="22"
+                        Height="22"
+                        Data="{DynamicResource Geo.Sub.Back}"
+                        Foreground="{DynamicResource Brush.OnSurface}" />
+                </Button>
+                <TextBlock Classes="SubTitle" Text="{loc:T Common_PaymentHistory}" />
+            </StackPanel>
+            <TextBlock
+                Margin="0,8,0,0"
+                Classes="SubNote"
+                Text="{loc:T Account_HistorySubtitle}" />
+
+            <!--  ==================== Список ====================  -->
+            <Border
+                Margin="0,14,0,0"
+                Classes="SubCard"
+                IsVisible="{Binding ShowList}">
+                <ItemsControl Classes="SubRows" ItemsSource="{Binding Payments}">
+                    <ItemsControl.ItemTemplate>
+                        <DataTemplate x:DataType="vms:PaymentRow">
+                            <StackPanel>
+                                <!--  Разделитель на всю ширину карточки перед каждой строкой кроме первой.  -->
+                                <Border Classes="SubDivider" />
+
+                                <Border Classes="SubRow">
+                                    <Grid ColumnDefinitions="Auto,*,Auto" VerticalAlignment="Center">
+                                        <Border Grid.Column="0" Classes="SubTile">
+                                            <PathIcon Data="{StaticResource Geo.Pay.History}" />
+                                        </Border>
+
+                                        <StackPanel
+                                            Grid.Column="1"
+                                            Margin="16,0,12,0"
+                                            VerticalAlignment="Center">
+                                            <TextBlock Classes="SubName" Text="{Binding Description}" />
+                                            <!--  ОДИН TextBlock на всю подпись «09.08.2026 · Оплачено».
+                                                  Прежде дата и статус были ДВУМЯ блоками в сетке рядом,
+                                                  и рядом они разъезжались: боксы равняются по верху, а
+                                                  у даты стояла числовая гарнитура, у статуса — нет, плюс
+                                                  расходились верхние отступы. Одна строка от самой себя
+                                                  не отъедет. Разделитель живёт внутри склейки — платёж
+                                                  без даты не получает висячую точку.
+                                                  Гарнитура — БОДИ: гротеск и tnum остаются ТОЛЬКО у суммы
+                                                  справа, где цифры стоят колонкой и обязаны не плясать.  -->
+                                            <TextBlock
+                                                Classes="SubSub"
+                                                Classes.bad="{Binding IsFailed}"
+                                                IsVisible="{Binding HasSub}"
+                                                Text="{Binding Sub}" />
+                                        </StackPanel>
+
+                                        <TextBlock
+                                            Grid.Column="2"
+                                            Classes="SubValue strong"
+                                            FontFamily="{DynamicResource Font.Numeric}"
+                                            FontFeatures="tnum,lnum,zero"
+                                            Text="{Binding Amount}" />
+                                    </Grid>
+                                </Border>
+                            </StackPanel>
+                        </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                </ItemsControl>
+            </Border>
+
+            <!--  ==================== Загрузка: те же строки силуэтом ====================  -->
+            <Border
+                Margin="0,14,0,0"
+                Classes="SubCard"
+                Classes.SkeletonPulse="{Binding ShowLoading}"
+                IsVisible="{Binding ShowLoading}">
+                <StackPanel>
+                    <Border Classes="SubRow">
+                        <Grid ColumnDefinitions="Auto,*" VerticalAlignment="Center">
+                            <Border Grid.Column="0" Classes="SubTile" />
+                            <StackPanel Grid.Column="1" Margin="16,0,0,0" VerticalAlignment="Center">
+                                <Border Width="170" HorizontalAlignment="Left" Classes="SkelBar" />
+                                <Border
+                                    Width="120"
+                                    Height="12"
+                                    Margin="0,8,0,0"
+                                    HorizontalAlignment="Left"
+                                    Classes="SkelBar" />
+                            </StackPanel>
+                        </Grid>
+                    </Border>
+                    <Border Classes="SubDivider" />
+                    <Border Classes="SubRow">
+                        <Grid ColumnDefinitions="Auto,*" VerticalAlignment="Center">
+                            <Border Grid.Column="0" Classes="SubTile" />
+                            <StackPanel Grid.Column="1" Margin="16,0,0,0" VerticalAlignment="Center">
+                                <Border Width="140" HorizontalAlignment="Left" Classes="SkelBar" />
+                                <Border
+                                    Width="150"
+                                    Height="12"
+                                    Margin="0,8,0,0"
+                                    HorizontalAlignment="Left"
+                                    Classes="SkelBar" />
+                            </StackPanel>
+                        </Grid>
+                    </Border>
+                    <Border Classes="SubDivider" />
+                    <Border Classes="SubRow">
+                        <Grid ColumnDefinitions="Auto,*" VerticalAlignment="Center">
+                            <Border Grid.Column="0" Classes="SubTile" />
+                            <StackPanel Grid.Column="1" Margin="16,0,0,0" VerticalAlignment="Center">
+                                <Border Width="190" HorizontalAlignment="Left" Classes="SkelBar" />
+                                <Border
+                                    Width="130"
+                                    Height="12"
+                                    Margin="0,8,0,0"
+                                    HorizontalAlignment="Left"
+                                    Classes="SkelBar" />
+                            </StackPanel>
+                        </Grid>
+                    </Border>
+                </StackPanel>
+            </Border>
+
+            <!--  ==================== Пусто ====================  -->
+            <Border
+                Margin="0,14,0,0"
+                Classes="SubEmpty"
+                IsVisible="{Binding ShowEmpty}">
+                <StackPanel VerticalAlignment="Center" Spacing="12">
+                    <Border Classes="SubEmptyTile">
+                        <PathIcon Data="{StaticResource Geo.Pay.History}" />
+                    </Border>
+                    <TextBlock Classes="SubEmptyTitle" Text="{loc:T History_Empty}" />
+                    <TextBlock Classes="SubEmptyText" Text="{loc:T History_EmptyHint}" />
+                    <Button
+                        Margin="0,4,0,0"
+                        HorizontalAlignment="Center"
+                        Classes="Tonal"
+                        Click="OnBuyClick"
+                        Content="{loc:T Common_BuySubscription}" />
+                </StackPanel>
+            </Border>
+
+            <!--  ==================== Ошибка: причина и «Повторить» ====================
+                  ОДНА строка причины, а не заголовок плюс подпись. Заголовком стоял
+                  History_ErrLoad, подписью — ErrorText, а ErrorText для всего, что не сеть,
+                  ЕСТЬ History_ErrLoad: на живом окне «Не удалось загрузить историю платежей»
+                  печаталось дважды подряд. Теперь причина одна и она же заголовок — как на
+                  «Устройствах», чтобы два соседних подэкрана не спорили друг с другом.  -->
+            <Border
+                Margin="0,14,0,0"
+                Classes="SubEmpty"
+                IsVisible="{Binding ShowError}">
+                <StackPanel VerticalAlignment="Center" Spacing="12">
+                    <Border Classes="SubEmptyTile">
+                        <PathIcon Data="{StaticResource Geo.Pay.History}" />
+                    </Border>
+                    <TextBlock Classes="SubEmptyTitle" Text="{Binding ErrorText}" />
+                    <Button
+                        Margin="0,4,0,0"
+                        HorizontalAlignment="Center"
+                        Classes="Tonal"
+                        Command="{Binding LoadCmd}"
+                        Content="{loc:T Common_Retry}" />
+                </StackPanel>
+            </Border>
+        </StackPanel>
+    </ScrollViewer>
+</UserControl>

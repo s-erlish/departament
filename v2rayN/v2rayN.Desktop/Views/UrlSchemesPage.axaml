@@ -1,0 +1,128 @@
+<UserControl
+    x:Class="v2rayN.Desktop.Views.UrlSchemesPage"
+    xmlns="https://github.com/avaloniaui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:loc="clr-namespace:v2rayN.Desktop.Common"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    d:DesignWidth="800"
+    d:DesignHeight="720"
+    mc:Ignorable="d">
+
+    <!--  Фон НЕ задан: подэкран прозрачный, шелл под ним погашен (ApplySubPageShellGate).  -->
+
+    <UserControl.Styles>
+        <StyleInclude Source="avares://departament/Assets/SubScreenStyles.axaml" />
+    </UserControl.Styles>
+
+    <ScrollViewer HorizontalScrollBarVisibility="Disabled" VerticalScrollBarVisibility="Auto">
+        <!--  Колонка подэкрана: карточки 720 + поля по 20 = внешний габарит 760, как в прототипе
+              (`max-width:760;padding:0 20px`). В Avalonia Margin лежит СНАРУЖИ MaxWidth, поэтому
+              ту же геометрию даёт 720 + поля 20 — ровно как в колонке вкладки настроек, чтобы
+              карточки не меняли ширину при входе в подэкран.
+              Выравнивание Stretch, а НЕ Center — см. SubScreenStyles.axaml, «Ширина колонки»:
+              Center отдаёт панели её желаемую ширину, и карточка съёживается по самой длинной
+              строке, у каждого экрана до своей.  -->
+        <StackPanel
+            MaxWidth="720"
+            Margin="20,10,20,20"
+            HorizontalAlignment="Stretch">
+
+            <!--  Отступ 2 сверху — из прототипа (`padding:2px 0 0` у строки заголовка поверх
+                  `padding:10px 0 20px` у самой прокрутки). Без него шапка садится на 2 выше эталона:
+                  замер по кадру — центр стрелки «назад» 69.5 вместо 71.5.  -->
+            <StackPanel
+                Margin="0,2,0,0"
+                Orientation="Horizontal"
+                Spacing="10">
+                <Button
+                    x:Name="btnBack"
+                    Classes="SubBack">
+                    <PathIcon
+                        Width="22"
+                        Height="22"
+                        Data="{DynamicResource Geo.Sub.Back}"
+                        Foreground="{DynamicResource Brush.OnSurface}" />
+                </Button>
+                <TextBlock Classes="SubTitle" Text="{loc:T Settings_UrlSchemes}" />
+            </StackPanel>
+            <TextBlock
+                Margin="0,8,0,0"
+                Classes="SubNote"
+                Text="{loc:T UrlSchemes_Intro}" />
+
+            <!--  ==================== Команды ====================
+                  Тап по строке копирует схему; «Копировать» справа — не кнопка, а подпись действия
+                  строки. Отдельная кнопка внутри строки, которая делает ровно то же, что строка,
+                  заставляла бы целиться в неё.  -->
+            <Border Classes="SubCard" Margin="0,14,0,0">
+                <ItemsControl x:Name="listSchemes">
+                    <ItemsControl.ItemTemplate>
+                        <DataTemplate x:CompileBindings="False">
+                            <StackPanel>
+                                <Border Classes="SubDivider" IsVisible="{Binding ShowDivider}" />
+                                <Border Classes="SubRow tap" Tapped="OnSchemeRowTapped">
+                                    <Grid ColumnDefinitions="Auto,*,Auto">
+                                        <Border Grid.Column="0" Classes="SubTile">
+                                            <PathIcon Data="{DynamicResource Geo.Sub.Url}" />
+                                        </Border>
+                                        <StackPanel
+                                            Grid.Column="1"
+                                            Margin="16,0,12,0"
+                                            VerticalAlignment="Center">
+                                            <TextBlock Classes="SubName" Text="{Binding Scheme}" />
+                                            <TextBlock Classes="SubSub" Text="{Binding Hint}" />
+                                        </StackPanel>
+                                        <TextBlock
+                                            Grid.Column="2"
+                                            Classes="SubValue accent"
+                                            Text="{loc:T Common_Copy}" />
+                                    </Grid>
+                                </Border>
+                            </StackPanel>
+                        </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                </ItemsControl>
+            </Border>
+
+            <!--  ==================== Регистрация ====================
+                  В прототипе этой группы нет: на телефоне схему регистрирует система. На Windows её
+                  регистрирует приложение, и без этой строки команды выше никуда не ведут.
+                  ОДИН тумблер вместо пары «Зарегистрировать» / «Убрать»: состояние ровно одно, и
+                  две кнопки заставляли бы выяснять, какая из них сейчас действует.
+                  ГРУППА ЖИВЁТ ТОЛЬКО ПОД WINDOWS (решение владельца). На Linux и macOS схему заводит
+                  не приложение, и вечно выключенный тумблер с подписью «доступно только на Windows»
+                  — это мёртвый орган управления: он занимает место, притягивает нажатие и на каждое
+                  отвечает отказом. Видимость ставит RefreshStatus.  -->
+            <StackPanel x:Name="RegistrationGroup">
+                <TextBlock Classes="SubGroupLabel" Text="{loc:T UrlSchemes_Registration}" />
+                <Border Classes="SubCard">
+                    <Border x:Name="RowRegister" Classes="SubRow tap">
+                        <Grid ColumnDefinitions="Auto,*,Auto">
+                            <Border Grid.Column="0" Classes="SubTile">
+                                <PathIcon Data="{DynamicResource Geo.Sub.Router}" />
+                            </Border>
+                            <StackPanel
+                                Grid.Column="1"
+                                Margin="16,0,12,0"
+                                VerticalAlignment="Center">
+                                <TextBlock Classes="SubName" Text="{loc:T UrlSchemes_RegisterRow}" />
+                                <TextBlock
+                                    x:Name="txtStatus"
+                                    Classes="SubSub"
+                                    TextWrapping="Wrap" />
+                            </StackPanel>
+                            <ToggleSwitch
+                                x:Name="switchRegister"
+                                Grid.Column="2"
+                                VerticalAlignment="Center"
+                                Theme="{DynamicResource ToggleSwitch.iOS}" />
+                        </Grid>
+                    </Border>
+                </Border>
+            </StackPanel>
+
+            <TextBlock x:Name="txtCopyState" Classes="SubFoot" />
+        </StackPanel>
+    </ScrollViewer>
+</UserControl>

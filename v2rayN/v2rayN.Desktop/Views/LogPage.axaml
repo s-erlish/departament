@@ -1,0 +1,136 @@
+<UserControl
+    x:Class="v2rayN.Desktop.Views.LogPage"
+    xmlns="https://github.com/avaloniaui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:loc="clr-namespace:v2rayN.Desktop.Common"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    d:DesignWidth="800"
+    d:DesignHeight="820"
+    mc:Ignorable="d">
+
+    <!--  Фон НЕ задан: подэкран прозрачный, шелл под ним погашен (ApplySubPageShellGate).  -->
+
+    <UserControl.Styles>
+        <StyleInclude Source="avares://departament/Assets/SubScreenStyles.axaml" />
+    </UserControl.Styles>
+
+    <ScrollViewer HorizontalScrollBarVisibility="Disabled" VerticalScrollBarVisibility="Auto">
+        <!--  Колонка подэкрана: карточки 720 + поля по 20 = внешний габарит 760, как в прототипе
+              (`max-width:760;padding:0 20px`). В Avalonia Margin лежит СНАРУЖИ MaxWidth, поэтому
+              ту же геометрию даёт 720 + поля 20 — ровно как в колонке вкладки настроек, чтобы
+              карточки не меняли ширину при входе в подэкран.
+              Выравнивание Stretch, а НЕ Center — см. SubScreenStyles.axaml, «Ширина колонки»:
+              Center отдаёт панели её желаемую ширину, и карточка съёживается по самой длинной
+              строке, у каждого экрана до своей.  -->
+        <StackPanel
+            MaxWidth="720"
+            Margin="20,10,20,20"
+            HorizontalAlignment="Stretch">
+
+            <StackPanel Orientation="Horizontal" Spacing="10">
+                <Button
+                    x:Name="btnBack"
+                    Classes="SubBack">
+                    <PathIcon
+                        Width="22"
+                        Height="22"
+                        Data="{DynamicResource Geo.Sub.Back}"
+                        Foreground="{DynamicResource Brush.OnSurface}" />
+                </Button>
+                <TextBlock Classes="SubTitle" Text="{loc:T Log_Title}" />
+            </StackPanel>
+            <!--  Пояснения под заголовком тут нет: на этом экране его нет и в эталонном кадре.
+                  «Лог ядра за текущий сеанс» уже сказано подписью строки, из которой сюда пришли.  -->
+
+            <!--  ==================== Поиск ====================  -->
+            <Border Classes="SubSearch" Margin="0,14,0,0">
+                <!--  Грид оставлен ради селектора стиля Border.SubSearch > Grid > TextBox;
+                      лупы в поле нет — в прототипе поиск обозначен только плейсхолдером.  -->
+                <Grid ColumnDefinitions="*">
+                    <TextBox
+                        x:Name="txtFilter"
+                        PlaceholderText="{loc:T Log_Search}" />
+                </Grid>
+            </Border>
+
+            <!--  ==================== Записи ====================
+                  Моноширинный блок: у строк ядра значащее выравнивание по колонкам (время, модуль,
+                  сообщение), и пропорциональный шрифт его разрушает.  -->
+            <Border
+                x:Name="LinesCard"
+                Classes="SubMono"
+                Margin="0,12,0,0"
+                IsVisible="False">
+                <ItemsControl x:Name="listLines">
+                    <ItemsControl.ItemTemplate>
+                        <DataTemplate x:CompileBindings="False">
+                            <TextBlock Classes="SubMonoLine" Text="{Binding}" />
+                        </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                </ItemsControl>
+            </Border>
+
+            <!--  Пустое состояние — плитка 54, заголовок 15/700, пояснение 12.5 (spec).  -->
+            <Border
+                x:Name="EmptyCard"
+                Classes="SubEmpty"
+                Margin="0,12,0,0">
+                <StackPanel VerticalAlignment="Center" Spacing="12">
+                    <Border Classes="SubEmptyTile">
+                        <PathIcon Data="{DynamicResource Geo.Sub.Copy}" />
+                    </Border>
+                    <TextBlock x:Name="txtEmptyTitle" Classes="SubEmptyTitle" />
+                    <TextBlock x:Name="txtEmptyText" Classes="SubEmptyText" />
+                </StackPanel>
+            </Border>
+
+            <!--  ==================== Действия ====================  -->
+            <Border Classes="SubCard" Margin="0,12,0,0">
+                <StackPanel>
+                    <Border
+                        x:Name="RowCopy"
+                        Classes="SubRow tap"
+                        CornerRadius="15,15,0,0">
+                        <Grid ColumnDefinitions="Auto,*,Auto">
+                            <Border Grid.Column="0" Classes="SubTile">
+                                <PathIcon Data="{DynamicResource Geo.Sub.Copy}" />
+                            </Border>
+                            <TextBlock
+                                Grid.Column="1"
+                                Margin="16,0,12,0"
+                                VerticalAlignment="Center"
+                                Classes="SubName accent"
+                                Text="{loc:T Log_Copy}" />
+                            <TextBlock
+                                x:Name="txtCopyState"
+                                Grid.Column="2"
+                                Classes="SubValue" />
+                        </Grid>
+                    </Border>
+                    <Border Classes="SubDivider" />
+                    <Border
+                        x:Name="RowClear"
+                        Classes="SubRow tap"
+                        CornerRadius="0,0,15,15">
+                        <Grid ColumnDefinitions="Auto,*,Auto">
+                            <Border Grid.Column="0" Classes="SubTile">
+                                <PathIcon Data="{DynamicResource Geo.Sub.Frag}" />
+                            </Border>
+                            <TextBlock
+                                Grid.Column="1"
+                                Margin="16,0,12,0"
+                                VerticalAlignment="Center"
+                                Classes="SubName accent"
+                                Text="{loc:T Log_Clear}" />
+                            <TextBlock
+                                x:Name="txtLineCount"
+                                Grid.Column="2"
+                                Classes="SubValue" />
+                        </Grid>
+                    </Border>
+                </StackPanel>
+            </Border>
+        </StackPanel>
+    </ScrollViewer>
+</UserControl>

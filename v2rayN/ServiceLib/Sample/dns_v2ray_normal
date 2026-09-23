@@ -1,0 +1,27 @@
+{
+  "hosts": {
+    "dns.google": "8.8.8.8",
+    "proxy.example.com": "127.0.0.1"
+  },
+  "servers": [
+    {
+      "address": "1.1.1.1",
+      "skipFallback": true,
+      "domains": [
+        "geosite:google"
+      ]
+    },
+    {
+      "address": "77.88.8.8",
+      "skipFallback": true,
+      "domains": [
+        "domain:ru",
+        "domain:su",
+        "domain:xn--p1ai"
+      ]
+    },
+    "1.1.1.1",
+    "8.8.8.8",
+    "https://dns.google/dns-query"
+  ]
+}

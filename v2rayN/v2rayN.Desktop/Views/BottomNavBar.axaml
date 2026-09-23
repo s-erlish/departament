@@ -1,0 +1,197 @@
+<UserControl
+    x:Class="v2rayN.Desktop.Views.BottomNavBar"
+    xmlns="https://github.com/avaloniaui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:cm="clr-namespace:v2rayN.Desktop.Common"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:loc="clr-namespace:v2rayN.Desktop.Common"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    d:DesignWidth="400"
+    mc:Ignorable="d">
+
+    <!--  ================================================================================
+          НИЖНЯЯ НАВИГАЦИЯ (CA-2) — компактная раскладка, 1:1 с Android bottom_nav.
+          Пункты: Главная · Аккаунт · Настройки (порядок README пакета); «Аккаунт» виден всегда —
+          в узком окне рейла нет, и без этой вкладки войти было бы негде. Отдельной вкладки «Сервера» нет — компактная
+          «Главная» показывает щит + мету + список серверов в ОДНОМ скролле, так что вторая
+          вкладка серверов была бы избыточной.
+          Геометрия по tokens.md «Нижняя панель (узкий режим)»: высота 62, глиф 23, подпись 11,
+          полоска 30×3 внизу, позиция = центр трети минус половина полоски, от ЖИВОЙ ширины окна.
+          Выбранный: глиф/подпись серый→accent, вес 500→700. Press: scale 0.92 (пункт навигации).
+          Под панелью — лёгкий градиент-скрим (frameless-вид), а не сплошная заливка.
+          =================================================================================  -->
+
+    <UserControl.Resources>
+        <!--  Тонкий скрим под баром: контент «уходит» под безрамочную панель.  -->
+        <LinearGradientBrush x:Key="Nav.Scrim" StartPoint="0%,0%" EndPoint="0%,100%">
+            <GradientStop Offset="0.0" Color="#00000000" />
+            <GradientStop Offset="1.0" Color="#33000000" />
+        </LinearGradientBrush>
+    </UserControl.Resources>
+
+    <UserControl.Styles>
+        <!--  Пункт нав-бара: прозрачная borderless-кнопка, press-scale 0.92, без ripple/glow.  -->
+        <Style Selector="Button.BottomNavItem">
+            <Setter Property="Theme" Value="{DynamicResource BorderlessButton}" />
+            <!--  Press-scale ОТ ЦЕНТРА: origin ОБЯЗАН быть относительным «50%,50%» (= 0.5·W,0.5·H),
+                  а НЕ абсолютным «0.5,0.5» (≈ 0.5px = левый-верхний угол → «проваливание влево»).  -->
+            <Setter Property="RenderTransformOrigin" Value="50%,50%" />
+            <Setter Property="Background" Value="Transparent" />
+            <Setter Property="BorderThickness" Value="0" />
+            <!--  Содержимое (глиф + подпись) центрируется в полосе 62 с нижним полем 11 — так пункт
+                  стоит В ВЕРХНИХ ~51px, а нижние 11 остаются полоске (её отступ снизу 5). 1:1 с прототипом.  -->
+            <Setter Property="Padding" Value="0,0,0,11" />
+            <Setter Property="MinHeight" Value="0" />
+            <Setter Property="HorizontalContentAlignment" Value="Stretch" />
+            <Setter Property="VerticalContentAlignment" Value="Center" />
+            <Setter Property="Cursor" Value="Arrow" />
+            <!--  Возврат нажатия у ПУНКТА НАВИГАЦИИ — 160мс ease-out-quart, БЕЗ отскока: так задан
+                  «.nav» в прототипе (у кнопок и строк там 200мс с перелётом, у навигации — нет).
+                  Значение общее с Button.NavRailItem в GlobalStyles: обе навигации ходят одинаково.  -->
+            <Setter Property="Transitions">
+                <Transitions>
+                    <TransformOperationsTransition Property="RenderTransform" Duration="0:0:0.16" Easing="{StaticResource Ease.OutQuart}" />
+                </Transitions>
+            </Setter>
+            <!--  Текст подписи не должен дёргаться на возврате — см. PressFeedback.Composited.  -->
+            <Setter Property="cm:PressFeedback.Composited" Value="True" />
+            <!--  Покой = явный scale(1): рендер не переключает ветку «трансформа нет»↔«есть».  -->
+            <Setter Property="RenderTransform" Value="scale(1)" />
+        </Style>
+        <Style Selector="Button.BottomNavItem /template/ ContentPresenter#PART_ContentPresenter">
+            <Setter Property="Background" Value="Transparent" />
+        </Style>
+        <Style Selector="Button.BottomNavItem:pointerover /template/ ContentPresenter#PART_ContentPresenter">
+            <Setter Property="Background" Value="Transparent" />
+        </Style>
+        <Style Selector="Button.BottomNavItem:pressed /template/ ContentPresenter#PART_ContentPresenter">
+            <Setter Property="Background" Value="Transparent" />
+        </Style>
+        <Style Selector="Button.BottomNavItem:pressed">
+            <Setter Property="RenderTransform" Value="scale(0.92)" />
+            <!--  Вход нажатия у «.nav» — 90мс (быстрее общего 70мс+отскок, но и ход глубже).  -->
+            <Setter Property="Transitions">
+                <Transitions>
+                    <TransformOperationsTransition Property="RenderTransform" Duration="0:0:0.09" Easing="{StaticResource Ease.PressIn}" />
+                </Transitions>
+            </Setter>
+        </Style>
+
+        <!--  Глиф/подпись — неактивные (серый), плавный переход цвета.  -->
+        <Style Selector="Button.BottomNavItem PathIcon">
+            <Setter Property="Width" Value="23" />
+            <Setter Property="Height" Value="23" />
+            <Setter Property="Foreground" Value="{DynamicResource Brush.OnSurfaceVariant}" />
+            <!--  Тон серый↔accent = Ease.Standard 200мс (двусторонняя смена, как рейл/Android nav).  -->
+            <Setter Property="Transitions">
+                <Transitions>
+                    <BrushTransition Property="Foreground" Duration="0:0:0.2" Easing="{StaticResource Ease.Standard}" />
+                </Transitions>
+            </Setter>
+        </Style>
+        <Style Selector="Button.BottomNavItem TextBlock.NavLabel">
+            <Setter Property="FontFamily" Value="{DynamicResource Font.Grotesk}" />
+            <Setter Property="FontSize" Value="11" />
+            <Setter Property="FontWeight" Value="Medium" />
+            <Setter Property="HorizontalAlignment" Value="Center" />
+            <!--  Зазор глиф↔подпись 5 (прототип; та же величина, что в рейле).  -->
+            <Setter Property="Margin" Value="0,5,0,0" />
+            <Setter Property="Foreground" Value="{DynamicResource Brush.OnSurfaceVariant}" />
+            <Setter Property="Transitions">
+                <Transitions>
+                    <BrushTransition Property="Foreground" Duration="0:0:0.2" Easing="{StaticResource Ease.Standard}" />
+                </Transitions>
+            </Setter>
+        </Style>
+        <!--  Активная пилюля БОЛЬШЕ НЕ per-item: три независимых пилюли заменены ОДНИМ общим
+              «путешествующим» индикатором (Border x:Name="BottomIndicator" в разметке), который
+              физически СКОЛЬЗИТ по X к центру активной трети. Позицию/скольжение ведёт code-behind
+              (PositionIndicator: центры из ЖИВЫХ ширин колонок, Motion.Dur.State 220 OutQuint).  -->
+
+        <!--  Выбранный пункт (класс .sel): глиф+подпись accent, подпись 500→700 (тинт 200мс Standard).  -->
+        <Style Selector="Button.BottomNavItem.sel PathIcon">
+            <Setter Property="Foreground" Value="{DynamicResource Brush.Accent}" />
+        </Style>
+        <Style Selector="Button.BottomNavItem.sel TextBlock.NavLabel">
+            <Setter Property="Foreground" Value="{DynamicResource Brush.Accent}" />
+            <Setter Property="FontWeight" Value="Bold" />
+        </Style>
+
+        <!--  Hover (не выбранный): затемняем ТОЛЬКО глиф/подпись (без фона), как у рейла.  -->
+        <Style Selector="Button.BottomNavItem:pointerover:not(.sel) PathIcon">
+            <Setter Property="Foreground" Value="{DynamicResource Brush.OnSurfaceVariantHover}" />
+        </Style>
+        <Style Selector="Button.BottomNavItem:pointerover:not(.sel) TextBlock.NavLabel">
+            <Setter Property="Foreground" Value="{DynamicResource Brush.OnSurfaceVariantHover}" />
+        </Style>
+
+        <!--  Reduced-motion (.lite на окне): переходы мгновенны.  -->
+        <Style Selector=":is(Window).lite Button.BottomNavItem">
+            <Setter Property="Transitions">
+                <Transitions />
+            </Setter>
+        </Style>
+        <Style Selector=":is(Window).lite Button.BottomNavItem PathIcon">
+            <Setter Property="Transitions">
+                <Transitions />
+            </Setter>
+        </Style>
+        <Style Selector=":is(Window).lite Button.BottomNavItem TextBlock.NavLabel">
+            <Setter Property="Transitions">
+                <Transitions />
+            </Setter>
+        </Style>
+    </UserControl.Styles>
+
+    <!--  Высота панели 62 (tokens.md). Задаётся ЗДЕСЬ, а не MinHeight на пунктах: пункты тянутся
+          на всю высоту, поэтому тап-таргет = вся треть панели, а не только глиф с подписью.  -->
+    <Panel Background="{StaticResource Nav.Scrim}" Height="62">
+        <Grid x:Name="NavGrid" ColumnDefinitions="*,*,*">
+            <Button
+                x:Name="ItemHome"
+                Grid.Column="0"
+                Classes="BottomNavItem">
+                <StackPanel HorizontalAlignment="Center">
+                    <PathIcon HorizontalAlignment="Center" Data="{StaticResource Geo.Nav.Home}" />
+                    <TextBlock Classes="NavLabel" Text="{loc:T Nav_Home}" />
+                </StackPanel>
+            </Button>
+            <Button
+                x:Name="ItemSettings"
+                Grid.Column="2"
+                Classes="BottomNavItem">
+                <StackPanel HorizontalAlignment="Center">
+                    <PathIcon HorizontalAlignment="Center" Data="{StaticResource Geo.Nav.Settings}" />
+                    <TextBlock Classes="NavLabel" Text="{loc:T Nav_Settings}" />
+                </StackPanel>
+            </Button>
+            <Button
+                x:Name="ItemAccount"
+                Grid.Column="1"
+                Classes="BottomNavItem">
+                <StackPanel HorizontalAlignment="Center">
+                    <PathIcon HorizontalAlignment="Center" Data="{StaticResource Geo.Nav.Account}" />
+                    <TextBlock Classes="NavLabel" Text="{loc:T Nav_Account}" />
+                </StackPanel>
+            </Button>
+
+            <!--  ОДИН путешествующий индикатор: акцентная полоса 30×3 (tokens.md), СКОЛЬЗИТ по X к
+                  центру активной трети. Спан по всем колонкам, база (left,bottom); реальный X ставит
+                  TranslateTransform.X из code-behind (PositionIndicator) — центры берутся из ЖИВЫХ
+                  ширин колонок, и пере-решается на каждом ресайзе окна. Первый показ — мгновенно на
+                  активной трети, дальше — переезд Motion.Dur.Nav 280мс ease-out-quart.  -->
+            <Border
+                x:Name="BottomIndicator"
+                Grid.Column="0"
+                Grid.ColumnSpan="3"
+                Width="30"
+                Height="3"
+                Margin="0,0,0,5"
+                HorizontalAlignment="Left"
+                VerticalAlignment="Bottom"
+                Background="{DynamicResource Brush.Accent}"
+                CornerRadius="2"
+                IsHitTestVisible="False" />
+        </Grid>
+    </Panel>
+</UserControl>

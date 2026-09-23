@@ -1,0 +1,384 @@
+<UserControl
+    x:Class="v2rayN.Desktop.Views.DevicesView"
+    xmlns="https://github.com/avaloniaui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:loc="clr-namespace:v2rayN.Desktop.Common"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:vms="clr-namespace:v2rayN.Desktop.ViewModels"
+    x:Name="Root"
+    x:DataType="vms:DevicesViewModel"
+    d:DesignWidth="900"
+    d:DesignHeight="760"
+    mc:Ignorable="d">
+
+    <!--
+        Подэкран «Устройства» (screens.md «Устройства · Устройства, подключённые к вашей подписке»).
+
+        ЕДИНОЕ ЛЕКАЛО подэкранов (Assets/SubScreenStyles.axaml): кнопка назад 40 со смещением −8 →
+        заголовок 22/700 → пояснение 13 → карточка 16 со строками 56 → сноска 12.
+        Строка: плитка 40 с глифом 22 · имя · подпись «windows · Активно: 17.08.2026 · ID: 774db157…»
+        · справа «Удалить» в цвете «плохо» либо «Это устройство» акцентом у текущего.
+
+        Что изменилось против прежней версии и ПОЧЕМУ:
+        • был бесшовный тулбар с пилюлей-счётчиком и колонка 560 — своё лекало на один экран;
+          теперь то же лекало и та же колонка, что у остальных подэкранов (760 всего, контент 720);
+        • плитка была ПЯТИ видов (Android/Apple/Windows/роутер/общая) в акцентном синем; на эталонных
+          кадрах у всех строк ОДИН нейтральный глиф устройства, а платформа стоит словом в подписи —
+          цветная радуга плиток дублировала текст и тянула на себя внимание;
+        • подложка текущего устройства и чип «Это устройство» заменены надписью акцентом справа:
+          геометрия строк теперь ОДИНАКОВАЯ, список не смещается;
+        • корзина-иконка → подпись «Удалить» цветом «плохо», как на кадрах (иконка без подписи в
+          строке из пяти одинаковых устройств не говорит, что именно удалится).
+
+        Фон НЕ задан: подэкран прозрачный, под ним непрерывный фон окна (шелл погашен хостом).
+        DATA-DRIVEN: всё из GET /client/devices через DevicesViewModel; пусто до реального ответа.
+    -->
+
+    <UserControl.Resources>
+        <!--  Устройства (ноутбук + телефон) — один глиф на все строки и на пустые состояния.  -->
+        <StreamGeometry x:Key="Geo.Dev.Devices">M4,6h18V4H4c-1.1,0 -2,0.9 -2,2v11H0v3h14v-3H4V6zM23,8h-6c-0.55,0 -1,0.45 -1,1v10c0,0.55 0.45,1 1,1h6c0.55,0 1,-0.45 1,-1V9c0,-0.55 -0.45,-1 -1,-1zM22,18h-4v-8h4v8z</StreamGeometry>
+    </UserControl.Resources>
+
+    <UserControl.Styles>
+        <StyleInclude Source="avares://departament/Assets/SubScreenStyles.axaml" />
+
+        <!--  Действие в строке: подпись 12.5/500, а не кнопка с хромом. Паддинг 10 компенсирован
+              отрицательным правым отступом — надпись садится ровно на 16-й гутер карточки,
+              а область нажатия остаётся 40 в высоту.  -->
+        <Style Selector="Button.RowAction">
+            <Setter Property="Theme" Value="{DynamicResource BorderlessButton}" />
+            <Setter Property="RenderTransformOrigin" Value="50%,50%" />
+            <Setter Property="Height" Value="40" />
+            <Setter Property="MinHeight" Value="0" />
+            <Setter Property="MinWidth" Value="0" />
+            <Setter Property="Margin" Value="8,0,-10,0" />
+            <Setter Property="Padding" Value="10,0" />
+            <Setter Property="CornerRadius" Value="10" />
+            <Setter Property="Background" Value="Transparent" />
+            <Setter Property="BorderThickness" Value="0" />
+            <Setter Property="FontSize" Value="12.5" />
+            <Setter Property="FontWeight" Value="Medium" />
+            <Setter Property="Foreground" Value="{DynamicResource Brush.RedText}" />
+            <Setter Property="VerticalAlignment" Value="Center" />
+            <Setter Property="Cursor" Value="Arrow" />
+            <Setter Property="Transitions">
+                <Transitions>
+                    <TransformOperationsTransition Property="RenderTransform" Duration="0:0:0.2" Easing="{StaticResource Ease.PressBack}" />
+                </Transitions>
+            </Setter>
+        </Style>
+        <Style Selector="Button.RowAction /template/ ContentPresenter#PART_ContentPresenter">
+            <Setter Property="Background" Value="Transparent" />
+        </Style>
+        <Style Selector="Button.RowAction:pointerover /template/ ContentPresenter#PART_ContentPresenter">
+            <Setter Property="Background" Value="{DynamicResource Brush.Hover}" />
+        </Style>
+        <Style Selector="Button.RowAction:pressed">
+            <Setter Property="RenderTransform" Value="scale(0.975)" />
+            <Setter Property="Transitions">
+                <Transitions>
+                    <TransformOperationsTransition Property="RenderTransform" Duration="0:0:0.07" Easing="{StaticResource Ease.PressIn}" />
+                </Transitions>
+            </Setter>
+        </Style>
+
+        <!--  Разделитель рисуется НАД каждой строкой; у первой гасится — карточка уже имеет границу.  -->
+        <Style Selector="ItemsControl.SubRows ContentPresenter:nth-child(1) Border.SubDivider">
+            <Setter Property="IsVisible" Value="False" />
+        </Style>
+
+        <!--  Вход модалки: скрим 150мс, карта 0.96 → 1 за 220мс.  -->
+        <Style Selector="Border.Scrim[IsVisible=True]">
+            <Style.Animations>
+                <Animation Duration="0:0:0.15" FillMode="Forward">
+                    <KeyFrame Cue="0%">
+                        <Setter Property="Opacity" Value="0" />
+                    </KeyFrame>
+                    <KeyFrame Cue="100%">
+                        <Setter Property="Opacity" Value="1" />
+                    </KeyFrame>
+                </Animation>
+            </Style.Animations>
+        </Style>
+        <Style Selector="Border.Scrim[IsVisible=True] Border.ModalCard">
+            <Style.Animations>
+                <Animation Duration="0:0:0.22" Easing="{StaticResource Ease.OutQuart}" FillMode="Forward">
+                    <KeyFrame Cue="0%">
+                        <Setter Property="ScaleTransform.ScaleX" Value="0.96" />
+                        <Setter Property="ScaleTransform.ScaleY" Value="0.96" />
+                        <Setter Property="Opacity" Value="0" />
+                    </KeyFrame>
+                    <KeyFrame Cue="100%">
+                        <Setter Property="ScaleTransform.ScaleX" Value="1" />
+                        <Setter Property="ScaleTransform.ScaleY" Value="1" />
+                        <Setter Property="Opacity" Value="1" />
+                    </KeyFrame>
+                </Animation>
+            </Style.Animations>
+        </Style>
+    </UserControl.Styles>
+
+    <!--  Прозрачный корень: под подэкраном непрерывный фон окна.  -->
+    <Panel Background="Transparent">
+
+        <ScrollViewer HorizontalScrollBarVisibility="Disabled" VerticalScrollBarVisibility="Auto">
+            <!--  Колонка ЛЕКАЛА: MaxWidth 720 + поля 20, внешний габарит 760 (SubScreenStyles,
+            «Ширина колонки»). В Avalonia Margin лежит СНАРУЖИ MaxWidth, поэтому «760» из макета
+            пишется числом 720 — стояло 760, и карточки этого подэкрана были на 40 шире, чем у
+            одиннадцати соседних. Замер эталона E_devices_dark.png: карточка 720…2160 из 2732,
+            то есть ровно 720 при 1366.
+            БЕЗ HorizontalAlignment="Center": у Center StackPanel сжимается по содержимому,
+            и экран с короткими строками получает колонку уже соседних. Stretch с MaxWidth
+            даёт ровно 720 и центрируется сам.  -->
+            <StackPanel
+                MaxWidth="720"
+                Margin="20,10,20,20">
+
+                <!--  ==================== Лекало: назад 40 (−8) → заголовок 22/700 → пояснение 13 ====================  -->
+                <StackPanel Orientation="Horizontal" Spacing="10">
+                    <Button
+                        AutomationProperties.Name="{loc:T Common_Back}"
+                        Classes="SubBack"
+                        Click="OnBackClick">
+                        <PathIcon
+                            Width="22"
+                            Height="22"
+                            Data="{DynamicResource Geo.Sub.Back}"
+                            Foreground="{DynamicResource Brush.OnSurface}" />
+                    </Button>
+                    <TextBlock Classes="SubTitle" Text="{loc:T Account_Devices}" />
+                </StackPanel>
+                <TextBlock
+                    Margin="0,8,0,0"
+                    Classes="SubNote"
+                    Text="{loc:T Devices_Subtitle}" />
+
+                <!--  ==================== Список ====================  -->
+                <Border
+                    Margin="0,14,0,0"
+                    Classes="SubCard"
+                    IsVisible="{Binding ShowList}">
+                    <ItemsControl Classes="SubRows" ItemsSource="{Binding Devices}">
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate x:DataType="vms:DeviceRow">
+                                <StackPanel>
+                                    <Border Classes="SubDivider" />
+
+                                    <Border Classes="SubRow">
+                                        <Grid ColumnDefinitions="Auto,*,Auto" VerticalAlignment="Center">
+                                            <Border Grid.Column="0" Classes="SubTile">
+                                                <PathIcon Data="{StaticResource Geo.Dev.Devices}" />
+                                            </Border>
+
+                                            <StackPanel
+                                                Grid.Column="1"
+                                                Margin="16,0,8,0"
+                                                VerticalAlignment="Center">
+                                                <TextBlock Classes="SubName" Text="{Binding Name}" />
+                                                <!--  ОДИН TextBlock на всю подпись «Windows · Активно: 17.08.2026
+                                                      · ID: 774db157…» — так же, как в прототипе (там подпись строки
+                                                      тоже одна строка). Прежде она была собрана из ДВУХ блоков в
+                                                      сетке «Auto,*»: платформа с датой сидела в Auto-колонке, а
+                                                      идентификатор в звёздной. На живых данных Auto-колонка первой
+                                                      забирала всю нужную ей ширину, звёздной не оставалось ничего,
+                                                      и 32-символьный hwid уезжал под «Удалить» — ровно тот баг,
+                                                      который владелец увидел на своём окне.
+                                                      Гарнитура — БОДИ (Roboto по умолчанию), а не Font.Numeric:
+                                                      это обычный текст, в котором дата и hwid лишь вкраплениями;
+                                                      гротеск остаётся на заголовках, чипах и столбце сумм.
+                                                      Обрезка хвоста — CharacterEllipsis из .SubSub; полный
+                                                      идентификатор доступен в подсказке, ничего не теряется.  -->
+                                                <TextBlock
+                                                    Classes="SubSub"
+                                                    IsVisible="{Binding HasSub}"
+                                                    Text="{Binding Sub}" />
+                                            </StackPanel>
+
+                                            <!--  Текущее устройство удалить нельзя — вместо действия надпись
+                                                  акцентом. Геометрия строки от этого не меняется.  -->
+                                            <TextBlock
+                                                Grid.Column="2"
+                                                Classes="SubValue accent"
+                                                IsVisible="{Binding IsCurrent}"
+                                                Text="{loc:T Devices_ThisDevice}" />
+                                            <Button
+                                                Grid.Column="2"
+                                                Classes="RowAction"
+                                                Command="{Binding DataContext.DeleteCmd, ElementName=Root}"
+                                                CommandParameter="{Binding Dto}"
+                                                Content="{loc:T Devices_Remove}"
+                                                IsVisible="{Binding !IsCurrent}" />
+                                        </Grid>
+                                    </Border>
+                                </StackPanel>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                </Border>
+                <TextBlock
+                    Classes="SubFoot"
+                    IsVisible="{Binding ShowList}"
+                    Text="{loc:T Devices_Foot}" />
+
+                <!--  ==================== Загрузка: те же строки силуэтом ====================  -->
+                <Border
+                    Margin="0,14,0,0"
+                    Classes="SubCard"
+                    Classes.SkeletonPulse="{Binding ShowLoading}"
+                    IsVisible="{Binding ShowLoading}">
+                    <StackPanel>
+                        <Border Classes="SubRow">
+                            <Grid ColumnDefinitions="Auto,*" VerticalAlignment="Center">
+                                <Border Grid.Column="0" Classes="SubTile" />
+                                <StackPanel Grid.Column="1" Margin="16,0,0,0" VerticalAlignment="Center">
+                                    <Border Width="160" HorizontalAlignment="Left" Classes="SkelBar" />
+                                    <Border
+                                        Width="280"
+                                        Height="12"
+                                        Margin="0,8,0,0"
+                                        HorizontalAlignment="Left"
+                                        Classes="SkelBar" />
+                                </StackPanel>
+                            </Grid>
+                        </Border>
+                        <Border Classes="SubDivider" />
+                        <Border Classes="SubRow">
+                            <Grid ColumnDefinitions="Auto,*" VerticalAlignment="Center">
+                                <Border Grid.Column="0" Classes="SubTile" />
+                                <StackPanel Grid.Column="1" Margin="16,0,0,0" VerticalAlignment="Center">
+                                    <Border Width="130" HorizontalAlignment="Left" Classes="SkelBar" />
+                                    <Border
+                                        Width="250"
+                                        Height="12"
+                                        Margin="0,8,0,0"
+                                        HorizontalAlignment="Left"
+                                        Classes="SkelBar" />
+                                </StackPanel>
+                            </Grid>
+                        </Border>
+                        <Border Classes="SubDivider" />
+                        <Border Classes="SubRow">
+                            <Grid ColumnDefinitions="Auto,*" VerticalAlignment="Center">
+                                <Border Grid.Column="0" Classes="SubTile" />
+                                <StackPanel Grid.Column="1" Margin="16,0,0,0" VerticalAlignment="Center">
+                                    <Border Width="190" HorizontalAlignment="Left" Classes="SkelBar" />
+                                    <Border
+                                        Width="230"
+                                        Height="12"
+                                        Margin="0,8,0,0"
+                                        HorizontalAlignment="Left"
+                                        Classes="SkelBar" />
+                                </StackPanel>
+                            </Grid>
+                        </Border>
+                    </StackPanel>
+                </Border>
+
+                <!--  ==================== Пусто ====================  -->
+                <Border
+                    Margin="0,14,0,0"
+                    Classes="SubEmpty"
+                    IsVisible="{Binding ShowEmpty}">
+                    <StackPanel VerticalAlignment="Center" Spacing="12">
+                        <Border Classes="SubEmptyTile">
+                            <PathIcon Data="{StaticResource Geo.Dev.Devices}" />
+                        </Border>
+                        <TextBlock Classes="SubEmptyTitle" Text="{loc:T Devices_Empty}" />
+                        <TextBlock Classes="SubEmptyText" Text="{loc:T Devices_EmptyHint}" />
+                    </StackPanel>
+                </Border>
+
+                <!--  ==================== Нет подписки ====================  -->
+                <Border
+                    Margin="0,14,0,0"
+                    Classes="SubEmpty"
+                    IsVisible="{Binding ShowNoSub}">
+                    <StackPanel VerticalAlignment="Center" Spacing="12">
+                        <Border Classes="SubEmptyTile">
+                            <PathIcon Data="{StaticResource Geo.Dev.Devices}" />
+                        </Border>
+                        <TextBlock Classes="SubEmptyTitle" Text="{loc:T Devices_NoSub}" />
+                        <TextBlock Classes="SubEmptyText" Text="{loc:T Devices_NoSubHint}" />
+                        <Button
+                            Margin="0,4,0,0"
+                            HorizontalAlignment="Center"
+                            Classes="Tonal"
+                            Click="OnBackClick"
+                            Content="{loc:T Devices_GoToAccount}" />
+                    </StackPanel>
+                </Border>
+
+                <!--  ==================== Ошибка ====================  -->
+                <Border
+                    Margin="0,14,0,0"
+                    Classes="SubEmpty"
+                    IsVisible="{Binding ShowError}">
+                    <StackPanel VerticalAlignment="Center" Spacing="12">
+                        <Border Classes="SubEmptyTile">
+                            <PathIcon Data="{StaticResource Geo.Dev.Devices}" />
+                        </Border>
+                        <TextBlock Classes="SubEmptyTitle" Text="{Binding ErrorText}" />
+                        <Button
+                            Margin="0,4,0,0"
+                            HorizontalAlignment="Center"
+                            Classes="Tonal"
+                            Command="{Binding LoadCmd}"
+                            Content="{loc:T Common_Retry}" />
+                    </StackPanel>
+                </Border>
+            </StackPanel>
+        </ScrollViewer>
+
+        <!--  ============ Подтверждение удаления: карта по центру на скриме ============
+              Клик по скриму / Escape → отмена (code-behind); кнопки заблокированы во время запроса.  -->
+        <!--  ОСОЗНАННОЕ ИСКЛЮЧЕНИЕ из «никаких сырых цветов в разметке» (00-rules §1.4.6).
+              Затемнение — не цвет темы, а полупрозрачная чернота поверх ЛЮБОГО фона: в светлой
+              теме она обязана оставаться чёрной, иначе перестаёт затемнять. Токена для неё нет и
+              заводить его не за чем — тематизировать тут нечего.  -->
+        <Border
+            x:Name="DeleteScrim"
+            Background="#80000000"
+            Classes="Scrim"
+            IsVisible="{Binding ShowDeleteConfirm}"
+            PointerPressed="OnScrimPressed">
+            <Border
+                MinWidth="320"
+                MaxWidth="360"
+                Margin="32"
+                Padding="20"
+                HorizontalAlignment="Center"
+                VerticalAlignment="Center"
+                Background="{DynamicResource Brush.Surface}"
+                BorderBrush="{DynamicResource Brush.OutlineVariant}"
+                BorderThickness="1"
+                Classes="ModalCard"
+                CornerRadius="16">
+                <StackPanel>
+                    <TextBlock Classes="SubEmptyTitle" HorizontalAlignment="Left" Text="{loc:T Devices_RemoveConfirm}" TextAlignment="Left" />
+                    <TextBlock
+                        Margin="0,8,0,0"
+                        Classes="SubNote"
+                        Text="{Binding DeleteConfirmText}" />
+                    <Grid Margin="0,16,0,0" ColumnDefinitions="*,12,*">
+                        <Button
+                            x:Name="DeleteCancelButton"
+                            Grid.Column="0"
+                            HorizontalAlignment="Stretch"
+                            Classes="Tonal"
+                            Command="{Binding CancelDeleteCmd}"
+                            Content="{loc:T Common_Cancel}"
+                            IsEnabled="{Binding !IsDeleting}" />
+                        <Button
+                            Grid.Column="2"
+                            HorizontalAlignment="Stretch"
+                            Classes="Destructive"
+                            Command="{Binding ConfirmDeleteCmd}"
+                            Content="{loc:T Devices_Remove}"
+                            IsEnabled="{Binding !IsDeleting}" />
+                    </Grid>
+                </StackPanel>
+            </Border>
+        </Border>
+    </Panel>
+</UserControl>

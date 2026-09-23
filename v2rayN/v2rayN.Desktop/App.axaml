@@ -1,0 +1,38 @@
+<Application
+    x:Class="v2rayN.Desktop.App"
+    xmlns="https://github.com/avaloniaui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:dialogHost="clr-namespace:DialogHostAvalonia;assembly=DialogHost.Avalonia"
+    xmlns:resx="clr-namespace:ServiceLib.Resx;assembly=ServiceLib"
+    xmlns:semi="https://irihi.tech/semi"
+    xmlns:vms="clr-namespace:ServiceLib.ViewModels;assembly=ServiceLib"
+    Name="v2rayN"
+    x:DataType="vms:StatusBarViewModel"
+    RequestedThemeVariant="Dark">
+    <Application.Resources>
+        <ResourceDictionary>
+            <ResourceDictionary.MergedDictionaries>
+                <ResourceInclude Source="Assets/GlobalResources.axaml" />
+            </ResourceDictionary.MergedDictionaries>
+        </ResourceDictionary>
+    </Application.Resources>
+    <Application.Styles>
+        <semi:SemiTheme />
+        <semi:AvaloniaEditSemiTheme />
+        <StyleInclude Source="Assets/GlobalStyles.axaml" />
+        <StyleInclude Source="avares://Semi.Avalonia.DataGrid/Index.axaml" />
+        <dialogHost:DialogHostStyles />
+    </Application.Styles>
+
+    <!--  ==================== Значок в трее ====================
+          Здесь его НЕТ, и это намеренно. Объявленный в разметке приложения значок Avalonia создаёт
+          при загрузке этого файла, то есть раньше, чем построено и показано окно: запуск выглядел так,
+          будто программа сперва «висит в трее», а окно появляется потом. Значок создаёт App.ShowTrayIcon
+          вместе с первым кадром окна (или в момент, когда окно уходит в трей, если окна на старте нет).
+          Меню, картинка и подсказка собираются там же, в коде.
+
+          Картинка — логотип владельца, ПЕРЕНЕСЁННЫЙ, а не перерисованный: знак отделён от кремового
+          фона исходника по альфе, сетка глобуса сохранена как нарисована. Windows и Linux
+          (StatusNotifierItem/XEmbed) показывают ЦВЕТНОЙ значок с прозрачностью. Стартовая картинка —
+          «не подключено» (NotifyShieldIdle.ico), при живом ядре — NotifyShieldOn.ico (StatusBarView).  -->
+</Application>

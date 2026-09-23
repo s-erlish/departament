@@ -1,0 +1,237 @@
+<UserControl
+    x:Class="v2rayN.Desktop.Views.LocalProxyPage"
+    xmlns="https://github.com/avaloniaui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:loc="clr-namespace:v2rayN.Desktop.Common"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    d:DesignWidth="800"
+    d:DesignHeight="760"
+    mc:Ignorable="d">
+
+    <!--  Фон НЕ задан: подэкран прозрачный, шелл под ним погашен (ApplySubPageShellGate).  -->
+
+    <UserControl.Styles>
+        <StyleInclude Source="avares://departament/Assets/SubScreenStyles.axaml" />
+    </UserControl.Styles>
+
+    <ScrollViewer HorizontalScrollBarVisibility="Disabled" VerticalScrollBarVisibility="Auto">
+        <!--  Колонка подэкрана: карточки 720 + поля по 20 = внешний габарит 760, как в прототипе
+              (`max-width:760;padding:0 20px`). В Avalonia Margin лежит СНАРУЖИ MaxWidth, поэтому
+              ту же геометрию даёт 720 + поля 20 — ровно как в колонке вкладки настроек, чтобы
+              карточки не меняли ширину при входе в подэкран.
+              Выравнивание Stretch, а НЕ Center — см. SubScreenStyles.axaml, «Ширина колонки»:
+              Center отдаёт панели её желаемую ширину, и карточка съёживается по самой длинной
+              строке, у каждого экрана до своей.  -->
+        <StackPanel
+            MaxWidth="720"
+            Margin="20,10,20,20"
+            HorizontalAlignment="Stretch">
+
+            <!--  Отступ 2 сверху — из прототипа (`padding:2px 0 0` у строки заголовка поверх
+                  `padding:10px 0 20px` у самой прокрутки). Без него шапка садится на 2 выше эталона.  -->
+            <StackPanel
+                Margin="0,2,0,0"
+                Orientation="Horizontal"
+                Spacing="10">
+                <Button
+                    x:Name="btnBack"
+                    Classes="SubBack">
+                    <PathIcon
+                        Width="22"
+                        Height="22"
+                        Data="{DynamicResource Geo.Sub.Back}"
+                        Foreground="{DynamicResource Brush.OnSurface}" />
+                </Button>
+                <TextBlock Classes="SubTitle" Text="{loc:T Settings_LocalProxy}" />
+            </StackPanel>
+            <TextBlock
+                Margin="0,8,0,0"
+                Classes="SubNote"
+                Text="{loc:T LocalProxy_Intro}" />
+
+            <!--  ==================== Параметры ====================
+                  Адрес показан значением, а не полем: 127.0.0.1 — это не настройка, вход всегда
+                  слушает петлю. Поле, которое нельзя изменить, обещало бы обратное.  -->
+            <TextBlock Classes="SubGroupLabel" Text="{loc:T LocalProxy_Params}" />
+            <!--  14 сверху — только у ПЕРВОЙ карточки экрана (в прототипе `mt:'14px'` по умолчанию,
+                  а каждая следующая группа передаёт `mt:'0px'`): после шапки нужен вдох, между
+                  соседними группами — нет. Без него первая карточка встаёт на 14 выше эталона.  -->
+            <Border Margin="0,14,0,0" Classes="SubCard">
+                <StackPanel>
+                    <Border Classes="SubRow">
+                        <Grid ColumnDefinitions="Auto,*,Auto">
+                            <Border Grid.Column="0" Classes="SubTile">
+                                <PathIcon Data="{DynamicResource Geo.Sub.Router}" />
+                            </Border>
+                            <TextBlock
+                                Grid.Column="1"
+                                Margin="16,0,12,0"
+                                VerticalAlignment="Center"
+                                Classes="SubName"
+                                Text="{loc:T LocalProxy_Address}" />
+                            <!--  Значение приглушённое и полужирное (в прототипе `valueFg:fg2`,
+                                  `valW:'500'`): цвет отдаёт первенство названию строки, вес держит
+                                  цифры читаемыми. Класс `strong` не годится — он ещё и перекрашивает.  -->
+                            <TextBlock
+                                Grid.Column="2"
+                                Classes="SubValue"
+                                FontWeight="Medium"
+                                Text="127.0.0.1" />
+                        </Grid>
+                    </Border>
+
+                    <Border Classes="SubDivider" />
+                    <Border x:Name="RowPortSocks" Classes="SubRow">
+                        <Grid ColumnDefinitions="Auto,*,Auto">
+                            <Border Grid.Column="0" Classes="SubTile">
+                                <PathIcon Data="{DynamicResource Geo.Sub.Router}" />
+                            </Border>
+                            <TextBlock
+                                Grid.Column="1"
+                                Margin="16,0,12,0"
+                                VerticalAlignment="Center"
+                                Classes="SubName"
+                                Text="{loc:T LocalProxy_PortSocks}" />
+                            <!--  Цвет и вес — как у соседних значений (12.5/400, приглушённый): в прототипе
+                                  порт выглядит ЗНАЧЕНИЕМ, а не полем ввода. Что его можно править, говорит
+                                  отклик — шаг фона под курсором и акцентная рамка на фокусе, а не постоянно
+                                  подсвеченный текст. Общее лекало (TextBox.SubField) не трогаем: там поле
+                                  задано ярким для экранов, где оно и правда форма.  -->
+                            <TextBox
+                                x:Name="txtPortSocks"
+                                Grid.Column="2"
+                                Classes="SubField"
+                                Foreground="{DynamicResource Brush.OnSurfaceVariant}"
+                                MaxLength="5" />
+                        </Grid>
+                    </Border>
+
+                    <Border Classes="SubDivider" />
+                    <Border Classes="SubRow">
+                        <Grid ColumnDefinitions="Auto,*,Auto">
+                            <Border Grid.Column="0" Classes="SubTile">
+                                <PathIcon Data="{DynamicResource Geo.Sub.Router}" />
+                            </Border>
+                            <StackPanel
+                                Grid.Column="1"
+                                Margin="16,0,12,0"
+                                VerticalAlignment="Center">
+                                <TextBlock Classes="SubName" Text="{loc:T LocalProxy_PortHttp}" />
+                                <TextBlock
+                                    x:Name="txtPortHttpNote"
+                                    Classes="SubSub"
+                                    Text="{loc:T LocalProxy_PortHttpSame}"
+                                    TextWrapping="Wrap" />
+                            </StackPanel>
+                            <TextBlock
+                                x:Name="txtPortHttp"
+                                Grid.Column="2"
+                                Classes="SubValue"
+                                FontWeight="Medium" />
+                        </Grid>
+                    </Border>
+                </StackPanel>
+            </Border>
+
+            <!--  ==================== Доступ ====================  -->
+            <TextBlock Classes="SubGroupLabel" Text="{loc:T LocalProxy_Access}" />
+            <Border Classes="SubCard">
+                <StackPanel>
+                    <Border x:Name="RowAuth" Classes="SubRow tap">
+                        <Grid ColumnDefinitions="Auto,*,Auto">
+                            <Border Grid.Column="0" Classes="SubTile">
+                                <PathIcon Data="{DynamicResource Geo.Sub.Lock}" />
+                            </Border>
+                            <StackPanel
+                                Grid.Column="1"
+                                Margin="16,0,12,0"
+                                VerticalAlignment="Center">
+                                <TextBlock Classes="SubName" Text="{loc:T Settings_Socks5Auth}" />
+                                <TextBlock
+                                    Classes="SubSub"
+                                    Text="{loc:T LocalProxy_AuthHint}"
+                                    TextWrapping="Wrap" />
+                            </StackPanel>
+                            <ToggleSwitch
+                                x:Name="switchAuth"
+                                Grid.Column="2"
+                                VerticalAlignment="Center"
+                                Theme="{DynamicResource ToggleSwitch.iOS}" />
+                        </Grid>
+                    </Border>
+
+                    <!--  Логин и пароль появляются только при включённой авторизации: два пустых поля
+                          у выключенного переключателя — это вопрос без ответа.  -->
+                    <StackPanel x:Name="authFields" IsVisible="False">
+                        <Border Classes="SubDivider" />
+                        <Border Classes="SubRow">
+                            <Grid ColumnDefinitions="Auto,*,Auto">
+                                <Border Grid.Column="0" Classes="SubTile" Opacity="0" />
+                                <TextBlock
+                                    Grid.Column="1"
+                                    Margin="16,0,12,0"
+                                    VerticalAlignment="Center"
+                                    Classes="SubName"
+                                    Text="{loc:T LocalProxy_Login}" />
+                                <TextBox
+                                    x:Name="txtUser"
+                                    Grid.Column="2"
+                                    MinWidth="180"
+                                    Classes="SubField" />
+                            </Grid>
+                        </Border>
+                        <Border Classes="SubDivider" />
+                        <Border Classes="SubRow">
+                            <Grid ColumnDefinitions="Auto,*,Auto">
+                                <Border Grid.Column="0" Classes="SubTile" Opacity="0" />
+                                <TextBlock
+                                    Grid.Column="1"
+                                    Margin="16,0,12,0"
+                                    VerticalAlignment="Center"
+                                    Classes="SubName"
+                                    Text="{loc:T LocalProxy_Password}" />
+                                <TextBox
+                                    x:Name="txtPass"
+                                    Grid.Column="2"
+                                    MinWidth="180"
+                                    Classes="SubField"
+                                    PasswordChar="•" />
+                            </Grid>
+                        </Border>
+                    </StackPanel>
+
+                    <Border Classes="SubDivider" />
+                    <Border x:Name="RowBlockUdp" Classes="SubRow tap">
+                        <Grid ColumnDefinitions="Auto,*,Auto">
+                            <Border Grid.Column="0" Classes="SubTile">
+                                <PathIcon Data="{DynamicResource Geo.Sub.Router}" />
+                            </Border>
+                            <StackPanel
+                                Grid.Column="1"
+                                Margin="16,0,12,0"
+                                VerticalAlignment="Center">
+                                <TextBlock Classes="SubName" Text="{loc:T LocalProxy_BlockUdp}" />
+                                <TextBlock
+                                    Classes="SubSub"
+                                    Text="{loc:T LocalProxy_BlockUdpHint}"
+                                    TextWrapping="Wrap" />
+                            </StackPanel>
+                            <ToggleSwitch
+                                x:Name="switchBlockUdp"
+                                Grid.Column="2"
+                                VerticalAlignment="Center"
+                                Theme="{DynamicResource ToggleSwitch.iOS}" />
+                        </Grid>
+                    </Border>
+
+                </StackPanel>
+            </Border>
+
+            <!--  Сноска — под ПОСЛЕДНЕЙ группой, как в прототипе: она про весь экран, а не про одну
+                  карточку, и снизу её видно вместе с обеими группами. Текст меняется на живом туннеле
+                  (LocalProxy_FootLive) — там она объясняет, почему порт не набирается.  -->
+            <TextBlock x:Name="txtPortFoot" Classes="SubFoot" />
+        </StackPanel>
+    </ScrollViewer>
+</UserControl>

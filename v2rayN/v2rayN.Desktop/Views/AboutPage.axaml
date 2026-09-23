@@ -1,0 +1,171 @@
+<UserControl
+    x:Class="v2rayN.Desktop.Views.AboutPage"
+    xmlns="https://github.com/avaloniaui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:loc="clr-namespace:v2rayN.Desktop.Common"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    d:DesignWidth="800"
+    d:DesignHeight="620"
+    mc:Ignorable="d">
+
+    <!--  Фон НЕ задан: подэкран прозрачный, шелл под ним погашен (ApplySubPageShellGate).  -->
+
+    <UserControl.Styles>
+        <StyleInclude Source="avares://departament/Assets/SubScreenStyles.axaml" />
+    </UserControl.Styles>
+
+    <ScrollViewer HorizontalScrollBarVisibility="Disabled" VerticalScrollBarVisibility="Auto">
+        <!--  Колонка подэкрана: карточки 720 + поля по 20 = внешний габарит 760, как в прототипе
+              (`max-width:760;padding:0 20px`). В Avalonia Margin лежит СНАРУЖИ MaxWidth, поэтому
+              ту же геометрию даёт 720 + поля 20 — ровно как в колонке вкладки настроек, чтобы
+              карточки не меняли ширину при входе в подэкран.
+              Выравнивание Stretch, а НЕ Center — см. SubScreenStyles.axaml, «Ширина колонки»:
+              Center отдаёт панели её желаемую ширину, и карточка съёживается по самой длинной
+              строке, у каждого экрана до своей.  -->
+        <StackPanel
+            MaxWidth="720"
+            Margin="20,10,20,20"
+            HorizontalAlignment="Stretch">
+
+            <StackPanel Orientation="Horizontal" Spacing="10">
+                <Button
+                    x:Name="btnBack"
+                    Classes="SubBack">
+                    <PathIcon
+                        Width="22"
+                        Height="22"
+                        Data="{DynamicResource Geo.Sub.Back}"
+                        Foreground="{DynamicResource Brush.OnSurface}" />
+                </Button>
+                <TextBlock Classes="SubTitle" Text="{loc:T Settings_About}" />
+            </StackPanel>
+
+            <!--  ==================== Приложение ====================
+                  Строки БЕЗ плитки (так в прототипе): здесь не действия, а факты, и плитка добавила бы
+                  им вес, которого у них нет. Копирование — иконочная кнопка справа, а не «Копировать
+                  сведения» отдельной кнопкой внизу: копируют ровно ту строку, на которую смотрят.  -->
+            <TextBlock Classes="SubGroupLabel" Text="{loc:T About_SecApp}" />
+            <Border Classes="SubCard">
+                <StackPanel>
+                    <Border Classes="SubRow">
+                        <Grid ColumnDefinitions="*,Auto,Auto">
+                            <TextBlock
+                                Grid.Column="0"
+                                Margin="0,0,12,0"
+                                VerticalAlignment="Center"
+                                Classes="SubName"
+                                Text="{loc:T About_VersionRow}" />
+                            <TextBlock
+                                x:Name="txtVersion"
+                                Grid.Column="1"
+                                Classes="SubValue strong" />
+                            <Button
+                                x:Name="btnCopyVersion"
+                                Grid.Column="2"
+                                Margin="6,0,-8,0"
+                                Classes="IconButton40 Row">
+                                <PathIcon Data="{DynamicResource Geo.Sub.Copy}" />
+                            </Button>
+                        </Grid>
+                    </Border>
+
+                    <Border Classes="SubDivider" />
+
+                    <Border Classes="SubRow">
+                        <Grid ColumnDefinitions="*,Auto,Auto">
+                            <TextBlock
+                                Grid.Column="0"
+                                Margin="0,0,12,0"
+                                VerticalAlignment="Center"
+                                Classes="SubName"
+                                Text="{loc:T About_System}" />
+                            <TextBlock
+                                x:Name="txtSystem"
+                                Grid.Column="1"
+                                Classes="SubValue" />
+                            <Button
+                                x:Name="btnCopySystem"
+                                Grid.Column="2"
+                                Margin="6,0,-8,0"
+                                Classes="IconButton40 Row">
+                                <PathIcon Data="{DynamicResource Geo.Sub.Copy}" />
+                            </Button>
+                        </Grid>
+                    </Border>
+                </StackPanel>
+            </Border>
+
+            <!--  ==================== Ссылки и документы ====================
+                  Показаны ТОЛЬКО те строки, за которыми в ветке стоит реальный адрес или экран:
+                  сайт, обратная связь (Telegram-бот) и проверка обновлений. «Исходный код»,
+                  «Лицензии открытого ПО», «Канал в Telegram» и «Политика конфиденциальности» из
+                  прототипа не добавлены — адресов под них в ветке нет, а шеврон в никуда хуже, чем
+                  отсутствующая строка. Так решено владельцем; отдельного экрана лицензий тоже нет.  -->
+            <TextBlock Classes="SubGroupLabel" Text="{loc:T About_SecLinks}" />
+            <Border Classes="SubCard">
+                <StackPanel>
+                    <Border x:Name="RowSite" Classes="SubRow tap">
+                        <Grid ColumnDefinitions="Auto,*,Auto">
+                            <Border Grid.Column="0" Classes="SubTile">
+                                <PathIcon Data="{DynamicResource Geo.Sub.Globe}" />
+                            </Border>
+                            <TextBlock
+                                Grid.Column="1"
+                                Margin="16,0,12,0"
+                                VerticalAlignment="Center"
+                                Classes="SubName"
+                                Text="{loc:T About_Site}" />
+                            <PathIcon
+                                Grid.Column="2"
+                                Classes="SubChevron"
+                                Data="{DynamicResource Geo.Sub.Chevron}" />
+                        </Grid>
+                    </Border>
+
+                    <Border Classes="SubDivider" />
+
+                    <Border x:Name="RowFeedback" Classes="SubRow tap">
+                        <Grid ColumnDefinitions="Auto,*,Auto">
+                            <Border Grid.Column="0" Classes="SubTile">
+                                <PathIcon Data="{DynamicResource Geo.Sub.Url}" />
+                            </Border>
+                            <TextBlock
+                                Grid.Column="1"
+                                Margin="16,0,12,0"
+                                VerticalAlignment="Center"
+                                Classes="SubName"
+                                Text="{loc:T About_Feedback}" />
+                            <PathIcon
+                                Grid.Column="2"
+                                Classes="SubChevron"
+                                Data="{DynamicResource Geo.Sub.Chevron}" />
+                        </Grid>
+                    </Border>
+
+                    <Border Classes="SubDivider" />
+
+                    <Border x:Name="RowCheckUpdate" Classes="SubRow tap">
+                        <Grid ColumnDefinitions="Auto,*,Auto">
+                            <Border Grid.Column="0" Classes="SubTile">
+                                <PathIcon Data="{DynamicResource Geo.Sub.Refresh}" />
+                            </Border>
+                            <TextBlock
+                                Grid.Column="1"
+                                Margin="16,0,12,0"
+                                VerticalAlignment="Center"
+                                Classes="SubName"
+                                Text="{loc:T About_CheckUpdates}" />
+                            <PathIcon
+                                Grid.Column="2"
+                                Classes="SubChevron"
+                                Data="{DynamicResource Geo.Sub.Chevron}" />
+                        </Grid>
+                    </Border>
+                </StackPanel>
+            </Border>
+
+            <TextBlock x:Name="txtCopyState" Classes="SubFoot" />
+        </StackPanel>
+    </ScrollViewer>
+</UserControl>
