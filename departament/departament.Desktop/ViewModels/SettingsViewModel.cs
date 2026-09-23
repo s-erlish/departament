@@ -294,24 +294,58 @@ public class SettingsViewModel : MyReactiveObject
     {
         // Each subscription emits the loaded value once on subscribe; the equality guards below make
         // that initial emission a no-op, so only genuine user changes are persisted.
-        this.WhenAnyValue(x => x.BypassLan).Subscribe(async v => await OnBypassLanChanged(v));
-        this.WhenAnyValue(x => x.EnableIpv6).Subscribe(async v => await OnIpv6Changed(v));
-        this.WhenAnyValue(x => x.MuxEnabled).Subscribe(async v => await OnMuxChanged(v));
-        this.WhenAnyValue(x => x.FragmentEnabled).Subscribe(async v => await OnFragmentChanged(v));
-        this.WhenAnyValue(x => x.AutoStart).Subscribe(async v => await OnAutoStartChanged(v));
-        this.WhenAnyValue(x => x.HideTrayIcon).Subscribe(async v => await OnHideTrayIconChanged(v));
-        this.WhenAnyValue(x => x.LiteMode).Subscribe(async v => await OnLiteModeChanged(v));
+        //
+        //  Каждый обработчик уходит через Guarded, и это НЕ УКРАШЕНИЕ. `Subscribe(async v => …)` —
+        //  это async void: лямбда возвращает void, поэтому исключение ПОСЛЕ первого await ловить
+        //  некому. ThrownExceptions у обычного Subscribe не работает (это канал ReactiveCommand), а
+        //  AppDomain.UnhandledException в App.axaml.cs только пишет строку в журнал и процесс не
+        //  спасает. WhenAnyValue отдаёт значение на том потоке, где свойство меняли, то есть на UI, и
+        //  await возвращается туда же — падение уходит прямо в диспетчер и уносит окно целиком.
+        //  Ровно этот механизм однажды съел экран «Вход»: разбор в шапке PlayMotion (LoginView).
+        //  Сегодня ни один из обработчиков ниже бросить не может (ConfigHandler.SaveConfig ловит всё
+        //  сам и возвращает -1, AutostartHelper тоже), но это свойство их ТЕЛ, а не этой строки:
+        //  первый же добавленный вызов, умеющий бросать, вернул бы падение. Guarded закрывает форму,
+        //  а не конкретный случай.
+        this.WhenAnyValue(x => x.BypassLan).Subscribe(v => Guarded(() => OnBypassLanChanged(v)));
+        this.WhenAnyValue(x => x.EnableIpv6).Subscribe(v => Guarded(() => OnIpv6Changed(v)));
+        this.WhenAnyValue(x => x.MuxEnabled).Subscribe(v => Guarded(() => OnMuxChanged(v)));
+        this.WhenAnyValue(x => x.FragmentEnabled).Subscribe(v => Guarded(() => OnFragmentChanged(v)));
+        this.WhenAnyValue(x => x.AutoStart).Subscribe(v => Guarded(() => OnAutoStartChanged(v)));
+        this.WhenAnyValue(x => x.HideTrayIcon).Subscribe(v => Guarded(() => OnHideTrayIconChanged(v)));
+        this.WhenAnyValue(x => x.LiteMode).Subscribe(v => Guarded(() => OnLiteModeChanged(v)));
 
         //  Строки-окошки: индекс — единственная точка записи. _loading гасит первичную эмиссию и
         //  все служебные пере-выставления (внешняя смена TUN, zoom с клавиатуры, смена языка).
-        this.WhenAnyValue(x => x.ModeIndex).Subscribe(async i => await OnModeIndexChanged(i));
-        this.WhenAnyValue(x => x.LookIndex).Subscribe(async i => await OnLookIndexChanged(i));
-        this.WhenAnyValue(x => x.LanguageIndex).Subscribe(async i => await OnLanguageIndexChanged(i));
+        this.WhenAnyValue(x => x.ModeIndex).Subscribe(i => Guarded(() => OnModeIndexChanged(i)));
+        this.WhenAnyValue(x => x.LookIndex).Subscribe(i => Guarded(() => OnLookIndexChanged(i)));
+        this.WhenAnyValue(x => x.LanguageIndex).Subscribe(i => Guarded(() => OnLanguageIndexChanged(i)));
         this.WhenAnyValue(x => x.UiScaleIndex).Subscribe(OnUiScaleIndexChanged);
-        this.WhenAnyValue(x => x.AutoUpdateIndex).Subscribe(async i => await OnAutoUpdateIndexChanged(i));
-        this.WhenAnyValue(x => x.MuxCountIndex).Subscribe(async i => await OnMuxCountIndexChanged(i));
-        this.WhenAnyValue(x => x.DnsIndex).Subscribe(async i => await OnDnsIndexChanged(i));
-        this.WhenAnyValue(x => x.PingIndex).Subscribe(async i => await OnPingIndexChanged(i));
+        this.WhenAnyValue(x => x.AutoUpdateIndex).Subscribe(i => Guarded(() => OnAutoUpdateIndexChanged(i)));
+        this.WhenAnyValue(x => x.MuxCountIndex).Subscribe(i => Guarded(() => OnMuxCountIndexChanged(i)));
+        this.WhenAnyValue(x => x.DnsIndex).Subscribe(i => Guarded(() => OnDnsIndexChanged(i)));
+        this.WhenAnyValue(x => x.PingIndex).Subscribe(i => Guarded(() => OnPingIndexChanged(i)));
+    }
+
+    /// <summary>
+    /// Запускает обработчик настройки и не даёт его падению уйти в необработанные. Одна строка
+    /// в журнале вместо закрывшегося окна: сама настройка не применилась, но приложение осталось.
+    ///
+    /// <para>Порядок сохраняется тот же, что был: задача стартует синхронно до первого await, и
+    /// быстрые переключения ложатся в том порядке, в каком пришли, — <c>Guarded</c> ничего не
+    /// откладывает и ничем не оборачивает поток значений.</para>
+    /// </summary>
+    private static void Guarded(Func<Task> handler) => _ = RunGuardedAsync(handler);
+
+    private static async Task RunGuardedAsync(Func<Task> handler)
+    {
+        try
+        {
+            await handler();
+        }
+        catch (Exception ex)
+        {
+            Logging.SaveLog("SettingsViewModel", ex);
+        }
     }
 
     private async Task OnBypassLanChanged(bool v)

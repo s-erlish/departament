@@ -90,6 +90,15 @@ public sealed class AppManager
         }
 
         Logging.Setup();
+
+        //  Каталоги с учётными данными закрываются от ЧУЖИХ пользователей этой машины: guiConfigs
+        //  (пропуск аккаунта и база с URL подписки), binConfigs (конфиг ядра с uuid/паролем узла),
+        //  guiBackups и guiTemps (резервное копирование раскладывает там полную незашифрованную
+        //  копию guiConfigs). Здесь, а не позже: новые файлы наследуют права каталога, поэтому
+        //  закрыть его надо ДО первой записи. Идемпотентно, не-Windows и непривилегированный запуск
+        //  пропускает само, любая неудача — только строка в журнале. См. DataFolderSecurity.
+        DataFolderSecurity.Harden();
+
         var config = ConfigHandler.LoadConfig();
         if (config == null)
         {
