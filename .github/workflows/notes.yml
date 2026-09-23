@@ -1,0 +1,48 @@
+name: Описание выпуска
+
+# Заменяет описание выпуска (вышедшего или черновика) текстом из release-notes/vX.Y.Z.md и той же
+# строкой о лицензии, что пишет «Выпуск». Файлы выпуска не трогает. Поправить описание можно и прямо на
+# странице выпуска карандашом Edit; этот запуск нужен, когда текст правят в репозитории.
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: Версия, например 1.0.0
+        required: true
+        type: string
+
+permissions:
+  contents: read
+
+jobs:
+  notes:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          sparse-checkout: release-notes
+
+      - name: Replace release notes
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+          IN_VERSION: ${{ inputs.version }}
+        run: |
+          set -euo pipefail
+          version="$(printf '%s' "$IN_VERSION" | tr -d '[:space:]')"
+          version="${version#[vV]}"
+          tag="v$version"
+          if [ ! -f "release-notes/$tag.md" ]; then
+            echo "::error::Нет файла release-notes/$tag.md"
+            exit 1
+          fi
+          body="$RUNNER_TEMP/notes.md"
+          {
+            cat "release-notes/$tag.md"
+            printf '\n---\n\nПрограмма распространяется по лицензии GPL-3.0.\n'
+          } > "$body"
+          gh release edit "$tag" --notes-file "$body"
+          echo "Описание $tag обновлено: $(gh release view "$tag" --json url -q .url)" >> "$GITHUB_STEP_SUMMARY"

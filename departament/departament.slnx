@@ -1,6 +1,7 @@
 <Solution>
   <Folder Name="/GitHub Action/">
     <File Path="../.github/workflows/build.yml" />
+    <File Path="../.github/workflows/notes.yml" />
     <File Path="../.github/workflows/release.yml" />
     <File Path="../.github/workflows/test.yml" />
   </Folder>

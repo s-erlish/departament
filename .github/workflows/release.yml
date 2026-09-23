@@ -8,8 +8,8 @@ name: Выпуск
 #     Releases появится черновик с установщиком и архивом обновления. «Publish release» — и выпуск вышел.
 #   • Или сразу Releases → Draft a new release → тег v1.2.3 → Publish release. Установщик и архив
 #     обновления сборка приложит к выпуску сама через 10–15 минут.
-# Опубликованный выпуск не пересобирается: люди, возможно, уже скачали его файлы. Для исправления нужна
-# новая версия.
+# Черновик можно пересобрать: запуск с тем же номером заменяет его новой сборкой. Опубликованный выпуск
+# не пересобирается: люди, возможно, уже скачали его файлы. Для исправления нужна новая версия.
 
 on:
   workflow_dispatch:
@@ -41,6 +41,7 @@ jobs:
       mode: ${{ steps.plan.outputs.mode }}
       tag: ${{ steps.plan.outputs.tag }}
       version: ${{ steps.plan.outputs.version }}
+      replace: ${{ steps.plan.outputs.replace }}
     steps:
       - id: plan
         env:
@@ -76,9 +77,15 @@ jobs:
               exit 0
             fi
           else
-            if gh release view "$tag" >/dev/null 2>&1; then
-              echo "::error::Выпуск $tag уже есть на странице Releases (может быть, черновиком). Укажите следующую версию."
-              exit 1
+            replace=false
+            if draft="$(gh release view "$tag" --json isDraft -q .isDraft 2>/dev/null)"; then
+              if [ "$draft" != "true" ]; then
+                echo "::error::Выпуск $tag уже опубликован. Укажите следующую версию."
+                exit 1
+              fi
+              # Черновик люди не видели и не скачивали: его можно заменить новой сборкой.
+              echo "::notice::Черновик $tag будет заменён новой сборкой"
+              replace=true
             fi
             if git ls-remote --exit-code --tags "https://github.com/$GH_REPO.git" "refs/tags/$tag" >/dev/null; then
               echo "::error::Тег $tag уже есть. Укажите следующую версию."
@@ -90,6 +97,7 @@ jobs:
             echo "mode=$mode"
             echo "tag=$tag"
             echo "version=$version"
+            echo "replace=${replace:-false}"
           } >> "$GITHUB_OUTPUT"
           echo "Выпуск $tag ($mode) из $GITHUB_SHA"
 
@@ -121,6 +129,7 @@ jobs:
           GH_REPO: ${{ github.repository }}
           MODE: ${{ needs.plan.outputs.mode }}
           TAG: ${{ needs.plan.outputs.tag }}
+          REPLACE: ${{ needs.plan.outputs.replace }}
           VERSION: ${{ needs.build.outputs.version }}
           PRERELEASE: ${{ needs.build.outputs.prerelease }}
           SOURCE_SHA: ${{ needs.build.outputs.source_sha }}
@@ -139,9 +148,17 @@ jobs:
               else
                 echo "Описание выпуска: что нового для людей. Отредактируйте его перед публикацией."
               fi
-              printf '\n---\n\nПрограмма распространяется по лицензии GPL-3.0. Исходный код этой версии — в этом репозитории, тег %s.\n' "$TAG"
+              printf '\n---\n\nПрограмма распространяется по лицензии GPL-3.0.\n'
             } > "$body"
-            flags=(--draft --title "departament для ПК $VERSION" --notes-file "$body")
+            if [ "$REPLACE" = "true" ]; then
+              # Пока шла сборка, черновик могли опубликовать: тогда его не трогаем.
+              if [ "$(gh release view "$TAG" --json isDraft -q .isDraft)" != "true" ]; then
+                echo "::error::Выпуск $TAG опубликован, пока шла сборка. Новая сборка не выложена."
+                exit 1
+              fi
+              gh release delete "$TAG" --yes
+            fi
+            flags=(--draft --title "departament $VERSION" --notes-file "$body")
             [ "$PRERELEASE" = "true" ] && flags+=(--prerelease)
             # Тег появится при публикации, на собранном коммите. Если токену сборки нельзя указать коммит,
             # тег встанет на main в момент публикации.

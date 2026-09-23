@@ -61,8 +61,11 @@ permissions:
   contents: read
 
 env:
-  XRAY_TAG: v26.3.27
-  XRAY_SHA256: d004c39288ce9ada487c6f398c7c545f7d749e44bdfdd59dbc9f865afba4e1ad
+  # Xray не ниже 26.4.13: только с ним TUN-вход понимает gateway и autoSystemRoutingTable, которые пишет
+  # программа, и на Windows адаптер xray_tun получает адрес и маршрут. С 26.3.27 TUN обычного узла
+  # поднимался с одним адресом APIPA, программа писала «Подключено», а трафик шёл мимо VPN.
+  XRAY_TAG: v26.9.9
+  XRAY_SHA256: 244deaba2098c2964e49bba90df3707777e5f5f428a82d2f29604015f24beec2
   SINGBOX_VERSION: 1.14.1
   SINGBOX_SHA256: 5197f16d492d93202dc623622149a6ed040f8eca263128f91d603f2b901baa89
 
