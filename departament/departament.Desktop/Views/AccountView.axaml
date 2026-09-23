@@ -87,6 +87,7 @@
                 <FocusAdornerTemplate>
                     <Border
                         Margin="-2"
+                        AdornerLayer.IsClipEnabled="False"
                         BorderBrush="{DynamicResource Brush.Accent}"
                         BorderThickness="2"
                         CornerRadius="23" />

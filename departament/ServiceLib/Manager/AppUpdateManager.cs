@@ -96,9 +96,13 @@ public sealed class AppUpdateManager
 
     /// <summary>
     /// Запускает автопроверку: первая через <paramref name="firstDelay"/>, дальше каждые <paramref name="period"/>.
-    /// Повторный вызов ничего не делает. Выключателя у автопроверки нет: владелец решил, что кнопки
-    /// «Проверить обновления» достаточно, а о новой версии приложение сообщает само. Поле AutoCheck из
-    /// конфигов прежних сборок при чтении пропускается и при следующей записи пропадает.
+    /// Не удалась фоновая проверка из-за сети (<see cref="QuickRetryFailures"/>) — следующая через
+    /// <see cref="QuickRetryDelay"/>, а не через период, но не больше <see cref="QuickRetries"/> раз подряд:
+    /// на запуске сеть часто ещё поднимается (подключение VPN перестраивает маршруты), и первая проверка
+    /// не должна откладывать новость на целый период. Повторный вызов ничего не делает.
+    /// Выключателя у автопроверки нет: владелец решил, что кнопки «Проверить обновления» достаточно, а о
+    /// новой версии приложение сообщает само. Поле AutoCheck из конфигов прежних сборок при чтении
+    /// пропускается и при следующей записи пропадает.
     /// </summary>
     public void StartSchedule(TimeSpan firstDelay, TimeSpan period)
     {
@@ -110,6 +114,7 @@ public sealed class AppUpdateManager
         {
             EnsureReconciled();
             var delay = firstDelay;
+            var retries = 0;
             while (true)
             {
                 await Task.Delay(delay);
@@ -118,6 +123,7 @@ public sealed class AppUpdateManager
                 {
                     continue;
                 }
+                _lastBackgroundFailure = null;
                 try
                 {
                     await CheckAsync(userInitiated: false);
@@ -126,9 +132,35 @@ public sealed class AppUpdateManager
                 {
                     Logging.SaveLog(_tag, ex);
                 }
+                if (_lastBackgroundFailure is { } failure && QuickRetryFailures.Contains(failure) && retries < QuickRetries)
+                {
+                    retries++;
+                    delay = QuickRetryDelay;
+                    Logging.SaveLog($"{_tag}: background check failed ({failure}), retry {retries} in {QuickRetryDelay.TotalMinutes:0} min");
+                }
+                else
+                {
+                    retries = 0;
+                }
             }
         });
     }
+
+    /// <summary>Через сколько повторить фоновую проверку, которой помешала сеть.</summary>
+    private static readonly TimeSpan QuickRetryDelay = TimeSpan.FromMinutes(2);
+
+    /// <summary>Сколько раз подряд повторять раньше периода.</summary>
+    private const int QuickRetries = 3;
+
+    /// <summary>
+    /// Сбои, которые проходят сами за минуты: нет сети, сервер не ответил, ответил ошибкой. Ограничение
+    /// числа запросов GitHub сюда не входит: оно снимается только через час, частые повторы его продлят.
+    /// </summary>
+    private static readonly AppUpdateFailure[] QuickRetryFailures =
+        [AppUpdateFailure.Offline, AppUpdateFailure.Unreachable, AppUpdateFailure.ServerError];
+
+    /// <summary>Итог последней фоновой проверки: причина сбоя или null. Читает только цикл автопроверки.</summary>
+    private AppUpdateFailure? _lastBackgroundFailure;
 
     /// <summary>
     /// Итог прошлой установки и уборка скачанного. Один раз за сеанс, до первой проверки. Установщик
@@ -279,6 +311,7 @@ public sealed class AppUpdateManager
         }
 
         // Фон: предложение показываем всегда, «новее нет» — если до этого показывать было нечего, сбой — никогда.
+        _lastBackgroundFailure = next.Stage == AppUpdateStage.Failed ? next.Failure : null;
         lock (_gate)
         {
             var show = next.Stage == AppUpdateStage.Available

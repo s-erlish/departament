@@ -1181,11 +1181,16 @@
     <!--  станет Focusable в Фазе 3 — кольцо-фундамент уже готово и сработает тогда).  -->
     <!-- ==================================================================== -->
 
+    <!--  AdornerLayer.IsClipEnabled="False" у КАЖДОГО кольца. Слой адорнеров по умолчанию подрезает
+          кольцо по границам самой кнопки, а кольцо лежит на 2 точки СНАРУЖИ неё: от него оставались
+          только четыре синие дуги на углах. Владелец увидел это на «Отмена» в «Перезапустить сейчас?»
+          и назвал кнопки кривыми.  -->
     <!--  Не-залитые CTA (Radius.Button 16 → кольцо 18): внешнее 2px Accent.  -->
     <Style Selector="Button.Tonal, Button.OutlinedAccent, Button.Destructive">
         <Setter Property="FocusAdorner">
             <FocusAdornerTemplate>
                 <Border Margin="-2" BorderThickness="2" CornerRadius="18"
+                        AdornerLayer.IsClipEnabled="False"
                         BorderBrush="{DynamicResource Brush.Accent}" />
             </FocusAdornerTemplate>
         </Setter>
@@ -1196,6 +1201,7 @@
         <Setter Property="FocusAdorner">
             <FocusAdornerTemplate>
                 <Border Margin="-2" BorderThickness="2" CornerRadius="14"
+                        AdornerLayer.IsClipEnabled="False"
                         BorderBrush="{DynamicResource Brush.Accent}" />
             </FocusAdornerTemplate>
         </Setter>
@@ -1206,6 +1212,7 @@
         <Setter Property="FocusAdorner">
             <FocusAdornerTemplate>
                 <Border Margin="-2" BorderThickness="2" CornerRadius="16"
+                        AdornerLayer.IsClipEnabled="False"
                         BorderBrush="{DynamicResource Brush.Accent}" />
             </FocusAdornerTemplate>
         </Setter>
@@ -1216,17 +1223,21 @@
         <Setter Property="FocusAdorner">
             <FocusAdornerTemplate>
                 <Border Margin="-2" BorderThickness="2" CornerRadius="22"
+                        AdornerLayer.IsClipEnabled="False"
                         BorderBrush="{DynamicResource Brush.Accent}" />
             </FocusAdornerTemplate>
         </Setter>
     </Style>
 
-    <!--  Primary/Tall — ВНУТРЕННЕЕ кольцо OnAccent @40% (радиус 16, без -2 отступа).  -->
+    <!--  Primary/Tall — то же внешнее кольцо 2px Accent (радиус 16 → 18). Раньше здесь было внутреннее
+          кольцо OnAccent @40% под синюю заливку; заливку убрали по просьбе владельца, кнопка стала
+          контурной, и тёмное кольцо внутри неё стало невидимым: фокус с клавиатуры не было видно вовсе.  -->
     <Style Selector="Button.Primary">
         <Setter Property="FocusAdorner">
             <FocusAdornerTemplate>
-                <Border BorderThickness="2" CornerRadius="16" Opacity="0.4"
-                        BorderBrush="{DynamicResource Brush.OnAccent}" />
+                <Border Margin="-2" BorderThickness="2" CornerRadius="18"
+                        AdornerLayer.IsClipEnabled="False"
+                        BorderBrush="{DynamicResource Brush.Accent}" />
             </FocusAdornerTemplate>
         </Setter>
     </Style>

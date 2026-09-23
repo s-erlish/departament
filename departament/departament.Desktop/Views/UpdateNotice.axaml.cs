@@ -36,15 +36,16 @@ public partial class UpdateNotice : UserControl
     }
 
     /// <summary>
-    /// Автопроверка обновлений: первая — через 20–30 с после первого кадра окна, дальше раз в 6 часов,
-    /// пока приложение открыто. Вызывает оболочка (MainWindow.OnOpened); повторный вызов ничего не делает.
-    /// Проверка не на пути запуска: к моменту первого запроса окно давно нарисовано и список серверов прочитан.
+    /// Автопроверка обновлений: первая — сразу после запуска (через 3 с после первого кадра окна), дальше
+    /// каждый час, пока приложение открыто. Так просил владелец: о новой версии программа узнаёт при
+    /// запуске и в течение часа после выхода выпуска. Вызывает оболочка (MainWindow.OnOpened); повторный
+    /// вызов ничего не делает. Три секунды — чтобы запрос не шёл в один кадр с отрисовкой окна.
     /// </summary>
     public static void StartAutoCheck()
     {
-        var first = TimeSpan.FromSeconds(Random.Shared.Next(20, 31));
+        var first = TimeSpan.FromSeconds(3);
 #if DEBUG
-        // Прогон на машине разработчика не ждёт полминуты (только отладочная сборка, см. AppUpdateChannel.Current).
+        // На машине разработчика задержку первой проверки можно задать (только отладочная сборка, см. AppUpdateChannel.Current).
         if (int.TryParse(Environment.GetEnvironmentVariable("DP_DEV_UPDATE_FIRST_S"), out var seconds) && seconds >= 0)
         {
             first = TimeSpan.FromSeconds(seconds);
@@ -55,7 +56,7 @@ public partial class UpdateNotice : UserControl
             return;
         }
 #endif
-        AppUpdateManager.Instance.StartSchedule(first, TimeSpan.FromHours(6));
+        AppUpdateManager.Instance.StartSchedule(first, TimeSpan.FromHours(1));
     }
 
 #if DEBUG

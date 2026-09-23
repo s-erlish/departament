@@ -16,41 +16,63 @@
         «Скачиваем 42 %» → «Проверяем файл» → «Перезапустить» (с подтверждением) или «Не удалось
         обновить». Сбой фоновой проверки (нет сети) сюда не выходит: это журнал, а не новость.
 
-        Геометрия — из соседей по строке окна: высота 30, как у кнопок окна; скругление Radius.Chip 12;
-        поля 12, зазор до глифа 8. Отклик — прогиб кнопки (Button.LinkAction: 0.975), без свечения при
-        наведении, как у всех кнопок приложения. Фокус — кольцо LinkAction.
+        Геометрия. Пилюля 32 в полосе 40: на ступень выше кнопок окна (30), по 4 сверху и снизу.
+        Радиус — половина высоты (Radius.Pill32), поля 12 у глифа и 14 у текста: глиф несёт свой
+        воздух внутри, так пилюля выглядит ровной. Текст 13 SemiBold белым (OnSurface): владелец просил
+        белый шрифт и кнопку крупнее — синий текст на тёмно-синей заливке 12 % читался плохо и
+        сливался с фоном, край плашки терялся, и текст казался вылезающим за рамку.
+
+        «Обновить» и «Перезапустить» — контурная пилюля: 1.5 акцентом, внутри пусто, глиф акцентный.
+        Это язык основных кнопок приложения (синей заливки у кнопок нет по просьбе владельца).
+        Загрузка, проверка и установка — нейтральная плитка без контура: кнопка не зовёт, пока идёт
+        работа. Сбой — та же плитка с красным текстом. Толщина контура одна во всех состояниях
+        (прозрачный там, где его нет), поэтому при смене состояния пилюля не дёргается.
+
+        Отклик — прогиб кнопки (Button.LinkAction: 0.975), без свечения при наведении, как у всех кнопок
+        приложения. Фокус — кольцо, концентричное пилюле (16 + 2).
     -->
 
     <UserControl.Styles>
         <Style Selector="Button.UpdateChip">
-            <Setter Property="Height" Value="30" />
+            <Setter Property="Height" Value="32" />
             <Setter Property="Padding" Value="0" />
+            <Setter Property="CornerRadius" Value="{DynamicResource Radius.Pill32}" />
             <Setter Property="VerticalAlignment" Value="Center" />
+            <Setter Property="FocusAdorner">
+                <FocusAdornerTemplate>
+                    <Border
+                        Margin="-2"
+                        AdornerLayer.IsClipEnabled="False"
+                        BorderBrush="{DynamicResource Brush.Accent}"
+                        BorderThickness="2"
+                        CornerRadius="18" />
+                </FocusAdornerTemplate>
+            </Setter>
         </Style>
         <Style Selector="Border.ChipBg">
-            <Setter Property="CornerRadius" Value="{DynamicResource Radius.Chip}" />
-            <Setter Property="Padding" Value="12,0" />
+            <Setter Property="Height" Value="32" />
+            <Setter Property="CornerRadius" Value="{DynamicResource Radius.Pill32}" />
+            <Setter Property="Padding" Value="12,0,14,0" />
+            <Setter Property="BorderThickness" Value="1.5" />
+            <Setter Property="BorderBrush" Value="Transparent" />
             <Setter Property="Background" Value="{DynamicResource Brush.Tile.Neutral}" />
         </Style>
-        <!--  Предложение и готовое обновление — единственные акцентные состояния: заливка выбора (12 %) и
-              акцентный текст. Остальные — нейтральная плитка приглушённого текста.  -->
         <Style Selector="Border.ChipBg.accent">
-            <Setter Property="Background" Value="{DynamicResource Brush.SelectedFill}" />
+            <Setter Property="Background" Value="Transparent" />
+            <Setter Property="BorderBrush" Value="{DynamicResource Brush.Accent}" />
         </Style>
         <Style Selector="Border.ChipBg TextBlock">
-            <Setter Property="FontWeight" Value="Medium" />
-            <Setter Property="Foreground" Value="{DynamicResource Brush.OnSurfaceVariant}" />
+            <Setter Property="FontSize" Value="13" />
+            <Setter Property="FontWeight" Value="SemiBold" />
+            <Setter Property="Foreground" Value="{DynamicResource Brush.OnSurface}" />
             <Setter Property="VerticalAlignment" Value="Center" />
-            <Setter Property="MaxWidth" Value="150" />
+            <Setter Property="MaxWidth" Value="200" />
             <Setter Property="TextTrimming" Value="CharacterEllipsis" />
         </Style>
         <Style Selector="Border.ChipBg PathIcon">
             <Setter Property="Width" Value="16" />
             <Setter Property="Height" Value="16" />
             <Setter Property="Foreground" Value="{DynamicResource Brush.OnSurfaceVariant}" />
-        </Style>
-        <Style Selector="Border.ChipBg.accent TextBlock">
-            <Setter Property="Foreground" Value="{DynamicResource Brush.Accent}" />
         </Style>
         <Style Selector="Border.ChipBg.accent PathIcon">
             <Setter Property="Foreground" Value="{DynamicResource Brush.Accent}" />
@@ -101,7 +123,7 @@
                         </Ellipse.RenderTransform>
                     </Ellipse>
                 </Panel>
-                <TextBlock x:Name="txtChip" Classes="Caption" />
+                <TextBlock x:Name="txtChip" />
             </StackPanel>
         </Border>
     </Button>
