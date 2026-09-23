@@ -1,0 +1,302 @@
+name: Сборка
+
+# Сборка departament для Windows x64: самодостаточная публикация (ReadyToRun), AmazTool, закреплённые
+# ядра Xray и sing-box с wintun и наборами правил, архив самообновления с контрольной суммой и
+# установщик.
+#
+# Запускается на каждый пуш в main и на запросы на слияние: готовые файлы лежат в артефактах запуска
+# (departament-vpn-win-x64 — папка программы, departament-setup — установщик). Её же вызывает выпуск
+# (release.yml): тогда архив, сумма и установщик уходят в релиз, а программы обновляются из него.
+#
+# Форма архива — договор с программой (AmazTool и проверка обновлений), а не вкус:
+#   • все файлы под одной папкой верхнего уровня departament-windows-x64/ — AmazTool срезает
+#     первый сегмент пути и файлы из корня архива пропускает;
+#   • разделитель путей в архиве — «/»; AmazTool режет по нему;
+#   • рядом departament-windows-x64.zip.sha256 в формате sha256sum — программа сверяет архив
+#     с ним до распаковки.
+#
+# Ядра ЗАКРЕПЛЕНЫ версией и контрольной суммой. Раньше сборка брала «latest» в момент
+# запуска, и выход нового ядра наверху мог за ночь сломать подключение без единой правки
+# здесь. Обновление ядра — это правка версии и суммы ниже и проверка сгенерированных
+# конфигов этим ядром (sing-box check / xray run -test), а не случайность расписания.
+# sing-box — не ниже 1.14: удалённые наборы правил приложение качает формой http_client,
+# которой ядра до 1.14 не знают.
+
+on:
+  push:
+    branches:
+      - main
+    paths-ignore:
+      - '**.md'
+      - 'LICENSE'
+  pull_request:
+    paths-ignore:
+      - '**.md'
+      - 'LICENSE'
+  workflow_dispatch:
+  workflow_call:
+    inputs:
+      version:
+        description: Версия X.Y.Z или X.Y.Z-rc.N; пусто — из v2rayN/Directory.Build.props
+        type: string
+        required: false
+        default: ''
+      package_release:
+        description: Выложить архив, сумму и установщик артефактом release-assets для публикации
+        type: boolean
+        required: false
+        default: false
+    outputs:
+      version:
+        description: Версия сборки
+        value: ${{ jobs.win-x64.outputs.version }}
+      prerelease:
+        description: true для X.Y.Z-rc.N
+        value: ${{ jobs.win-x64.outputs.prerelease }}
+      source_sha:
+        description: Коммит, из которого собрано
+        value: ${{ jobs.win-x64.outputs.source_sha }}
+
+permissions:
+  contents: read
+
+env:
+  XRAY_TAG: v26.3.27
+  XRAY_SHA256: d004c39288ce9ada487c6f398c7c545f7d749e44bdfdd59dbc9f865afba4e1ad
+  SINGBOX_VERSION: 1.14.1
+  SINGBOX_SHA256: 5197f16d492d93202dc623622149a6ed040f8eca263128f91d603f2b901baa89
+
+jobs:
+  win-x64:
+    runs-on: windows-latest
+    outputs:
+      version: ${{ steps.version.outputs.version }}
+      prerelease: ${{ steps.version.outputs.prerelease }}
+      source_sha: ${{ steps.version.outputs.source_sha }}
+    steps:
+      # Коммит, ради которого запущена сборка: пуш, запрос на слияние или выпуск (для выпуска — его тег
+      # или ветка, с которой его запустили).
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      # Версия — только в строгой форме: по ней программа решает, новее ли выпуск, чем она сама.
+      - name: Resolve version
+        id: version
+        shell: pwsh
+        env:
+          REQUESTED_VERSION: ${{ inputs.version }}
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $version = $env:REQUESTED_VERSION
+          if (-not $version) {
+            $props = [xml](Get-Content 'v2rayN/Directory.Build.props')
+            $version = @($props.Project.PropertyGroup | ForEach-Object { $_.Version } | Where-Object { $_ })[0]
+          }
+          if ($version -notmatch '^\d+\.\d+\.\d+(-rc\.\d+)?$') { throw "Version '$version' is not X.Y.Z or X.Y.Z-rc.N" }
+          $sha = (git rev-parse HEAD).Trim()
+          "version=$version" >> $env:GITHUB_OUTPUT
+          "prerelease=$(($version -match '-').ToString().ToLower())" >> $env:GITHUB_OUTPUT
+          "source_sha=$sha" >> $env:GITHUB_OUTPUT
+          Write-Host "Version $version from $sha"
+
+      - name: Setup .NET 10
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.0.x'
+
+      # ReadyToRun: код приложения и Avalonia заранее скомпилирован в машинный, и на запуске его не
+      # компилирует JIT. Владелец ждал окно с серверами после каждого старта; живой замер — 1,4–1,5 с
+      # до списка вместо 2,1–2,6 с. Цена — размер: exe 105 → 170 МБ, архив сборки примерно +25 МБ.
+      # Только здесь, а не в Directory.Build.props: общие настройки апстрима не трогаем.
+      # AmazTool — помощник обновления: программа отдаёт ему скачанный архив и выходит, он заменяет
+      # файлы и запускает её снова. Без него рядом с departament.exe обновиться нечем. Публикуется
+      # ПЕРВЫМ и в ту же папку: среда выполнения у них общая, а собранные ReadyToRun файлы
+      # приложения публикация приложения затем кладёт поверх.
+      - name: Publish AmazTool (upgrade helper)
+        working-directory: ./v2rayN
+        run: dotnet publish ./AmazTool/AmazTool.csproj -c Release -r win-x64 -p:SelfContained=true -p:EnableWindowsTargeting=true -p:Version=${{ steps.version.outputs.version }} -o "${{ github.workspace }}/dist"
+
+      - name: Publish (self-contained win-x64)
+        working-directory: ./v2rayN
+        run: dotnet publish ./v2rayN.Desktop/v2rayN.Desktop.csproj -c Release -r win-x64 -p:SelfContained=true -p:EnableWindowsTargeting=true -p:PublishReadyToRun=true -p:Version=${{ steps.version.outputs.version }} -o "${{ github.workspace }}/dist"
+
+      - name: Strip debug symbols
+        shell: pwsh
+        run: Get-ChildItem "${{ github.workspace }}/dist" -Filter *.pdb -Recurse | Remove-Item -Force -ErrorAction SilentlyContinue
+
+      - name: Verify departament executable
+        shell: pwsh
+        run: |
+          # The project's AssemblyName is now "departament", so publish emits
+          # departament.exe natively (correct filename AND baked FileDescription).
+          # No rename needed; just fail fast if the expected host is missing.
+          $exe = Join-Path "${{ github.workspace }}/dist" 'departament.exe'
+          if (Test-Path $exe) {
+            Write-Host 'Found departament.exe (native, no rename needed)'
+          } else {
+            # Fallback: a stale v2rayN.exe would mean AssemblyName regressed.
+            $legacy = Join-Path "${{ github.workspace }}/dist" 'v2rayN.exe'
+            if (Test-Path $legacy) {
+              Rename-Item $legacy 'departament.exe' -Force
+              Write-Host 'AssemblyName regressed; renamed v2rayN.exe -> departament.exe'
+            } else {
+              throw 'departament.exe not found in publish output'
+            }
+          }
+          if (-not (Test-Path (Join-Path "${{ github.workspace }}/dist" 'AmazTool.exe'))) { throw 'AmazTool.exe not found in publish output' }
+          # На выпуске версия в самом файле обязана совпасть с тегом: по ней программа сравнивает
+          # себя с релизом. Разойдись они — обновление предлагалось бы по кругу или не предлагалось вовсе.
+          $v = '${{ steps.version.outputs.version }}'
+          if ($v) {
+            $pv = (Get-Item $exe).VersionInfo.ProductVersion
+            # ProductVersion = версия выпуска, после «+» — хеш коммита (его дописывает SDK).
+            if ($pv -ne $v -and -not $pv.StartsWith("$v+")) { throw "departament.exe ProductVersion '$pv' does not match release $v" }
+            Write-Host "departament.exe ProductVersion $pv"
+          }
+
+      - name: Bundle Xray core + geo assets
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $url = "https://github.com/XTLS/Xray-core/releases/download/$env:XRAY_TAG/Xray-windows-64.zip"
+          Invoke-WebRequest -Uri $url -OutFile xray.zip
+          $hash = (Get-FileHash xray.zip -Algorithm SHA256).Hash
+          if ($hash -ne $env:XRAY_SHA256) { throw "Xray-windows-64.zip ($env:XRAY_TAG): SHA256 $hash, expected $env:XRAY_SHA256" }
+          Expand-Archive xray.zip -DestinationPath xray -Force
+          $dir = "${{ github.workspace }}/dist/bin/Xray"
+          New-Item -ItemType Directory -Force -Path $dir | Out-Null
+          Copy-Item xray/xray.exe "$dir/xray.exe" -Force
+          # wintun.dll — рядом с xray.exe: собственный TUN-вход Xray (режим «весь трафик» для
+          # обычных, не Custom, узлов) грузит его из своей папки, а сам его не содержит. Без
+          # файла Xray не может создать адаптер, и туннель не поднимается.
+          if (-not (Test-Path xray/wintun.dll)) { throw 'wintun.dll not found in the Xray archive' }
+          Copy-Item xray/wintun.dll "$dir/wintun.dll" -Force
+          Copy-Item xray/geoip.dat "${{ github.workspace }}/dist/bin/geoip.dat" -Force
+          Copy-Item xray/geosite.dat "${{ github.workspace }}/dist/bin/geosite.dat" -Force
+          $ver = (& "$dir/xray.exe" version | Select-Object -First 1)
+          if ($ver -notmatch "^Xray $([regex]::Escape($env:XRAY_TAG.TrimStart('v'))) ") { throw "unexpected Xray version: $ver" }
+          Write-Host "Bundled $ver"
+
+      - name: Bundle sing-box core (TUN pre-service, embeds wintun)
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $url = "https://github.com/SagerNet/sing-box/releases/download/v$env:SINGBOX_VERSION/sing-box-$env:SINGBOX_VERSION-windows-amd64.zip"
+          Invoke-WebRequest -Uri $url -OutFile singbox.zip
+          $hash = (Get-FileHash singbox.zip -Algorithm SHA256).Hash
+          if ($hash -ne $env:SINGBOX_SHA256) { throw "sing-box $env:SINGBOX_VERSION windows-amd64: SHA256 $hash, expected $env:SINGBOX_SHA256" }
+          Expand-Archive singbox.zip -DestinationPath singbox -Force
+          $exe = Get-ChildItem singbox -Recurse -Filter 'sing-box.exe' | Select-Object -First 1
+          if (-not $exe) { throw 'sing-box.exe not found in the downloaded archive' }
+          $dir = "${{ github.workspace }}/dist/bin/sing_box"
+          New-Item -ItemType Directory -Force -Path $dir | Out-Null
+          Copy-Item $exe.FullName "$dir/sing-box.exe" -Force
+          $ver = (& "$dir/sing-box.exe" version | Select-Object -First 1)
+          if ($ver -ne "sing-box version $env:SINGBOX_VERSION") { throw "unexpected sing-box version: $ver" }
+          Write-Host "Bundled $ver"
+
+      - name: Bundle sing-box rule-sets (bin/srss)
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          # Наборы правил — ФАЙЛАМИ рядом с приложением. Без них конфиг sing-box ссылается на
+          # удалённые наборы, и ядро при старте качает их через туннель; не скачалось —
+          # FATAL «initial rule-set», и подключение уходит в круг перезапусков. Локальный файл
+          # приложение берёт первым (SingboxRulesetService), и старт от сети не зависит.
+          # Список — все теги встроенных маршрутов («Белый список России», белый, чёрный, глобальный),
+          # DNS-шаблонов и умолчаний «Обновить базы» (UpdateService). ru и category-ru — для набора по
+          # умолчанию «Белый список России»: без файлов sing-box качал бы их на каждом старте через
+          # туннель и без сети падал бы с «initial rule-set: geosite-category-ru».
+          $sets = @{
+            'geoip'   = @('private', 'ru', 'cn', 'facebook', 'fastly', 'google', 'netflix', 'telegram', 'twitter')
+            'geosite' = @('private', 'category-ru', 'cn', 'google', 'gfw', 'greatfire', 'geolocation-cn', 'category-ads-all')
+          }
+          $dir = "${{ github.workspace }}/dist/bin/srss"
+          New-Item -ItemType Directory -Force -Path $dir, srs-check | Out-Null
+          $sb = "${{ github.workspace }}/dist/bin/sing_box/sing-box.exe"
+          foreach ($kind in $sets.Keys) {
+            foreach ($name in $sets[$kind]) {
+              $tag = "$kind-$name"
+              Invoke-WebRequest -Uri "https://raw.githubusercontent.com/2dust/sing-box-rules/rule-set-$kind/$tag.srs" -OutFile "$dir/$tag.srs"
+              # Данные наборов обновляются ежедневно, а ядро закреплено: проверяем, что именно
+              # это ядро файл читает. Иначе новый формат наверху сломал бы старт уже у людей.
+              & $sb rule-set decompile -o "srs-check/$tag.json" "$dir/$tag.srs"
+              if ($LASTEXITCODE -ne 0) { throw "sing-box $env:SINGBOX_VERSION cannot read $tag.srs" }
+            }
+          }
+          Write-Host 'Bundled rule-sets:' ((Get-ChildItem $dir -Filter *.srs).Name -join ', ')
+
+      - name: Package release zip
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          Add-Type -AssemblyName System.IO.Compression.FileSystem
+          $name = 'departament-windows-x64'
+          $pkg = Join-Path $env:RUNNER_TEMP 'pkg'
+          $root = Join-Path $pkg $name
+          New-Item -ItemType Directory -Force -Path $root | Out-Null
+          Copy-Item -Path "${{ github.workspace }}/dist/*" -Destination $root -Recurse -Force
+          $zip = Join-Path "${{ github.workspace }}" "$name.zip"
+          if (Test-Path $zip) { Remove-Item $zip -Force }
+          # includeBaseDirectory: все записи под departament-windows-x64/, разделитель — «/».
+          [System.IO.Compression.ZipFile]::CreateFromDirectory($root, $zip, [System.IO.Compression.CompressionLevel]::Optimal, $true)
+          $archive = [System.IO.Compression.ZipFile]::OpenRead($zip)
+          try {
+            $names = $archive.Entries | ForEach-Object { $_.FullName }
+          } finally { $archive.Dispose() }
+          $bad = $names | Where-Object { -not $_.StartsWith("$name/") -or $_.Contains('\') }
+          if ($bad) { throw "Zip entries outside '$name/' or with backslashes: $($bad | Select-Object -First 5)" }
+          foreach ($must in @('departament.exe', 'AmazTool.exe', 'bin/Xray/xray.exe', 'bin/Xray/wintun.dll', 'bin/sing_box/sing-box.exe', 'bin/geoip.dat', 'bin/geosite.dat')) {
+            if ($names -notcontains "$name/$must") { throw "Zip is missing $name/$must" }
+          }
+          $hash = (Get-FileHash $zip -Algorithm SHA256).Hash.ToLowerInvariant()
+          [System.IO.File]::WriteAllText("$zip.sha256", "$hash  $name.zip`n")
+          Write-Host "$name.zip: $($names.Count) entries, $([math]::Round((Get-Item $zip).Length / 1MB, 1)) MB, sha256 $hash"
+
+      # Установщик — для первой установки: тот же набор файлов, что в архиве самообновления, плюс ярлыки,
+      # запись в «Приложениях» и удаление. Дальше программа обновляется сама из выпусков, мимо него.
+      # Inno Setup на образе бывает не всегда — тогда ставим его на время сборки.
+      - name: Build installer (Inno Setup)
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $iscc = Join-Path ${env:ProgramFiles(x86)} 'Inno Setup 6\ISCC.exe'
+          if (-not (Test-Path $iscc)) { choco install innosetup --no-progress -y | Out-Host }
+          if (-not (Test-Path $iscc)) { throw "ISCC.exe not found at $iscc" }
+          $ws = "${{ github.workspace }}"
+          $v = '${{ steps.version.outputs.version }}'
+          if (-not $v) { $v = (Get-Item "$ws/dist/departament.exe").VersionInfo.ProductVersion.Split('+')[0] }
+          $num = "$(($v -split '-')[0]).0"
+          & $iscc "/DAppVersion=$v" "/DNumericVersion=$num" "/DSourceDir=$ws\dist" "/DIconFile=$ws\v2rayN\v2rayN.Desktop\Assets\AppIcon.ico" "/O$ws" "$ws\installer\departament.iss"
+          if ($LASTEXITCODE -ne 0) { throw "ISCC failed with exit code $LASTEXITCODE" }
+          $setup = Get-Item "$ws/departament-setup.exe"
+          Write-Host "departament-setup.exe $v, $([math]::Round($setup.Length / 1MB, 1)) MB"
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: departament-vpn-win-x64
+          path: dist
+          if-no-files-found: error
+
+      - name: Upload installer
+        uses: actions/upload-artifact@v4
+        with:
+          name: departament-setup
+          path: departament-setup.exe
+          if-no-files-found: error
+          compression-level: 0
+
+      - name: Upload release assets
+        if: inputs.package_release
+        uses: actions/upload-artifact@v4
+        with:
+          name: release-assets
+          retention-days: 3
+          path: |
+            departament-windows-x64.zip
+            departament-windows-x64.zip.sha256
+            departament-setup.exe
+          if-no-files-found: error
