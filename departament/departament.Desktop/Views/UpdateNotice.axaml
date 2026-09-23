@@ -1,0 +1,108 @@
+<UserControl
+    x:Class="departament.Desktop.Views.UpdateNotice"
+    xmlns="https://github.com/avaloniaui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    IsVisible="False">
+
+    <!--
+        УВЕДОМЛЕНИЕ ОБ ОБНОВЛЕНИИ — чип в строке окна, слева от кнопок окна.
+
+        Почему здесь, а не тостом внизу: владелец не хочет НИКАКИХ нижних уведомлений (MainWindow,
+        snackHost — осознанный no-op). Строка окна видна на любой вкладке и на любом подэкране, чип в ней
+        ничего не закрывает и ничего не сдвигает, а в покое его нет вовсе. Так же сообщают о готовом
+        обновлении настольные программы, которые обновляются сами (браузеры — «Обновить» у кнопок окна).
+
+        Чип живёт, пока у состояния есть предложение (AppUpdateState.Offer): «Обновить до 1.2.0» →
+        «Скачиваем 42 %» → «Проверяем файл» → «Перезапустить» (с подтверждением) или «Не удалось
+        обновить». Сбой фоновой проверки (нет сети) сюда не выходит: это журнал, а не новость.
+
+        Геометрия — из соседей по строке окна: высота 30, как у кнопок окна; скругление Radius.Chip 12;
+        поля 12, зазор до глифа 8. Отклик — прогиб кнопки (Button.LinkAction: 0.975), без свечения при
+        наведении, как у всех кнопок приложения. Фокус — кольцо LinkAction.
+    -->
+
+    <UserControl.Styles>
+        <Style Selector="Button.UpdateChip">
+            <Setter Property="Height" Value="30" />
+            <Setter Property="Padding" Value="0" />
+            <Setter Property="VerticalAlignment" Value="Center" />
+        </Style>
+        <Style Selector="Border.ChipBg">
+            <Setter Property="CornerRadius" Value="{DynamicResource Radius.Chip}" />
+            <Setter Property="Padding" Value="12,0" />
+            <Setter Property="Background" Value="{DynamicResource Brush.Tile.Neutral}" />
+        </Style>
+        <!--  Предложение и готовое обновление — единственные акцентные состояния: заливка выбора (12 %) и
+              акцентный текст. Остальные — нейтральная плитка приглушённого текста.  -->
+        <Style Selector="Border.ChipBg.accent">
+            <Setter Property="Background" Value="{DynamicResource Brush.SelectedFill}" />
+        </Style>
+        <Style Selector="Border.ChipBg TextBlock">
+            <Setter Property="FontWeight" Value="Medium" />
+            <Setter Property="Foreground" Value="{DynamicResource Brush.OnSurfaceVariant}" />
+            <Setter Property="VerticalAlignment" Value="Center" />
+            <Setter Property="MaxWidth" Value="150" />
+            <Setter Property="TextTrimming" Value="CharacterEllipsis" />
+        </Style>
+        <Style Selector="Border.ChipBg PathIcon">
+            <Setter Property="Width" Value="16" />
+            <Setter Property="Height" Value="16" />
+            <Setter Property="Foreground" Value="{DynamicResource Brush.OnSurfaceVariant}" />
+        </Style>
+        <Style Selector="Border.ChipBg.accent TextBlock">
+            <Setter Property="Foreground" Value="{DynamicResource Brush.Accent}" />
+        </Style>
+        <Style Selector="Border.ChipBg.accent PathIcon">
+            <Setter Property="Foreground" Value="{DynamicResource Brush.Accent}" />
+        </Style>
+        <Style Selector="Border.ChipBg.error TextBlock">
+            <Setter Property="Foreground" Value="{DynamicResource Brush.RedText}" />
+        </Style>
+        <Style Selector="Border.ChipBg.error PathIcon">
+            <Setter Property="Foreground" Value="{DynamicResource Brush.RedText}" />
+        </Style>
+    </UserControl.Styles>
+
+    <UserControl.Resources>
+        <StreamGeometry x:Key="Geo.Notice.Install">M19,9h-4V3H9v6H5l7,7 7,-7zM5,18v2h14v-2H5z</StreamGeometry>
+        <StreamGeometry x:Key="Geo.Notice.Restart">M12,5V2L8,6l4,4V7c3.31,0 6,2.69 6,6 0,2.97 -2.17,5.43 -5,5.91v2.02c3.95,-0.49 7,-3.85 7,-7.93 0,-4.42 -3.58,-8 -8,-8zM6,13c0,-1.65 0.67,-3.15 1.76,-4.24L6.34,7.34C4.9,8.79 4,10.79 4,13c0,4.08 3.05,7.44 7,7.93v-2.02c-2.83,-0.48 -5,-2.94 -5,-5.91z</StreamGeometry>
+        <StreamGeometry x:Key="Geo.Notice.Alert">M12,5.99L19.53,19H4.47L12,5.99M12,2L1,21h22L12,2zM13,16h-2v2h2v-2zM13,10h-2v4h2v-4z</StreamGeometry>
+    </UserControl.Resources>
+
+    <Button x:Name="btnChip" Classes="LinkAction UpdateChip">
+        <Border x:Name="chipBg" Classes="ChipBg">
+            <StackPanel
+                VerticalAlignment="Center"
+                Orientation="Horizontal"
+                Spacing="8">
+                <Panel
+                    Width="16"
+                    Height="16"
+                    VerticalAlignment="Center">
+                    <PathIcon x:Name="icoChip" Data="{DynamicResource Geo.Notice.Install}" />
+                    <Ellipse
+                        x:Name="spinChip"
+                        Width="14"
+                        Height="14"
+                        HorizontalAlignment="Center"
+                        VerticalAlignment="Center"
+                        Classes="Spinner"
+                        IsVisible="False"
+                        Stroke="{DynamicResource Brush.OnSurfaceVariant}"
+                        StrokeDashArray="5.5,16.5"
+                        StrokeLineCap="Round"
+                        StrokeThickness="2">
+                        <!--  Центр вращения явно (14/2), как у остальных спиннеров.  -->
+                        <Ellipse.RenderTransform>
+                            <RotateTransform
+                                Angle="0"
+                                CenterX="7"
+                                CenterY="7" />
+                        </Ellipse.RenderTransform>
+                    </Ellipse>
+                </Panel>
+                <TextBlock x:Name="txtChip" Classes="Caption" />
+            </StackPanel>
+        </Border>
+    </Button>
+</UserControl>

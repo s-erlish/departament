@@ -1,0 +1,340 @@
+<UserControl
+    x:Class="departament.Desktop.Views.CheckUpdateView"
+    xmlns="https://github.com/avaloniaui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:loc="clr-namespace:departament.Desktop.Common"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    d:DesignWidth="800"
+    d:DesignHeight="620"
+    mc:Ignorable="d">
+
+    <!--  Фон НЕ задан: подэкран прозрачный, шелл под ним погашен (ApplySubPageShellGate).  -->
+
+    <UserControl.Styles>
+        <StyleInclude Source="avares://departament/Assets/SubScreenStyles.axaml" />
+
+        <!--  ==================== Плитка состояния ====================
+              Три тона плитки на весь продукт (00-rules 3.6, D-5): нейтральный — почти всегда; акцентный —
+              «одна светящаяся строка экрана», то есть новая версия и готовое обновление; красного у плитки
+              здесь нет: сбой — не удаление. Сбой узнаётся по глифу и словам, а глиф красится RedText, чтобы
+              цвет не был единственным сигналом.  -->
+        <!--  Общий вид глифа в плитке состояния — ПЕРВЫМ: из одинаково точных стилей побеждает поздний, и
+              тон (акцент, сбой) обязан стоять после него, иначе серый перекрасил бы акцентный глиф.  -->
+        <Style Selector="Border.SubTile > Panel > PathIcon">
+            <Setter Property="Width" Value="22" />
+            <Setter Property="Height" Value="22" />
+            <Setter Property="HorizontalAlignment" Value="Center" />
+            <Setter Property="VerticalAlignment" Value="Center" />
+            <Setter Property="Foreground" Value="{DynamicResource Brush.OnSurfaceVariant}" />
+        </Style>
+        <Style Selector="Border.SubTile.accent">
+            <Setter Property="Background" Value="{DynamicResource Brush.Tile.Blue}" />
+        </Style>
+        <Style Selector="Border.SubTile.accent > Panel > PathIcon">
+            <Setter Property="Foreground" Value="{DynamicResource Brush.Accent}" />
+        </Style>
+        <Style Selector="Border.SubTile.error > Panel > PathIcon">
+            <Setter Property="Foreground" Value="{DynamicResource Brush.RedText}" />
+        </Style>
+
+        <!--  Заголовок состояния — ступень Title (16/700): это главное содержание экрана, а не подпись строки.  -->
+        <Style Selector="TextBlock.StatusTitle">
+            <Setter Property="LineHeight" Value="20" />
+            <Setter Property="TextWrapping" Value="Wrap" />
+        </Style>
+
+        <!--  ==================== Полоса загрузки ====================
+              Трек 6 (Size.Meter), концы круглые (Radius.Pill: половина высоты). Заливка — ширина от доли,
+              её ставит код: без перехода, прогресс идёт шагами по 0,5 % сам (motion 8.7: размер не
+              анимируем). Длина неизвестна — заливки нет, остаётся «Скачано N МБ».  -->
+        <Style Selector="Border.Meter">
+            <Setter Property="Height" Value="6" />
+            <Setter Property="CornerRadius" Value="3" />
+            <Setter Property="Background" Value="{DynamicResource Brush.SurfaceHighest}" />
+            <Setter Property="ClipToBounds" Value="True" />
+        </Style>
+        <Style Selector="Border.MeterFill">
+            <Setter Property="HorizontalAlignment" Value="Left" />
+            <Setter Property="CornerRadius" Value="3" />
+            <Setter Property="Background" Value="{DynamicResource Brush.Accent}" />
+        </Style>
+
+        <!--  Строка-действие, пока действие недоступно (идёт проверка): текст теряет акцент, строка — отклик.  -->
+        <Style Selector="Border.SubRow.idle TextBlock.SubName">
+            <Setter Property="Foreground" Value="{DynamicResource Brush.OnSurfaceVariant}" />
+        </Style>
+    </UserControl.Styles>
+
+    <UserControl.Resources>
+        <!--  Глифы экрана — Material 24, та же семья, что у остальных подэкранов.  -->
+        <!--  Состояние и действие под ним никогда не носят один и тот же глиф: повторённая иконка ничего не
+              сообщает. Состояние — ЧТО произошло, действие — ЧТО сделать.  -->
+        <!--  Новая версия есть (upgrade).  -->
+        <StreamGeometry x:Key="Geo.Update.Newer">M16,18v2H8v-2h8zM11,7.99V16h2V7.99h3L12,4 8,7.99h3z</StreamGeometry>
+        <!--  Скачано и проверено (download_done).  -->
+        <StreamGeometry x:Key="Geo.Update.Done">M20.13,5.41L18.72,4l-9.19,9.19 -4.25,-4.24 -1.41,1.41 5.66,5.66zM5,18h14v2H5z</StreamGeometry>
+        <!--  Проверки ещё не было (update: часы со стрелкой).  -->
+        <StreamGeometry x:Key="Geo.Update.Schedule">M21,10.12h-6.78l2.74,-2.82c-2.73,-2.7 -7.15,-2.8 -9.88,-0.1c-2.73,2.71 -2.73,7.08 0,9.79s7.15,2.71 9.88,0C18.32,15.65 19,14.08 19,12.1h2c0,1.98 -0.88,4.55 -2.64,6.29c-3.51,3.48 -9.21,3.48 -12.72,0c-3.5,-3.47 -3.53,-9.11 -0.02,-12.58s9.14,-3.47 12.65,0L21,3V10.12zM12.5,8v4.25l3.5,2.08l-0.72,1.21L11,13V8H12.5z</StreamGeometry>
+        <!--  Скачать и записать (file_download).  -->
+        <StreamGeometry x:Key="Geo.Update.Install">M19,9h-4V3H9v6H5l7,7 7,-7zM5,18v2h14v-2H5z</StreamGeometry>
+        <!--  Перезапустить (restart_alt).  -->
+        <StreamGeometry x:Key="Geo.Update.Restart">M12,5V2L8,6l4,4V7c3.31,0 6,2.69 6,6 0,2.97 -2.17,5.43 -5,5.91v2.02c3.95,-0.49 7,-3.85 7,-7.93 0,-4.42 -3.58,-8 -8,-8zM6,13c0,-1.65 0.67,-3.15 1.76,-4.24L6.34,7.34C4.9,8.79 4,10.79 4,13c0,4.08 3.05,7.44 7,7.93v-2.02c-2.83,-0.48 -5,-2.94 -5,-5.91z</StreamGeometry>
+        <!--  Отменить (close).  -->
+        <StreamGeometry x:Key="Geo.Update.Cancel">M19,6.41L17.59,5 12,10.59 6.41,5 5,6.41 10.59,12 5,17.59 6.41,19 12,13.41 17.59,19 19,17.59 13.41,12z</StreamGeometry>
+        <!--  Сбой (warning outline, тот же, что у сбоя синхронизации аккаунта).  -->
+        <StreamGeometry x:Key="Geo.Update.Alert">M12,5.99L19.53,19H4.47L12,5.99M12,2L1,21h22L12,2zM13,16h-2v2h2v-2zM13,10h-2v4h2v-4z</StreamGeometry>
+        <!--  Ответ «нечего предложить» (info outline).  -->
+        <StreamGeometry x:Key="Geo.Update.Info">M11,7h2v2h-2zM11,11h2v6h-2zM12,2C6.48,2 2,6.48 2,12s4.48,10 10,10 10,-4.48 10,-10S17.52,2 12,2zM12,20c-4.41,0 -8,-3.59 -8,-8s3.59,-8 8,-8 8,3.59 8,8 -3.59,8 -8,8z</StreamGeometry>
+        <!--  Нет сети (cloud_off).  -->
+        <StreamGeometry x:Key="Geo.Update.Offline">M19.35,10.04C18.67,6.59 15.64,4 12,4c-1.48,0 -2.85,0.43 -4.01,1.17l1.46,1.46C10.21,6.23 11.08,6 12,6c3.04,0 5.5,2.46 5.5,5.5v0.5H19c1.66,0 3,1.34 3,3 0,1.13 -0.64,2.11 -1.56,2.62l1.45,1.45C23.16,18.16 24,16.68 24,15c0,-2.64 -2.05,-4.78 -4.65,-4.96zM3,5.27l2.75,2.74C2.56,8.15 0,10.77 0,14c0,3.31 2.69,6 6,6h11.73l2,2L21,20.73 4.27,4 3,5.27zM7.73,10l8,8H6c-2.21,0 -4,-1.79 -4,-4s1.79,-4 4,-4h1.73z</StreamGeometry>
+        <!--  Страница загрузки в браузере (open_in_new).  -->
+        <StreamGeometry x:Key="Geo.Update.Open">M19,19H5V5h7V3H5c-1.11,0 -2,0.9 -2,2v14c0,1.1 0.89,2 2,2h14c1.1,0 2,-0.9 2,-2v-7h-2v7zM14,3v2h3.59l-9.83,9.83 1.41,1.41L19,6.41V10h2V3h-7z</StreamGeometry>
+
+        <!--  ==================== ТУМБЛЕР СТРОКИ ====================
+              tokens.md «Тумблер»: 46×28, скругление 14, обводка 2. Копия ControlTheme из SettingsView
+              (ToggleSwitch.Row): общий дом ей — GlobalResources, до его освобождения живёт здесь.  -->
+        <ControlTheme x:Key="ToggleSwitch.Row" TargetType="ToggleSwitch">
+            <Setter Property="Cursor" Value="Arrow" />
+            <Setter Property="HorizontalAlignment" Value="Left" />
+            <Setter Property="MinWidth" Value="0" />
+            <Setter Property="MinHeight" Value="0" />
+            <Setter Property="Padding" Value="0" />
+            <Setter Property="Template">
+                <ControlTemplate>
+                    <Border
+                        x:Name="track"
+                        Width="46"
+                        Height="28"
+                        BorderThickness="2"
+                        CornerRadius="14">
+                        <Border.Transitions>
+                            <Transitions>
+                                <BrushTransition
+                                    Duration="0:0:0.22"
+                                    Easing="{StaticResource Ease.OutQuart}"
+                                    Property="Background" />
+                                <BrushTransition
+                                    Duration="0:0:0.22"
+                                    Easing="{StaticResource Ease.OutQuart}"
+                                    Property="BorderBrush" />
+                            </Transitions>
+                        </Border.Transitions>
+                        <Panel x:Name="PART_MovingKnobs">
+                            <Panel
+                                x:Name="PART_SwitchKnob"
+                                HorizontalAlignment="Left"
+                                VerticalAlignment="Center">
+                                <Panel.Transitions>
+                                    <Transitions>
+                                        <TransformOperationsTransition
+                                            Duration="0:0:0.22"
+                                            Easing="{StaticResource Ease.OutQuart}"
+                                            Property="RenderTransform" />
+                                        <DoubleTransition
+                                            Duration="0:0:0.22"
+                                            Easing="{StaticResource Ease.OutQuart}"
+                                            Property="Width" />
+                                        <DoubleTransition
+                                            Duration="0:0:0.22"
+                                            Easing="{StaticResource Ease.OutQuart}"
+                                            Property="Height" />
+                                    </Transitions>
+                                </Panel.Transitions>
+                                <Ellipse x:Name="knobFill">
+                                    <Ellipse.Transitions>
+                                        <Transitions>
+                                            <BrushTransition
+                                                Duration="0:0:0.22"
+                                                Easing="{StaticResource Ease.OutQuart}"
+                                                Property="Fill" />
+                                        </Transitions>
+                                    </Ellipse.Transitions>
+                                </Ellipse>
+                            </Panel>
+                        </Panel>
+                    </Border>
+                </ControlTemplate>
+            </Setter>
+
+            <Style Selector="^ /template/ Border#track">
+                <Setter Property="Background" Value="{DynamicResource Brush.SurfaceVariant}" />
+                <Setter Property="BorderBrush" Value="{DynamicResource Brush.Outline}" />
+            </Style>
+            <Style Selector="^ /template/ Panel#PART_SwitchKnob">
+                <Setter Property="Width" Value="14" />
+                <Setter Property="Height" Value="14" />
+                <Setter Property="RenderTransform" Value="translateX(5px)" />
+            </Style>
+            <Style Selector="^ /template/ Ellipse#knobFill">
+                <Setter Property="Fill" Value="{DynamicResource Brush.OnSurfaceVariant}" />
+            </Style>
+            <Style Selector="^:checked /template/ Border#track">
+                <Setter Property="Background" Value="{DynamicResource Brush.Accent}" />
+                <Setter Property="BorderBrush" Value="{DynamicResource Brush.Accent}" />
+            </Style>
+            <Style Selector="^:checked /template/ Panel#PART_SwitchKnob">
+                <Setter Property="Width" Value="20" />
+                <Setter Property="Height" Value="20" />
+                <Setter Property="RenderTransform" Value="translateX(20px)" />
+            </Style>
+            <Style Selector="^:checked /template/ Ellipse#knobFill">
+                <Setter Property="Fill" Value="White" />
+            </Style>
+            <Style Selector="^:disabled">
+                <Setter Property="Opacity" Value="0.38" />
+            </Style>
+        </ControlTheme>
+    </UserControl.Resources>
+
+    <ScrollViewer HorizontalScrollBarVisibility="Disabled" VerticalScrollBarVisibility="Auto">
+        <!--  Колонка подэкрана 720 + поля 20, Stretch, а не Center — см. SubScreenStyles «Ширина колонки».  -->
+        <StackPanel MaxWidth="720" Margin="20,10,20,20">
+
+            <StackPanel
+                Margin="0,2,0,0"
+                Orientation="Horizontal"
+                Spacing="10">
+                <Button
+                    x:Name="btnBack"
+                    Classes="SubBack">
+                    <PathIcon Data="{DynamicResource Geo.Sub.Back}" Foreground="{DynamicResource Brush.OnSurface}" />
+                </Button>
+                <TextBlock Classes="SubTitle" Text="{loc:T Update_Title}" />
+            </StackPanel>
+
+            <!--  ==================== Состояние и следующий шаг ====================
+                  Одна карточка на ответ: ЧТО сейчас (плитка, заголовок, строка) и ЧТО делать дальше (строка-
+                  действие под разделителем). Каждое состояние называет себя словами и ставит свой следующий
+                  шаг рядом с причиной — «Повторить» у сбоя, «Обновить» у новой версии, «Перезапустить» у
+                  готового обновления. Раньше здесь были две вечные строки «Проверить» и «Обновить сейчас» и
+                  список ядер: действия не зависели от ответа, а ответ писался мелким шрифтом под компонентом.
+
+                  Действий бывает два: основное и запасное «Открыть страницу загрузки» там, где повтор
+                  ничего не изменит. Состав карточки меняется, её каркас — нет: плитка 40 держит место,
+                  спиннер встаёт на место глифа, и строки не прыгают.  -->
+            <Border Classes="SubCard" Margin="0,14,0,0">
+                <StackPanel>
+                    <Border x:Name="RowStatus" Classes="SubRow" Padding="16,12">
+                        <Grid ColumnDefinitions="Auto,*">
+                            <Border
+                                x:Name="tileStatus"
+                                Grid.Column="0"
+                                VerticalAlignment="Top"
+                                Classes="SubTile">
+                                <Panel>
+                                    <PathIcon x:Name="icoStatus" Data="{DynamicResource Geo.Sub.Refresh}" />
+                                    <Ellipse
+                                        x:Name="spinStatus"
+                                        Width="18"
+                                        Height="18"
+                                        Classes="Spinner"
+                                        IsVisible="False"
+                                        Stroke="{DynamicResource Brush.OnSurfaceVariant}"
+                                        StrokeDashArray="7.1,21.2"
+                                        StrokeLineCap="Round"
+                                        StrokeThickness="2">
+                                        <!--  Центр вращения явно (18/2): Ellipse.Spinner крутит RotateTransform.Angle, origin к нему не применяется.  -->
+                                        <Ellipse.RenderTransform>
+                                            <RotateTransform
+                                                Angle="0"
+                                                CenterX="9"
+                                                CenterY="9" />
+                                        </Ellipse.RenderTransform>
+                                    </Ellipse>
+                                </Panel>
+                            </Border>
+                            <StackPanel
+                                Grid.Column="1"
+                                Margin="16,0,8,0"
+                                VerticalAlignment="Center"
+                                Spacing="4">
+                                <TextBlock x:Name="txtStatusTitle" Classes="Title StatusTitle" />
+                                <TextBlock x:Name="txtStatusLine" Classes="SubNote" />
+                            </StackPanel>
+                        </Grid>
+                    </Border>
+
+                    <!--  Загрузка: полоса и настоящие цифры под ней. Отступ слева 72 — по линии текста состояния
+                          (16 поле + 40 плитка + 16), чтобы полоса читалась как часть ответа, а не как отдельный блок.  -->
+                    <StackPanel
+                        x:Name="ProgressBlock"
+                        Margin="72,0,16,16"
+                        IsVisible="False"
+                        Spacing="8">
+                        <Border x:Name="Meter" Classes="Meter">
+                            <Border x:Name="MeterFill" Classes="MeterFill" Width="0" />
+                        </Border>
+                        <TextBlock x:Name="txtProgress" Classes="SubSub" />
+                    </StackPanel>
+
+                    <Border x:Name="DividerAction" Classes="SubDivider" />
+                    <Border x:Name="RowAction" Classes="SubRow tap">
+                        <Grid ColumnDefinitions="Auto,*">
+                            <Border Grid.Column="0" Classes="SubTile">
+                                <PathIcon x:Name="icoAction" Data="{DynamicResource Geo.Sub.Refresh}" />
+                            </Border>
+                            <TextBlock
+                                x:Name="txtAction"
+                                Grid.Column="1"
+                                Margin="16,0,8,0"
+                                VerticalAlignment="Center"
+                                Classes="SubName accent"
+                                Text="{loc:T Update_Check}" />
+                        </Grid>
+                    </Border>
+
+                    <Border x:Name="DividerSecondary" Classes="SubDivider" IsVisible="False" />
+                    <Border
+                        x:Name="RowSecondary"
+                        Classes="SubRow tap"
+                        IsVisible="False">
+                        <Grid ColumnDefinitions="Auto,*">
+                            <Border Grid.Column="0" Classes="SubTile">
+                                <PathIcon Data="{DynamicResource Geo.Update.Open}" />
+                            </Border>
+                            <TextBlock
+                                Grid.Column="1"
+                                Margin="16,0,8,0"
+                                VerticalAlignment="Center"
+                                Classes="SubName"
+                                Text="{loc:T Update_OpenReleases}" />
+                        </Grid>
+                    </Border>
+                </StackPanel>
+            </Border>
+
+            <!--  ==================== Предварительные выпуски ====================
+                  Отдельной карточкой: это настройка, а не часть ответа. Смена переключателя сбрасывает
+                  найденное и спрашивает ленту заново — ответ зависит от него.  -->
+            <Border Classes="SubCard" Margin="0,16,0,0">
+                <Border x:Name="RowPreRelease" Classes="SubRow tap">
+                    <Grid ColumnDefinitions="Auto,*,Auto">
+                        <Border Grid.Column="0" Classes="SubTile">
+                            <PathIcon Data="{DynamicResource Geo.Sub.Frag}" />
+                        </Border>
+                        <StackPanel
+                            Grid.Column="1"
+                            Margin="16,0,8,0"
+                            VerticalAlignment="Center">
+                            <TextBlock Classes="SubName" Text="{loc:T Update_PreRelease}" />
+                            <TextBlock
+                                Classes="SubSub"
+                                Text="{loc:T Update_PreReleaseHint}"
+                                TextWrapping="Wrap" />
+                        </StackPanel>
+                        <ToggleSwitch
+                            x:Name="togEnableCheckPreReleaseUpdate"
+                            Grid.Column="2"
+                            VerticalAlignment="Center"
+                            Focusable="False"
+                            IsTabStop="False"
+                            Theme="{StaticResource ToggleSwitch.Row}" />
+                    </Grid>
+                </Border>
+            </Border>
+
+            <TextBlock x:Name="txtFoot" Classes="SubFoot" />
+        </StackPanel>
+    </ScrollViewer>
+</UserControl>

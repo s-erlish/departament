@@ -1,0 +1,386 @@
+<UserControl
+    x:Class="departament.Desktop.Views.ServerListView"
+    xmlns="https://github.com/avaloniaui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:dd="clr-namespace:departament.Desktop.DesignData"
+    xmlns:loc="clr-namespace:departament.Desktop.Common"
+    xmlns:local="clr-namespace:departament.Desktop.Views"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:models="clr-namespace:ServiceLib.Models.Dto;assembly=ServiceLib"
+    xmlns:vms="clr-namespace:departament.Desktop.ViewModels"
+    d:DesignHeight="900"
+    d:DesignWidth="440"
+    x:DataType="vms:HomeViewModel"
+    Design.DataContext="{x:Static dd:DesignData.Home}"
+    mc:Ignorable="d">
+
+    <!--  DATA-DRIVEN: binds the real HomeViewModel (grouped ProfileItems). Starts EMPTY —
+          the list appears only once a subscription is added. Sample rows live ONLY in
+          DesignData.Home (previewer), never at runtime.
+
+          Owner's structural demand: NO separate «Сервера» header / toolbar / top-right «+».
+          Each subscription is ONE cohesive section — its rich meta-bar (SubscriptionMetaView,
+          the group header) flows DIRECTLY into its server rows. Multiple subscriptions =
+          multiple such sections, each collapsible from its own meta-bar chevron.  -->
+
+    <UserControl.Resources>
+        <!--  Empty-state hero glyph (cloud download, port of ic_cloud_download_24dp).  -->
+        <StreamGeometry x:Key="Geo.CloudDownload">M19.35 10.04C18.67 6.59 15.64 4 12 4 9.11 4 6.6 5.64 5.35 8.04 2.34 8.36 0 10.91 0 14c0 3.31 2.69 6 6 6h13c2.76 0 5-2.24 5-5 0-2.64-2.05-4.78-4.65-4.96zM17 13l-5 5-5-5h3V9h4v4h3z</StreamGeometry>
+        <!--  Unified globe emblem for non-country / aggregate rows (import sub, xHTTP…).  -->
+
+        <!--  Server name: drop a leading flag emoji (the flag lives in its tile) — no duplication.  -->
+        <local:StripLeadingFlagConverter x:Key="StripLeadingFlag" />
+        <!--  Ping value shows only once a latency test produced a real (numeric ms) result.  -->
+        <local:DelayResultConverter x:Key="DelayResult" />
+        <!--  A test is in flight for this row: DelayVal holds the engine's non-numeric «Testing…»
+              placeholder → show a spinner in the ping slot, never the placeholder text.  -->
+        <local:DelayTestingConverter x:Key="DelayTesting" />
+        <!--  A8: real reading → its ms number; a failed / timed-out probe («-1») → em-dash «—».  -->
+        <local:DelayDisplayConverter x:Key="DelayDisplay" />
+        <!--  A8: real reading → theme ink (blue/light, white/dark); failure («—») → muted variant tone.  -->
+        <local:DelayInkConverter x:Key="DelayInk" />
+    </UserControl.Resources>
+
+    <UserControl.Styles>
+        <!--  ==================== РАЗДЕЛИТЕЛЬ БЕЗ МЕСТА В РАСКЛАДКЕ ====================
+              ПРИЁМКА: «список серверов не смещается при выборе».
+
+              Раньше разделитель был ОТДЕЛЬНЫМ Border высотой 1 ПОД строкой, скрытым у выбранной
+              (IsVisible="{Binding !IsActive}"). Скрытие схлопывало этот пиксель, и в момент выбора
+              весь хвост списка подпрыгивал на 1px — ровно то смещение, которое приёмка ловит.
+
+              tokens.md формулирует иначе: «разделитель — ВНУТРЕННЯЯ ТЕНЬ 1 сверху, у первой и у
+              выбранной нет». Внутренняя тень МЕСТА НЕ ЗАНИМАЕТ. Поэтому здесь волосяная линия
+              лежит ВНУТРИ самой строки, приклеенная к её верхней кромке, и переключается
+              прозрачностью, а не видимостью: занимаемое место не меняется НИКОГДА.
+
+              Итого геометрия строки одинакова в обоих состояниях — высота, отступы, поля и рамка
+              1.5 неизменны; при выборе меняются ТОЛЬКО цвета (заливка, цвет рамки, эта линия).  -->
+        <Style Selector="Border.rowHairline">
+            <Setter Property="Height" Value="1" />
+            <Setter Property="VerticalAlignment" Value="Top" />
+            <!--  Отрицательный верхний отступ = ВЕРХНИЙ паддинг строки (12): линия садится на
+                  ВЕРХНЮЮ кромку паддинг-бокса, сразу под рамкой, а не на верх содержимого. По
+                  ширине линия совпадает с паддинг-боксом (эталон: строка 88…504 → линия 102…490),
+                  поэтому боковой отступ здесь НУЛЕВОЙ. Раньше тут стояло «12,0», но элемент задавал
+                  свой Margin локально, и сеттер молча проигрывал — два числа, из которых работало
+                  одно. Теперь геометрия линии живёт ровно здесь.  -->
+            <Setter Property="Margin" Value="0,-11,0,0" />
+            <Setter Property="IsHitTestVisible" Value="False" />
+            <Setter Property="Background" Value="{DynamicResource Brush.OutlineVariant}" />
+        </Style>
+        <!--  У первой строки группы и у выбранной линии нет — гасим прозрачностью, НЕ видимостью.  -->
+        <!--  Отступы строки живут В СТИЛЕ, а не на элементе: локальное значение в Avalonia бьёт
+              стилевой сеттер, и правило для выделенной строки ниже молча не срабатывало бы.  -->
+        <Style Selector="Border.ServerRow">
+            <Setter Property="Padding" Value="12,7" />
+        </Style>
+        <Style Selector="Border.ServerRow.selected Border.rowHairline">
+            <Setter Property="Opacity" Value="0" />
+        </Style>
+        <Style Selector="Border.rowHairline.first">
+            <Setter Property="Opacity" Value="0" />
+        </Style>
+
+        <!--  Пинг-спиннер: гасим ПОЛНОСТЬЮ вне «теста» и под «Облегчённым режимом».
+              Раньше видимость дуги висела на локальном IsVisible-биндинге (DelayTesting), а вращение
+              гасил только глобальный селектор :is(Window):not(.lite) — под lite оставалась ЗАМЁРЗШАЯ
+              половина кольца. Теперь видимость дуги привязана к ТОМУ ЖЕ рычагу, что и вращение: базово
+              скрыта, показывается лишь пока идёт тест И движение включено. Тот же lever, что у
+              ConnectHeroView (класс .lite на окне) → под lite дуга схлопывается (ничего не видно), и
+              реагирует ЖИВО при переключении режима (класс .lite на окне ставится/снимается на лету).  -->
+        <Style Selector="Ellipse.Spinner">
+            <Setter Property="IsVisible" Value="False" />
+        </Style>
+        <Style Selector=":is(Window):not(.lite) Ellipse.Spinner.spinning">
+            <Setter Property="IsVisible" Value="True" />
+        </Style>
+    </UserControl.Styles>
+
+    <Grid Background="Transparent">
+
+        <!--  SCROLL: subscription sections (meta-bar header + its rows), bound to real ServerGroups.
+              CLEARANCE — the bottom breathing room is a REAL trailing spacer child at the END of the
+              scroll content (the trailing spacer below), NOT `ScrollViewer.Padding`. In this Avalonia
+              build the ScrollViewer's bottom Padding is NOT reliably folded into the scroll Extent, so a
+              padding-only clearance let the last row sit past the scrollable range and never come fully
+              into view («bottom border clips the final server», both layouts). A child's height is ALWAYS
+              part of the Extent, so a 0-hit-test spacer guarantees the last row scrolls clear. Compact's
+              bottom nav no longer overlays the list (MainWindow's `navScrim` now reserves space instead
+              of painting over `contentHost`), so ONE modest tail covers both layouts with no dead space.  -->
+        <ScrollViewer IsVisible="{Binding HasServers}">
+            <StackPanel>
+            <ItemsControl ItemsSource="{Binding ServerGroups}">
+                <ItemsControl.ItemTemplate>
+                    <DataTemplate x:DataType="vms:HomeServerGroup">
+                        <StackPanel Margin="0,0,0,14">
+
+                            <!--  Карточка подписки = header секции (имя + трафик + действия + шеврон
+                                  сворачивания + удаление). Бесшовно продолжается в свои серверы.
+                                  Боковых отступов НЕТ: колонку уже отбивает сама «Главная»
+                                  (14/10/14/14), второй gutter здесь дал бы двойной отступ.  -->
+                            <local:SubscriptionMetaView Margin="0,0,0,8" />
+
+                            <!--  Group rows reveal (collapse with the group via the meta-bar chevron).
+                                  The chevron flips HomeServerGroup.IsExpanded; the code-behind runs a
+                                  Transitions-driven accordion on THIS ClipToBounds viewport — a DoubleTransition
+                                  tweens Height (0 ↔ measured content height) AND Opacity (0 ↔ 1) together over
+                                  ~300ms OutQuint, so the list clips open/closed in step with the fade — both
+                                  expand AND collapse visibly animate. Same primitive as the chevron rotate and
+                                  the rail-width animation. Gated: under lite / reduced-motion the toggle is instant.  -->
+                            <Border
+                                ClipToBounds="True"
+                                Loaded="OnGroupRevealLoaded"
+                                Unloaded="OnGroupRevealUnloaded">
+                            <ItemsControl ItemsSource="{Binding Servers}">
+                                <!--  БЕЗ ВИРТУАЛИЗАЦИИ — намеренно. Здесь стоял VirtualizingStackPanel,
+                                      и на больших экранах список ломался: строки появлялись по мере
+                                      прокрутки, последние не показывались вовсе, картинка мерцала.
+                                      Причина в том, что виртуализирующая панель сообщает ОЦЕНОЧНУЮ
+                                      полную высоту, а не измеренную. Оценка живёт поверх трёх слоёв,
+                                      каждый из которых на неё влияет: аккордеон группы (Border с
+                                      ClipToBounds, у которого высота то фиксируется в пикселях, то
+                                      отпускается в Auto), внешний StackPanel и ScrollViewer. Пока
+                                      панель до-реализовывала строки, её оценка менялась, вместе с ней
+                                      прыгал предел прокрутки — отсюда и мерцание, и недосягаемый хвост.
+                                      Список короткий по природе: подписка даёт десяток-другой строк, а
+                                      не тысячи. Обычная панель меряет ВСЕ строки честно — предел
+                                      прокрутки постоянен, хвост на месте, мерцать нечему. Экономия
+                                      памяти на таком списке не стоит сломанного отображения.  -->
+                                <ItemsControl.ItemsPanel>
+                                    <ItemsPanelTemplate>
+                                        <StackPanel Orientation="Vertical" />
+                                    </ItemsPanelTemplate>
+                                </ItemsControl.ItemsPanel>
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate x:DataType="models:ProfileItemModel">
+                                        <StackPanel>
+
+                                            <!--  Server row (bg_server_row): default flat, hover SurfaceHigh, pressed
+                                                  scale 0.96, selected = blue pill (12% accent fill + 1.5px Accent,
+                                                  radius 16). Tap → SelectServer (default + connect). Right-click → §2.13.
+                                                  ONE grid: 56 rhythm, 40 tile, single inset divider, no vertical margin.  -->
+                                            <!--  Loaded → одноразовый reveal-стаггер первой заливки списка
+                                                  (первые ≤8 строк всплывают 12→0 + fade, задержка i×40мс,
+                                                  ~300мс OutQuint). Строки видимы ПО УМОЛЧАНИЮ — анимация лишь
+                                                  усиливает уже видимый покой (см. code-behind, §A.4).  -->
+                                            <!--  Геометрия строки — tokens.md «Строка сервера»: высота от 58,
+                                                  паддинг 8×12, скругление 14, рамка 1.5 ВСЕГДА (прозрачная у
+                                                  невыбранных), отступ СВЕРХУ 2. Ни одно из этих чисел не зависит
+                                                  от выбора — при выборе меняются только цвета.
+                                                  Отступ именно сверху: он же держит воздух под линией-разделителем,
+                                                  которая приклеена к верхней кромке строки. Шаг списка 58+2 = 60,
+                                                  как в эталоне; карточка подписки отдала эти 2 из своего нижнего
+                                                  отступа (10 → 8), поэтому зазор карточка↔первая строка остался 10.  -->
+                                            <!--  Высота 54 (владелец просил строки чуть ниже). Отступы НЕСИММЕТРИЧНЫЕ —
+                                                  10 сверху, 4 снизу — и это не произвол. Разделитель приклеен к ВЕРХНЕЙ
+                                                  кромке строки и места не занимает, а над ним лежит ещё 2 отступа: в
+                                                  итоге видимая полоса «от линии до линии» смещена относительно бокса,
+                                                  в котором центруется содержимое, и имя с пингом вставали ВЫШЕ середины.
+                                                  Смещение делится между двумя требованиями, которые тянут в разные
+                                                  стороны: содержимое должно стоять по центру полосы «от линии до линии»
+                                                  И по центру РАМКИ выделенной строки, а рамка обводит бокс, который на
+                                                  2 отступа уже полосы. 10/4 выравнивали по полосе, но перекашивали
+                                                  рамку (замер: воздух 15 сверху против 12 снизу). 8/6 — середина:
+                                                  внутри рамки воздух ровный, по полосе остаётся неразличимый глазом
+                                                  сдвиг. Сумма прежняя (14), шаг строк и высота не меняются.  -->
+                                            <Border
+                                                MinHeight="54"
+                                                Margin="0,2,0,0"
+                                                Classes="ServerRow"
+                                                Classes.selected="{Binding IsActive}"
+                                                ContextRequested="OnRowContextRequested"
+                                                CornerRadius="{StaticResource Radius.Search}"
+                                                Loaded="OnServerRowLoaded"
+                                                PointerCaptureLost="OnRowPointerCaptureLost"
+                                                PointerExited="OnRowPointerExited"
+                                                PointerPressed="OnRowPointerPressed"
+                                                PointerReleased="OnRowPointerReleased">
+                                                <Border.ContextMenu>
+                                                    <ContextMenu>
+                                                        <MenuItem Click="OnRowMakeDefault" Header="{loc:T Servers_MakeDefault}" />
+                                                        <MenuItem Click="OnRowPing" Header="{loc:T Common_TestLatency}" />
+                                                        <Separator />
+                                                        <MenuItem Click="OnRowEdit" Header="{loc:T Common_Edit}" />
+                                                        <MenuItem Click="OnRowDuplicate" Header="{loc:T Servers_Duplicate}" />
+                                                        <Separator />
+                                                        <MenuItem Click="OnRowShareQr" Header="{loc:T Servers_ShareQr}" />
+                                                        <MenuItem Click="OnRowShareLink" Header="{loc:T Servers_ShareLink}" />
+                                                        <Separator />
+                                                        <MenuItem
+                                                            Click="OnRowDelete"
+                                                            Foreground="{DynamicResource Brush.Red}"
+                                                            Header="{loc:T Common_Delete}" />
+                                                    </ContextMenu>
+                                                </Border.ContextMenu>
+
+                                                <Grid VerticalAlignment="Center" ColumnDefinitions="Auto,*,Auto">
+
+                                                    <!--  Флаг: круглая плитка 32 с флагом 18 ВНУТРИ (tokens.md «Строка
+                                                          сервера»), радиус = половина стороны = 16. Флаг НЕ растягивается
+                                                          на всю плитку: подложка обязана читаться кольцом вокруг него,
+                                                          иначе плитка исчезает под картинкой и строка теряет свой якорь —
+                                                          а у пустого слота и у глобуса-заглушки не остаётся общего силуэта
+                                                          с флагом соседней строки. 18 в 32 держит этот силуэт одинаковым
+                                                          для любой картинки. RemarkToFlag достаёт страну из Remarks;
+                                                          не-страновые / сводные строки падают на глобус (xx.png).  -->
+                                                    <Border
+                                                        Grid.Column="0"
+                                                        Width="32"
+                                                        Height="32"
+                                                        Margin="0,0,12,0"
+                                                        VerticalAlignment="Center"
+                                                        Background="{DynamicResource Brush.Tile.Neutral}"
+                                                        ClipToBounds="True"
+                                                        CornerRadius="16">
+                                                        <Image
+                                                            Width="18"
+                                                            Height="18"
+                                                            HorizontalAlignment="Center"
+                                                            VerticalAlignment="Center"
+                                                            Source="{Binding Remarks, Converter={StaticResource RemarkToFlag}}"
+                                                            Stretch="UniformToFill" />
+                                                    </Border>
+
+                                                    <!--  Имя 14/700 (флаг-эмодзи снят — он и так в плитке) + «чип протокола · транспорт».  -->
+                                                    <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                                                        <TextBlock
+                                                            Classes="Title"
+                                                            FontSize="14"
+                                                            Text="{Binding Remarks, Converter={StaticResource StripLeadingFlag}}"
+                                                            TextTrimming="CharacterEllipsis" />
+                                                        <StackPanel
+                                                            Margin="0,4,0,0"
+                                                            VerticalAlignment="Center"
+                                                            Orientation="Horizontal">
+                                                            <Border Classes="ProtocolChip">
+                                                                <!--  BUG 2: center the glyph INSIDE the padded chip. Without this the chip
+                                                                      text drew at the top of its stretched box, so «VLESS» sat higher than
+                                                                      the vertically-centred «· TCP · REALITY» caption (mismatched baselines).
+                                                                      Centred, the chip's optical middle matches the caption's → one line.  -->
+                                                                <TextBlock
+                                                                    VerticalAlignment="Center"
+                                                                    Classes="Chip"
+                                                                    Foreground="{DynamicResource Brush.Accent}"
+                                                                    Text="{Binding Converter={StaticResource ConfigTypeToProtocol}}" />
+                                                            </Border>
+                                                            <TextBlock
+                                                                Margin="8,0,0,0"
+                                                                VerticalAlignment="Center"
+                                                                Classes="Caption"
+                                                                Text="{Binding Converter={StaticResource ProfileTransport}}"
+                                                                TextTrimming="CharacterEllipsis" />
+                                                        </StackPanel>
+                                                    </StackPanel>
+
+                                                    <!--  Ping slot (tv_test_result): while a test is in flight show a compact
+                                                          indeterminate spinner (NO «Testing…» text); when the result lands, show
+                                                          the coloured ms value (green good / red bad). The two states are mutually
+                                                          exclusive, share this Auto column, and are right-aligned on one vertical.  -->
+                                                    <!--  По ЦЕНТРУ строки, а не по нижней кромке: раньше значение пинга
+                                                          висело внизу и тянуло взгляд вниз, ломая общее центрирование.  -->
+                                                    <Panel
+                                                        Grid.Column="2"
+                                                        Margin="12,0,0,0"
+                                                        VerticalAlignment="Center">
+                                                        <!--  In-flight: 15px arc spinner (reuses the global Ellipse.Spinner.spinning).  -->
+                                                        <!--  Видимость дуги НЕ биндим напрямую: базово скрыта, а класс .spinning
+                                                              (по DelayTesting) вместе с :is(Window):not(.lite) в UserControl.Styles
+                                                              показывает её лишь во время теста И при включённом движении. Под lite
+                                                              дуга схлопнута целиком (никакого замёрзшего полукольца).  -->
+                                                        <Ellipse
+                                                            Width="15"
+                                                            Height="15"
+                                                            HorizontalAlignment="Right"
+                                                            VerticalAlignment="Center"
+                                                            Classes="Spinner"
+                                                            Classes.spinning="{Binding DelayVal, Converter={StaticResource DelayTesting}}"
+                                                            Stroke="{DynamicResource Brush.Accent}"
+                                                            StrokeDashArray="5.9,17.7"
+                                                            StrokeLineCap="Round"
+                                                            StrokeThickness="2">
+                                                            <!--  Явный центр вращения (половина 15px = 7.5): глобальный
+                                                                  Ellipse.Spinner.spinning крутит RotateTransform.Angle, а
+                                                                  origin к этому пути не применяется — без CenterX/CenterY
+                                                                  спиннер «облетал» по орбите вместо вращения на месте.  -->
+                                                            <Ellipse.RenderTransform>
+                                                                <RotateTransform
+                                                                    Angle="0"
+                                                                    CenterX="7.5"
+                                                                    CenterY="7.5" />
+                                                            </Ellipse.RenderTransform>
+                                                        </Ellipse>
+                                                        <!--  Значение: 12.5/500, табличные цифры. Ответил — число
+                                                              зелёным, не ответил — дефис красным, как на Android
+                                                              (DelayDisplayConverter / DelayInkConverter).  -->
+                                                        <TextBlock
+                                                            VerticalAlignment="Center"
+                                                            Classes="Numeric"
+                                                            FontSize="12.5"
+                                                            FontWeight="Medium"
+                                                            Foreground="{Binding Delay, Converter={StaticResource DelayInk}}"
+                                                            IsVisible="{Binding DelayVal, Converter={StaticResource DelayResult}}"
+                                                            Text="{Binding DelayVal, Converter={StaticResource DelayDisplay}}"
+                                                            TextAlignment="Right" />
+                                                    </Panel>
+
+                                                    <!--  Разделитель ВНУТРИ строки, приклеенный к её верхней кромке
+                                                          (см. Border.rowHairline): не занимает места, поэтому выбор
+                                                          не двигает список. Лежит поверх сетки, но не ловит указатель.  -->
+                                                    <Border
+                                                        Grid.Column="0"
+                                                        Grid.ColumnSpan="3"
+                                                        Classes="rowHairline"
+                                                        DataContextChanged="OnRowHairlineRebound"
+                                                        Loaded="OnRowHairlineSync" />
+                                                </Grid>
+                                            </Border>
+                                        </StackPanel>
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
+                            </Border>
+                        </StackPanel>
+                    </DataTemplate>
+                </ItemsControl.ItemTemplate>
+            </ItemsControl>
+
+                <!--  Trailing spacer = the list's real bottom clearance (see the ScrollViewer note).
+                      A concrete child height is always in the scroll Extent, so this lifts the LAST
+                      server's full height clear of the bottom edge / nav with clean breathing room and
+                      no magic padding constant. 0-hit-test so it never intercepts a row tap or scroll.  -->
+                <Border
+                    Height="24"
+                    Background="Transparent"
+                    Focusable="False"
+                    IsHitTestVisible="False" />
+            </StackPanel>
+        </ScrollViewer>
+
+        <!--  Empty state (layout_servers_empty): hero icon 64 + «Список пуст». The full onboarding
+              CTAs live in the connect-hero (right panel of Home), so this stays quiet.  -->
+        <StackPanel
+            Margin="24,0"
+            HorizontalAlignment="Center"
+            VerticalAlignment="Center"
+            IsVisible="{Binding IsEmpty}"
+            Spacing="14">
+            <Border Classes="EmptyIcon">
+                <PathIcon Data="{StaticResource Geo.CloudDownload}" />
+            </Border>
+            <TextBlock
+                HorizontalAlignment="Center"
+                Classes="Title"
+                Text="{loc:T Servers_Empty}"
+                TextAlignment="Center" />
+            <TextBlock
+                HorizontalAlignment="Center"
+                Classes="Subtitle"
+                MaxWidth="260"
+                Text="{loc:T Servers_EmptyHint}"
+                TextAlignment="Center"
+                TextWrapping="Wrap" />
+        </StackPanel>
+    </Grid>
+</UserControl>

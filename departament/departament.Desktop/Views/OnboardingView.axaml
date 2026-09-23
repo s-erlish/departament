@@ -1,0 +1,589 @@
+<UserControl
+    x:Class="departament.Desktop.Views.OnboardingView"
+    xmlns="https://github.com/avaloniaui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:cm="clr-namespace:departament.Desktop.Common"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:dd="clr-namespace:departament.Desktop.DesignData"
+    xmlns:loc="clr-namespace:departament.Desktop.Common"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:vms="clr-namespace:departament.Desktop.ViewModels"
+    d:DesignHeight="720"
+    d:DesignWidth="1120"
+    x:DataType="vms:HomeViewModel"
+    Design.DataContext="{x:Static dd:DesignData.Home}"
+    mc:Ignorable="d">
+
+    <!--  ================================================================================
+          НАЧАЛЬНЫЙ ЭКРАН (screens.md «Начальный экран (первый запуск)»).
+
+          Навигация СКРЫТА ЦЕЛИКОМ — ни рейла, ни нижней панели: MainWindow держит эту вью
+          отдельной поверхностью шелла (3-way гейт SYNCING > EMPTY > CONTENT), поэтому здесь
+          нет ни рейла, ни нижнего бара, а контент центрируется по ВСЕМУ окну, а не по остатку
+          после рейла. (В прототипе рейл физически остаётся в раскладке, а колонка сдвигается
+          на его ширину влево — здесь сдвигать нечего, рейла в дереве нет.)
+
+          Сверху вниз: щит 118 в кольце (внешнее сплошное, внутреннее пунктирное, под ними мягкое
+          свечение) → «Приветствуем!» 24/700 → подзаголовок 14/400 → [карточка найденной ссылки]
+          → две контурные пилюли 50/скругление 100 → «Другие способы» с кареткой, раскрывающей
+          «Добавить по QR-коду» и «Войти по почте». Пока видна карточка, вторая пилюля («Добавить
+          из буфера обмена») схлопнута: у карточки своя кнопка на то же действие. Если колонке всё
+          равно не хватает высоты окна, щит ужимается до 3/4.
+
+          Карточка найденной ссылки видна ТОЛЬКО когда в буфере обмена реально лежит ссылка на
+          подписку (проверка — при показе экрана и при возврате фокуса окну), и раскрывается по
+          высоте за 340/240 мс. Пустой буфер — карточки нет вовсе, а не «карточка с заглушкой».
+
+          Движение (motion.md «Появление начального экрана»): щит 620 мс из 0.82×; заголовок
+          460 мс/80 мс; подзаголовок 140 мс; блок кнопок 200 мс. Всё гасится «Облегчённым
+          режимом» (MotionState.IsLite) — тогда экран сразу отдаётся полностью видимым.
+          =================================================================================  -->
+
+    <UserControl.Resources>
+        <!--  Щит-контур (тот же силуэт и та же геометрия, что у connect-щита в покое —
+              ConnectHeroView.ShieldOutline). F0 = even-odd: внутренний контур ВЫРЕЗАЕТСЯ,
+              иначе щит зальётся целиком и перестанет быть контурным.  -->
+        <StreamGeometry x:Key="Geo.Start.Shield">F0 M12,2.2 L19.6,5.2 L19.6,11.4 C19.6,16.1 15.9,19.9 12,21.8 C8.1,19.9 4.4,16.1 4.4,11.4 L4.4,5.2 Z M12,4.7 L17.2,6.8 L17.2,11.4 C17.2,14.9 14.7,17.9 12,19.3 C9.3,17.9 6.8,14.9 6.8,11.4 L6.8,6.8 Z</StreamGeometry>
+        <!--  Telegram (ic_telegram_24dp, сетка 1024) — тот же глиф, что на «Входе».  -->
+        <StreamGeometry x:Key="Geo.Start.Telegram">M912.2,154A85.3,85.3 0,0 0,853.3 128a85.3,85.3 0,0 0,-33.3 6.8l-708.3,306.8a42.7,42.7 0,0 0,-26.5 42.7V512a42.7,42.7 0,0 0,29.4 42.7L298.7,616.1l55.5,187.3a75.9,75.9 0,0 0,56.3 53.3,62.7 62.7,0 0,0 15.4,0 73.8,73.8 0,0 0,50.8 -20.5l67.8,-64 131.4,103.7a85.3,85.3 0,0 0,90 9.4l14.1,-7.3a88.3,88.3 0,0 0,46.5 -62.7L938.7,235.1a90,90 0,0 0,-26.5 -81.1zM763.7,805.1a25.2,25.2 0,0 1,-12.8 17.5l-14.1,7.3a19.6,19.6 0,0 1,-9 2.1,19.6 19.6,0 0,1 -12.4,-4.7l-160.4,-128a20.9,20.9 0,0 0,-27.7 0l-94.7,89.2a11.1,11.1 0,0 1,-6 2.1V640a21.8,21.8 0,0 1,6.8 -15.8c136.1,-128 217.6,-199.7 266.2,-240.6a15.8,15.8 0,0 0,5.1 -11.1,13.7 13.7,0 0,0 -4.3,-11.1 14.9,14.9 0,0 0,-17.9 -4.3l-322.6,203.5a21.3,21.3 0,0 1,-18.3 0L149.3,494.9l694.2,-301.2a16.6,16.6 0,0 1,7.7 0,22.2 22.2,0 0,1 16.2,7.7 26.9,26.9 0,0 1,6.8 23.5z</StreamGeometry>
+        <!--  Буфер обмена (content_copy).  -->
+        <StreamGeometry x:Key="Geo.Start.Copy">M16,1L4,1c-1.1,0 -2,0.9 -2,2v14h2L4,3h12L16,1zM19,5L8,5c-1.1,0 -2,0.9 -2,2v14c0,1.1 0.9,2 2,2h11c1.1,0 2,-0.9 2,-2L21,7c0,-1.1 -0.9,-2 -2,-2zM19,21L8,21L8,7h11v14z</StreamGeometry>
+        <!--  Клевер — марка подписки departament (плитка карточки найденной ссылки).  -->
+        <StreamGeometry x:Key="Geo.Start.Clover">M12,11.5c0.6,-1.3 1.9,-2.2 3.4,-2.2 1,0 1.9,-0.6 2.3,-1.5 0.4,-0.9 0.2,-2 -0.5,-2.7 -0.7,-0.7 -1.8,-0.9 -2.7,-0.5 -0.9,0.4 -1.5,1.3 -1.5,2.3 0,1.5 -0.9,2.8 -2.2,3.4 1.3,0.6 2.2,1.9 2.2,3.4 0,1 0.6,1.9 1.5,2.3 0.9,0.4 2,0.2 2.7,-0.5 0.7,-0.7 0.9,-1.8 0.5,-2.7 -0.4,-0.9 -1.3,-1.5 -2.3,-1.5 -1.5,0 -2.8,-0.9 -3.4,-2.2zM12,11.5c-0.6,1.3 -1.9,2.2 -3.4,2.2 -1,0 -1.9,0.6 -2.3,1.5 -0.4,0.9 -0.2,2 0.5,2.7 0.7,0.7 1.8,0.9 2.7,0.5 0.9,-0.4 1.5,-1.3 1.5,-2.3 0,-1.5 0.9,-2.8 2.2,-3.4 -1.3,-0.6 -2.2,-1.9 -2.2,-3.4 0,-1 -0.6,-1.9 -1.5,-2.3 -0.9,-0.4 -2,-0.2 -2.7,0.5 -0.7,0.7 -0.9,1.8 -0.5,2.7 0.4,0.9 1.3,1.5 2.3,1.5 1.5,0 2.8,0.9 3.4,2.2zM12,19.5c0.3,0.9 0.6,1.7 1,2.5 -0.7,-0.3 -1.3,-0.3 -2,0 0.4,-0.8 0.7,-1.6 1,-2.5z</StreamGeometry>
+        <!--  Каретка «Другие способы» (та же, что у окошка у значения).  -->
+        <StreamGeometry x:Key="Geo.Start.Caret">M7,10l5,5 5,-5z</StreamGeometry>
+        <!--  QR-код (четыре квадрата — как в прототипе, не «рамка сканера»).  -->
+        <StreamGeometry x:Key="Geo.Start.Qr">M4,4h6v6H4V4zM14,4h6v6h-6V4zM4,14h6v6H4v-6zM14,14h6v6h-6v-6z</StreamGeometry>
+        <!--  Конверт — вход по почте. Тот же путь, что Geo.Login.Mail на форме «Вход», куда строка и ведёт.  -->
+        <StreamGeometry x:Key="Geo.Start.Mail">M20,4H4c-1.1,0 -1.99,0.9 -1.99,2L2,18c0,1.1 0.9,2 2,2h16c1.1,0 2,-0.9 2,-2V6c0,-1.1 -0.9,-2 -2,-2zM20,8l-8,5 -8,-5V6l8,5 8,-5v2z</StreamGeometry>
+    </UserControl.Resources>
+
+    <UserControl.Styles>
+        <!--  ==================== Контурная пилюля 50 (архетип начального экрана) ====================
+              screens.md: «контурные пилюли 50, скругление 100». В GlobalStyles такого архетипа нет
+              (там Primary/Tonal/OutlinedAccent — все 48 и radius 16), поэтому он живёт здесь.
+              Контур — Brush.ButtonOutline (tokens.md «Контур кнопки», отдельная роль от «Контур»),
+              заливки в покое нет вообще: на начальном экране это единственные две кнопки, и залитый
+              акцент назначил бы одну из двух главной — а они равноправны.
+
+              Отклик 1:1 с глобальной лестницей (GlobalStyles Button.Primary): прогиб 0.975,
+              вход 70 мс Ease.PressIn, возврат 200 мс Ease.PressBack, аппаратный слой под текстом
+              (PressFeedback.Composited) — чтобы на возврате подпись не снапилась по пикселям.
+              Ховер — ШАГ ФОНА (Brush.Hover), никакого свечения и ripple.  -->
+        <Style Selector="Button.StartPill">
+            <Setter Property="RenderTransformOrigin" Value="50%,50%" />
+            <Setter Property="Background" Value="Transparent" />
+            <Setter Property="Foreground" Value="{DynamicResource Brush.OnSurface}" />
+            <Setter Property="BorderBrush" Value="{DynamicResource Brush.ButtonOutline}" />
+            <Setter Property="BorderThickness" Value="1.5" />
+            <!--  Радиус пилюли = ПОЛОВИНА её высоты. Avalonia режет CornerRadius ПО КАЖДОЙ ОСИ
+                  отдельно: на кнопке 360×50 значение 100 даёт rx=100 / ry=25 — вздутый по бокам
+                  эллипс, а не пилюлю (в CSS `border-radius:100px` браузер подрезает сам).  -->
+            <Setter Property="CornerRadius" Value="{DynamicResource Radius.Pill50}" />
+            <Setter Property="Height" Value="50" />
+            <Setter Property="Padding" Value="20,0" />
+            <!--  Обе пилюли — на всю ширину колонки и потому РАВНЫЕ. Semi отдаёт кнопке ширину по
+                  содержимому, и без этого «Войти через Telegram» и «Добавить из буфера обмена»
+                  вышли бы двумя разными по ширине пилюлями, а на эталонном кадре они одинаковые.  -->
+            <Setter Property="HorizontalAlignment" Value="Stretch" />
+            <Setter Property="HorizontalContentAlignment" Value="Center" />
+            <Setter Property="VerticalContentAlignment" Value="Center" />
+            <!--  Курсор ВЕЗДЕ обычная стрелка — решение владельца на всё приложение: «руки» нет ни у
+                  одной кнопки, ни у одной строки, ни у одной карточки. Нажимаемость показывают форма
+                  и прогиб, а не указатель.  -->
+            <Setter Property="Cursor" Value="Arrow" />
+            <Setter Property="cm:PressFeedback.Composited" Value="True" />
+            <Setter Property="RenderTransform" Value="scale(1)" />
+            <Setter Property="Transitions">
+                <Transitions>
+                    <TransformOperationsTransition Property="RenderTransform" Duration="0:0:0.2" Easing="{StaticResource Ease.PressBack}" />
+                </Transitions>
+            </Setter>
+        </Style>
+        <Style Selector="Button.StartPill:pressed">
+            <Setter Property="RenderTransform" Value="scale(0.975)" />
+            <Setter Property="Transitions">
+                <Transitions>
+                    <TransformOperationsTransition Property="RenderTransform" Duration="0:0:0.07" Easing="{StaticResource Ease.PressIn}" />
+                </Transitions>
+            </Setter>
+        </Style>
+        <!--  Тема Semi иначе зальёт ContentPresenter своим токеном на ховере (кнопка СВЕТЛЕЕТ) и
+              уведёт рамку в свой цвет. Прибиваем и фон, и рамку во всех трёх состояниях.  -->
+        <Style Selector="Button.StartPill /template/ ContentPresenter#PART_ContentPresenter">
+            <Setter Property="Background" Value="Transparent" />
+            <Setter Property="BorderBrush" Value="{DynamicResource Brush.ButtonOutline}" />
+        </Style>
+        <!--  СВЕЧЕНИЯ ПРИ НАВЕДЕНИИ НЕТ. Плавный кроссфейд фона давал вспышку ДВАЖДЫ за проход —
+              на входе курсора и на выходе, — и владелец видел это как моргание кнопки. Убран и сам
+              ховер-фон, и переход, которому теперь нечего вести. Кнопка отвечает нажатием.  -->
+        <Style Selector="Button.StartPill:pointerover /template/ ContentPresenter#PART_ContentPresenter">
+            <Setter Property="Background" Value="Transparent" />
+            <Setter Property="BorderBrush" Value="{DynamicResource Brush.ButtonOutline}" />
+        </Style>
+        <Style Selector="Button.StartPill:pressed /template/ ContentPresenter#PART_ContentPresenter">
+            <Setter Property="Background" Value="{DynamicResource Brush.Hover}" />
+            <Setter Property="BorderBrush" Value="{DynamicResource Brush.ButtonOutline}" />
+        </Style>
+
+        <!--  ==================== Карточка найденной ссылки — ВЫВЕСКА ====================
+              Не кнопка и не орган управления: она показывает, ЧТО нашли в буфере, а нажимается
+              кнопка ВНУТРИ неё — «Добавить подписку». Поэтому это Border, а не Button: обычная
+              стрелка под курсором, никакого отклика на наведение, никакого прогиба и — главное —
+              НИ ОДНОГО невидимого обработчика. Две двери в одно действие, одна из них без ручки,
+              — это и читалось как «карточка вроде нажимается, а курсор обычный».
+              Геометрия карточки: Surface, рамка 1, скругление 16, паддинг 14, высота по содержимому.  -->
+        <Style Selector="Border.StartCard">
+            <Setter Property="Background" Value="{DynamicResource Brush.Surface}" />
+            <Setter Property="BorderBrush" Value="{DynamicResource Brush.OutlineVariant}" />
+            <Setter Property="BorderThickness" Value="1" />
+            <Setter Property="CornerRadius" Value="16" />
+            <Setter Property="Padding" Value="14" />
+        </Style>
+
+        <!--  CTA карточки: контурная акцентная пилюля 44 (screens.md), подпись 12.5/700 акцентом.
+              Базовый архетип — глобальный Button.OutlinedAccent (у него уже верные покой, ховер
+              без свечения и прогиб на нажатии); здесь только размер, скругление пилюли и кегль.  -->
+        <Style Selector="Button.StartCardCta">
+            <Setter Property="Height" Value="44" />
+            <Setter Property="BorderThickness" Value="1.5" />
+            <Setter Property="CornerRadius" Value="{DynamicResource Radius.Pill44}" />
+            <Setter Property="FontSize" Value="12.5" />
+            <Setter Property="FontWeight" Value="Bold" />
+            <Setter Property="HorizontalAlignment" Value="Stretch" />
+            <Setter Property="Cursor" Value="Arrow" />
+        </Style>
+
+        <!--  «Другие способы» — текстовая кнопка 40 без рамки и без фона в покое: она не третья
+              кнопка, а раскрывающий переключатель. Тот же прогиб/ховер, что у пилюль.  -->
+        <Style Selector="Button.StartMore">
+            <Setter Property="RenderTransformOrigin" Value="50%,50%" />
+            <Setter Property="Background" Value="Transparent" />
+            <Setter Property="BorderThickness" Value="0" />
+            <Setter Property="CornerRadius" Value="{DynamicResource Radius.Pill40}" />
+            <Setter Property="Height" Value="40" />
+            <Setter Property="Padding" Value="16,0" />
+            <Setter Property="HorizontalContentAlignment" Value="Center" />
+            <Setter Property="VerticalContentAlignment" Value="Center" />
+            <Setter Property="Cursor" Value="Arrow" />
+            <Setter Property="cm:PressFeedback.Composited" Value="True" />
+            <Setter Property="RenderTransform" Value="scale(1)" />
+            <Setter Property="Transitions">
+                <Transitions>
+                    <TransformOperationsTransition Property="RenderTransform" Duration="0:0:0.2" Easing="{StaticResource Ease.PressBack}" />
+                </Transitions>
+            </Setter>
+        </Style>
+        <Style Selector="Button.StartMore:pressed">
+            <Setter Property="RenderTransform" Value="scale(0.975)" />
+            <Setter Property="Transitions">
+                <Transitions>
+                    <TransformOperationsTransition Property="RenderTransform" Duration="0:0:0.07" Easing="{StaticResource Ease.PressIn}" />
+                </Transitions>
+            </Setter>
+        </Style>
+        <Style Selector="Button.StartMore /template/ ContentPresenter#PART_ContentPresenter">
+            <Setter Property="Background" Value="Transparent" />
+        </Style>
+        <Style Selector="Button.StartMore:pointerover /template/ ContentPresenter#PART_ContentPresenter">
+            <Setter Property="Background" Value="Transparent" />
+        </Style>
+        <Style Selector="Button.StartMore:pressed /template/ ContentPresenter#PART_ContentPresenter">
+            <Setter Property="Background" Value="{DynamicResource Brush.Hover}" />
+        </Style>
+        <!--  Каретка разворачивается на 180° за 300 мс (motion.md «Окошко у значения» — та же
+              каретка, тот же темп). Центр — относительный «50%,50%»: абсолютный «0.5,0.5» в
+              Avalonia означает 0.5px ≈ угол, и глиф улетел бы за пределы кнопки.  -->
+        <Style Selector="PathIcon.StartCaret">
+            <Setter Property="RenderTransformOrigin" Value="50%,50%" />
+            <Setter Property="RenderTransform" Value="rotate(0deg)" />
+            <Setter Property="Transitions">
+                <Transitions>
+                    <TransformOperationsTransition Property="RenderTransform" Duration="0:0:0.3" Easing="{StaticResource Ease.OutQuart}" />
+                </Transitions>
+            </Setter>
+        </Style>
+        <Style Selector="PathIcon.StartCaret.open">
+            <Setter Property="RenderTransform" Value="rotate(180deg)" />
+        </Style>
+
+        <!--  Раскрытия по высоте (motion.md «Раскрытия»): карточка найденной ссылки 340/240 мс,
+              «Другие способы» 320/220 мс. Высоту ведёт code-behind (замеряет натуральную), здесь
+              только темп. ClipToBounds на самих хостах в разметке — без него контент вылезал бы
+              за схлопнутую в 0 высоту.  -->
+        <Style Selector="Border.StartReveal">
+            <Setter Property="ClipToBounds" Value="True" />
+            <Setter Property="Transitions">
+                <Transitions>
+                    <DoubleTransition Property="Height" Duration="0:0:0.34" Easing="{StaticResource Ease.OutQuart}" />
+                    <DoubleTransition Property="Opacity" Duration="0:0:0.24" Easing="{StaticResource Ease.OutQuart}" />
+                </Transitions>
+            </Setter>
+        </Style>
+        <Style Selector="Border.StartReveal.fast">
+            <Setter Property="Transitions">
+                <Transitions>
+                    <DoubleTransition Property="Height" Duration="0:0:0.32" Easing="{StaticResource Ease.OutQuart}" />
+                    <DoubleTransition Property="Opacity" Duration="0:0:0.22" Easing="{StaticResource Ease.OutQuart}" />
+                </Transitions>
+            </Setter>
+        </Style>
+        <!--  «Облегчённый режим»: раскрытия и каретка переключаются мгновенно.  -->
+        <Style Selector=":is(Window).lite Border.StartReveal">
+            <Setter Property="Transitions">
+                <Transitions />
+            </Setter>
+        </Style>
+        <Style Selector=":is(Window).lite PathIcon.StartCaret">
+            <Setter Property="Transitions">
+                <Transitions />
+            </Setter>
+        </Style>
+    </UserControl.Styles>
+
+    <Border Background="{DynamicResource Brush.HomeGradient}">
+        <!--  Скролл: на низком окне колонка не обрезается, на высоком — стоит по центру.
+              Высоту вьюпорта сюда БОЛЬШЕ НЕ ПРОКИДЫВАЕМ. Раньше на панели стояло
+              MinHeight="{Binding #Scroll.Bounds.Height}" — и это ровно тот дефект, из-за которого
+              экран открывался НЕ ПО ЦЕНТРУ и вставал на место только после прокрутки: Bounds
+              заполняются ПОСЛЕ раскладки, поэтому первый проход считал центровку по чужой (нулевой
+              или ещё не отмасштабированной корневым LayoutTransformControl) высоте, а второй проход
+              приходил уже после первого кадра. Любая прокрутка запускала пересчёт — и «оно вставало
+              как надо».
+              Хост скролла и так растягивает содержимое до вьюпорта, когда оно меньше: колонке
+              достаточно VerticalAlignment=Center, чтобы стоять по центру С ПЕРВОГО кадра, и она
+              честно уезжает вверх с прокруткой, когда не влезает. Проверено замером на живом окне:
+              контент 502 пикселя в 815-пиксельном вьюпорте — центр колонки 457 при центре вьюпорта
+              452 (расхождение — верхний отступ 24 против нижнего), а на окне 560 колонка
+              прокручивается целиком.  -->
+        <ScrollViewer
+            x:Name="Scroll"
+            HorizontalScrollBarVisibility="Disabled"
+            VerticalScrollBarVisibility="Auto">
+            <Panel Margin="16,0">
+                <StackPanel
+                    x:Name="Column"
+                    Margin="0,24"
+                    Width="360"
+                    HorizontalAlignment="Center"
+                    VerticalAlignment="Center">
+
+                    <!--  ==================== (1) Щит 118 в кольце ====================
+                          Внешнее кольцо сплошное, внутреннее (отступ 14) пунктирное, под ними мягкое
+                          свечение. Щит КОНТУРНЫЙ и приглушённый (Brush.ShieldOff): доступа ещё нет,
+                          залитый щит здесь соврал бы про состояние.  -->
+                    <!--  Обёртка умеет ужать щит до 3/4, когда колонке не хватает высоты окна (см.
+                          UpdateShieldFit): на минимальном окне 420×560 с карточкой найденной ссылки
+                          иначе обрезались «Другие способы». Ужимается именно раскладка (LayoutTransform),
+                          а не рендер: освободившиеся 30 точек должна получить колонка.  -->
+                    <LayoutTransformControl
+                        x:Name="ShieldFit"
+                        HorizontalAlignment="Center"
+                        RenderTransformOrigin="50%,50%">
+                        <Panel
+                            x:Name="ShieldRing"
+                            Width="118"
+                            Height="118"
+                            HorizontalAlignment="Center">
+                            <!--  Свечение — ШЁПОТ, а не шар: на эталонном кадре (shots/F_first_dark.png)
+                                  внутри кольца фон ПЛОСКИЙ, прибавка синего к фону меньше единицы по
+                                  каналу. Brush.ConnectGlow заведён для гало connect-щита 230 и на 118
+                                  даёт видимый диск, который вдобавок просвечивает сквозь вырез контурного
+                                  щита и делает его «залитым». Гасим до 0.3 — свечение остаётся, шар уходит.  -->
+                            <Ellipse
+                                Width="118"
+                                Height="118"
+                                Fill="{DynamicResource Brush.ConnectGlow}"
+                                Opacity="0.3" />
+                            <Ellipse
+                                Width="118"
+                                Height="118"
+                                Stroke="{DynamicResource Brush.Ring.Outer}"
+                                StrokeThickness="1.5" />
+                            <Ellipse
+                                Width="90"
+                                Height="90"
+                                HorizontalAlignment="Center"
+                                VerticalAlignment="Center"
+                                Stroke="{DynamicResource Brush.Ring.Outer}"
+                                StrokeDashArray="3,3"
+                                StrokeThickness="1.5" />
+                            <PathIcon
+                                Width="46"
+                                Height="46"
+                                HorizontalAlignment="Center"
+                                VerticalAlignment="Center"
+                                Data="{StaticResource Geo.Start.Shield}"
+                                Foreground="{DynamicResource Brush.ShieldOff}" />
+                        </Panel>
+                    </LayoutTransformControl>
+
+                    <!--  ==================== (2) «Приветствуем!» 24/700 ====================
+                          Классом Headline (Grotesk Bold 24, трекинг −0.24 ≈ −0.01em) — тот же
+                          заголовочный уровень, что у подэкранов, ни на шаг мимо шкалы.  -->
+                    <TextBlock
+                        x:Name="TitleText"
+                        Margin="0,24,0,0"
+                        HorizontalAlignment="Stretch"
+                        Classes="Headline"
+                        Text="{loc:T Home_Welcome}"
+                        TextAlignment="Center"
+                        TextWrapping="Wrap" />
+
+                    <!--  ==================== (3) Подзаголовок 14/400 ====================  -->
+                    <TextBlock
+                        x:Name="SubtitleText"
+                        MaxWidth="340"
+                        Margin="0,8,0,0"
+                        HorizontalAlignment="Center"
+                        Classes="Body"
+                        Foreground="{DynamicResource Brush.OnSurfaceVariant}"
+                        LineHeight="21"
+                        Text="{loc:T Start_Subtitle}"
+                        TextAlignment="Center"
+                        TextWrapping="Wrap" />
+
+                    <!--  ==================== (4) Карточка найденной ссылки ====================
+                          Видна ТОЛЬКО когда в буфере лежит ссылка на подписку. Схлопнута в высоту 0
+                          и прозрачна по умолчанию — раскрывает её code-behind (340/240 мс).
+                          Вся карточка кликабельна (это и есть действие), внутри — ОДНА контурная
+                          акцентная кнопка 44, а не вторая карточка: вложенных карточек нет.  -->
+                    <Border
+                        x:Name="ClipRevealHost"
+                        Height="0"
+                        Classes="StartReveal"
+                        Opacity="0">
+                        <Border
+                            x:Name="ClipCard"
+                            Margin="0,24,0,0"
+                            HorizontalAlignment="Stretch"
+                            VerticalAlignment="Top"
+                            Classes="StartCard">
+                            <StackPanel>
+                                <Grid ColumnDefinitions="Auto,12,*">
+                                    <Border
+                                        Grid.Column="0"
+                                        Width="38"
+                                        Height="38"
+                                        Background="{DynamicResource Brush.SurfaceHighest}"
+                                        CornerRadius="12">
+                                        <PathIcon
+                                            Width="20"
+                                            Height="20"
+                                            Data="{StaticResource Geo.Start.Clover}"
+                                            Foreground="{DynamicResource Brush.OnSurfaceVariant}" />
+                                    </Border>
+                                    <StackPanel Grid.Column="2" VerticalAlignment="Center">
+                                        <!--  LineHeight числом НЕ задаём: строка гротеска по
+                                              метрикам гарнитуры = 1.276em, то есть 19.14 при кегле
+                                              15, и прежние «19» срезали «Подписке» нижние выносные.
+                                              Текст русский, кириллицы в Space Grotesk нет — рисует
+                                              запасной Roboto с ДРУГИМИ метриками, поэтому подобранное
+                                              на глаз число снова разошлось бы с гарнитурой.  -->
+                                        <TextBlock
+                                            FontFamily="{DynamicResource Font.Grotesk}"
+                                            FontSize="15"
+                                            FontWeight="Bold"
+                                            Foreground="{DynamicResource Brush.OnSurface}"
+                                            Text="{loc:T Start_ClipCardTitle}"
+                                            TextAlignment="Left" />
+                                        <TextBlock
+                                            Margin="0,3,0,0"
+                                            FontSize="11.5"
+                                            Foreground="{DynamicResource Brush.OnSurfaceVariant}"
+                                            Text="{loc:T Start_ClipCardNote}"
+                                            TextAlignment="Left"
+                                            TextTrimming="CharacterEllipsis" />
+                                    </StackPanel>
+                                </Grid>
+                                <!--  CTA карточки — ЕДИНСТВЕННОЕ, что здесь нажимается. Раньше это
+                                      был Border «внутри кликабельной карточки»: настоящая кнопка
+                                      была снаружи и невидима, а видимая — не нажималась. Теперь
+                                      наоборот. Цвет подписи и рамки несёт класс OutlinedAccent —
+                                      руками их здесь не задаём.  -->
+                                <Button
+                                    x:Name="ClipCardButton"
+                                    Margin="0,12,0,0"
+                                    Classes="OutlinedAccent StartCardCta"
+                                    Content="{loc:T Common_AddSubscription}" />
+                            </StackPanel>
+                        </Border>
+                    </Border>
+
+                    <!--  ==================== (5) Блок кнопок ====================
+                          Отступ сверху ведёт code-behind: 24 без карточки, 12 с карточкой (карточка
+                          уже принесла свои 24 сверху — иначе разрыв удвоился бы).
+                          Интервал 8 между кнопками стоит НА САМИХ кнопках и внутри раскрытий, а не
+                          Spacing-ом панели: схлопнутое в ноль раскрытие у StackPanel всё равно
+                          получало бы свой интервал, и под «Другими способами» висела бы пустая
+                          полоса.  -->
+                    <StackPanel x:Name="ActionsBlock">
+
+                        <!--  Войти через Telegram — глиф в фирменном цвете Telegram, подпись 14.5/700.  -->
+                        <Button x:Name="TelegramButton" Classes="StartPill">
+                            <StackPanel
+                                HorizontalAlignment="Center"
+                                Orientation="Horizontal"
+                                Spacing="10"
+                                VerticalAlignment="Center">
+                                <PathIcon
+                                    Width="20"
+                                    Height="20"
+                                    VerticalAlignment="Center"
+                                    Data="{StaticResource Geo.Start.Telegram}"
+                                    Foreground="{DynamicResource Brush.Telegram}" />
+                                <TextBlock
+                                    VerticalAlignment="Center"
+                                    FontSize="14.5"
+                                    FontWeight="Bold"
+                                    Foreground="{DynamicResource Brush.OnSurface}"
+                                    Text="{loc:T Common_SignInTelegram}" />
+                            </StackPanel>
+                        </Button>
+
+                        <!--  Добавить из буфера обмена — серый глиф, подпись 14.5/500: второй путь
+                              равен первому по весу пилюли, но не спорит с ним весом подписи.
+                              Пока видна карточка найденной ссылки, пилюля СХЛОПЫВАЕТСЯ: кнопка карточки
+                              «Добавить подписку» — то же самое действие, и две двери в одно действие на
+                              одном экране только отнимали высоту (с карточкой колонка не помещалась
+                              в окно 900×600, «Другие способы» уходили под нижний край).  -->
+                        <Border
+                            x:Name="PillRevealHost"
+                            Classes="StartReveal">
+                            <Button
+                                x:Name="ClipboardButton"
+                                Margin="0,8,0,0"
+                                VerticalAlignment="Top"
+                                Classes="StartPill">
+                                <StackPanel
+                                    HorizontalAlignment="Center"
+                                    Orientation="Horizontal"
+                                    Spacing="10"
+                                    VerticalAlignment="Center">
+                                    <PathIcon
+                                        Width="19"
+                                        Height="19"
+                                        VerticalAlignment="Center"
+                                        Data="{StaticResource Geo.Start.Copy}"
+                                        Foreground="{DynamicResource Brush.OnSurfaceVariant}" />
+                                    <TextBlock
+                                        VerticalAlignment="Center"
+                                        FontSize="14.5"
+                                        FontWeight="Medium"
+                                        Foreground="{DynamicResource Brush.OnSurface}"
+                                        Text="{loc:T Common_AddFromClipboard}" />
+                                </StackPanel>
+                            </Button>
+                        </Border>
+
+                        <!--  Другие способы — текст + каретка.  -->
+                        <Button
+                            x:Name="MoreButton"
+                            Margin="0,8,0,0"
+                            Classes="StartMore">
+                            <StackPanel
+                                HorizontalAlignment="Center"
+                                Orientation="Horizontal"
+                                Spacing="6"
+                                VerticalAlignment="Center">
+                                <TextBlock
+                                    x:Name="MoreLabel"
+                                    VerticalAlignment="Center"
+                                    FontSize="13"
+                                    FontWeight="Medium"
+                                    Foreground="{DynamicResource Brush.OnSurfaceVariant}"
+                                    Text="{loc:T Start_MoreWays}" />
+                                <!--  Каретка 12: PathIcon вписывает геометрию Uniform, а треугольник
+                                      10×5 — вдвое шире, чем выше. При Width 17 он растягивался в
+                                      17×8.5 и читался тяжелее эталонного (~11×6).  -->
+                                <PathIcon
+                                    x:Name="MoreCaret"
+                                    Width="12"
+                                    Height="12"
+                                    VerticalAlignment="Center"
+                                    Classes="StartCaret"
+                                    Data="{StaticResource Geo.Start.Caret}"
+                                    Foreground="{DynamicResource Brush.OnSurfaceVariant}" />
+                            </StackPanel>
+                        </Button>
+
+                        <!--  Раскрытие «Другие способы»: две строки 46 с шевроном. Фон, скругление и
+                              паддинг НЕ задаются локально: у Border.Row они уже есть, а локальное
+                              значение в Avalonia сильнее любого сеттера стиля — прибитый
+                              Background="Transparent" глушил бы :pointerover, и строка под курсором
+                              не темнела бы (на эталонном кадре темнеет). Прогиб 0.985 — «строка
+                              списка» из motion.md.  -->
+                        <Border
+                            x:Name="MoreRevealHost"
+                            Height="0"
+                            Classes="StartReveal fast"
+                            Opacity="0">
+                            <StackPanel Margin="0,8,0,0" VerticalAlignment="Top">
+                                <Border
+                                    x:Name="QrRow"
+                                    MinHeight="46"
+                                    Classes="Row"
+                                    Cursor="Arrow"
+                                    cm:PressFeedback.Scale="0.985">
+                                    <Grid ColumnDefinitions="Auto,12,*,Auto">
+                                        <PathIcon
+                                            Grid.Column="0"
+                                            Width="18"
+                                            Height="18"
+                                            VerticalAlignment="Center"
+                                            Data="{StaticResource Geo.Start.Qr}"
+                                            Foreground="{DynamicResource Brush.OnSurfaceVariant}" />
+                                        <TextBlock
+                                            Grid.Column="2"
+                                            VerticalAlignment="Center"
+                                            FontSize="13.5"
+                                            Foreground="{DynamicResource Brush.OnSurface}"
+                                            Text="{loc:T Common_AddViaQr}"
+                                            TextAlignment="Left" />
+                                        <PathIcon
+                                            Grid.Column="3"
+                                            Width="16"
+                                            Height="16"
+                                            VerticalAlignment="Center"
+                                            Data="{StaticResource Geo.ChevronRight}"
+                                            Foreground="{DynamicResource Brush.OnSurfaceVariant}" />
+                                    </Grid>
+                                </Border>
+                                <Border
+                                    x:Name="EmailRow"
+                                    MinHeight="46"
+                                    Classes="Row"
+                                    Cursor="Arrow"
+                                    cm:PressFeedback.Scale="0.985">
+                                    <Grid ColumnDefinitions="Auto,12,*,Auto">
+                                        <PathIcon
+                                            Grid.Column="0"
+                                            Width="18"
+                                            Height="18"
+                                            VerticalAlignment="Center"
+                                            Data="{StaticResource Geo.Start.Mail}"
+                                            Foreground="{DynamicResource Brush.OnSurfaceVariant}" />
+                                        <TextBlock
+                                            Grid.Column="2"
+                                            VerticalAlignment="Center"
+                                            FontSize="13.5"
+                                            Foreground="{DynamicResource Brush.OnSurface}"
+                                            Text="{loc:T Common_SignInEmail}"
+                                            TextAlignment="Left" />
+                                        <PathIcon
+                                            Grid.Column="3"
+                                            Width="16"
+                                            Height="16"
+                                            VerticalAlignment="Center"
+                                            Data="{StaticResource Geo.ChevronRight}"
+                                            Foreground="{DynamicResource Brush.OnSurfaceVariant}" />
+                                    </Grid>
+                                </Border>
+                            </StackPanel>
+                        </Border>
+                    </StackPanel>
+                </StackPanel>
+            </Panel>
+        </ScrollViewer>
+    </Border>
+</UserControl>

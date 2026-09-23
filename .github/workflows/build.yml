@@ -37,7 +37,7 @@ on:
   workflow_call:
     inputs:
       version:
-        description: Версия X.Y.Z или X.Y.Z-rc.N; пусто — из v2rayN/Directory.Build.props
+        description: Версия X.Y.Z или X.Y.Z-rc.N; пусто — из departament/Directory.Build.props
         type: string
         required: false
         default: ''
@@ -91,7 +91,7 @@ jobs:
           $ErrorActionPreference = 'Stop'
           $version = $env:REQUESTED_VERSION
           if (-not $version) {
-            $props = [xml](Get-Content 'v2rayN/Directory.Build.props')
+            $props = [xml](Get-Content 'departament/Directory.Build.props')
             $version = @($props.Project.PropertyGroup | ForEach-Object { $_.Version } | Where-Object { $_ })[0]
           }
           if ($version -notmatch '^\d+\.\d+\.\d+(-rc\.\d+)?$') { throw "Version '$version' is not X.Y.Z or X.Y.Z-rc.N" }
@@ -115,12 +115,12 @@ jobs:
       # ПЕРВЫМ и в ту же папку: среда выполнения у них общая, а собранные ReadyToRun файлы
       # приложения публикация приложения затем кладёт поверх.
       - name: Publish AmazTool (upgrade helper)
-        working-directory: ./v2rayN
+        working-directory: ./departament
         run: dotnet publish ./AmazTool/AmazTool.csproj -c Release -r win-x64 -p:SelfContained=true -p:EnableWindowsTargeting=true -p:Version=${{ steps.version.outputs.version }} -o "${{ github.workspace }}/dist"
 
       - name: Publish (self-contained win-x64)
-        working-directory: ./v2rayN
-        run: dotnet publish ./v2rayN.Desktop/v2rayN.Desktop.csproj -c Release -r win-x64 -p:SelfContained=true -p:EnableWindowsTargeting=true -p:PublishReadyToRun=true -p:Version=${{ steps.version.outputs.version }} -o "${{ github.workspace }}/dist"
+        working-directory: ./departament
+        run: dotnet publish ./departament.Desktop/departament.Desktop.csproj -c Release -r win-x64 -p:SelfContained=true -p:EnableWindowsTargeting=true -p:PublishReadyToRun=true -p:Version=${{ steps.version.outputs.version }} -o "${{ github.workspace }}/dist"
 
       - name: Strip debug symbols
         shell: pwsh
@@ -129,22 +129,10 @@ jobs:
       - name: Verify departament executable
         shell: pwsh
         run: |
-          # The project's AssemblyName is now "departament", so publish emits
-          # departament.exe natively (correct filename AND baked FileDescription).
-          # No rename needed; just fail fast if the expected host is missing.
+          # AssemblyName в departament.Desktop.csproj — departament, поэтому публикация сразу даёт
+          # departament.exe с верными именем и описанием. Нет файла — сборка падает здесь, а не у людей.
           $exe = Join-Path "${{ github.workspace }}/dist" 'departament.exe'
-          if (Test-Path $exe) {
-            Write-Host 'Found departament.exe (native, no rename needed)'
-          } else {
-            # Fallback: a stale v2rayN.exe would mean AssemblyName regressed.
-            $legacy = Join-Path "${{ github.workspace }}/dist" 'v2rayN.exe'
-            if (Test-Path $legacy) {
-              Rename-Item $legacy 'departament.exe' -Force
-              Write-Host 'AssemblyName regressed; renamed v2rayN.exe -> departament.exe'
-            } else {
-              throw 'departament.exe not found in publish output'
-            }
-          }
+          if (-not (Test-Path $exe)) { throw 'departament.exe not found in publish output' }
           if (-not (Test-Path (Join-Path "${{ github.workspace }}/dist" 'AmazTool.exe'))) { throw 'AmazTool.exe not found in publish output' }
           # На выпуске версия в самом файле обязана совпасть с тегом: по ней программа сравнивает
           # себя с релизом. Разойдись они — обновление предлагалось бы по кругу или не предлагалось вовсе.
@@ -269,7 +257,7 @@ jobs:
           $v = '${{ steps.version.outputs.version }}'
           if (-not $v) { $v = (Get-Item "$ws/dist/departament.exe").VersionInfo.ProductVersion.Split('+')[0] }
           $num = "$(($v -split '-')[0]).0"
-          & $iscc "/DAppVersion=$v" "/DNumericVersion=$num" "/DSourceDir=$ws\dist" "/DIconFile=$ws\v2rayN\v2rayN.Desktop\Assets\AppIcon.ico" "/O$ws" "$ws\installer\departament.iss"
+          & $iscc "/DAppVersion=$v" "/DNumericVersion=$num" "/DSourceDir=$ws\dist" "/DIconFile=$ws\departament\departament.Desktop\Assets\AppIcon.ico" "/O$ws" "$ws\installer\departament.iss"
           if ($LASTEXITCODE -ne 0) { throw "ISCC failed with exit code $LASTEXITCODE" }
           $setup = Get-Item "$ws/departament-setup.exe"
           Write-Host "departament-setup.exe $v, $([math]::Round($setup.Length / 1MB, 1)) MB"

@@ -5,11 +5,11 @@ on:
     branches:
       - main
     paths:
-      - 'v2rayN/**'
+      - 'departament/**'
       - '.github/workflows/test.yml'
   pull_request:
     paths:
-      - 'v2rayN/**'
+      - 'departament/**'
       - '.github/workflows/test.yml'
   workflow_dispatch:
 
@@ -31,5 +31,5 @@ jobs:
           dotnet-version: '10.0.x'
 
       - name: ServiceLib.Tests
-        working-directory: ./v2rayN
+        working-directory: ./departament
         run: dotnet test ./ServiceLib.Tests

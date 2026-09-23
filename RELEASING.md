@@ -35,9 +35,9 @@
 
 ## Что где лежит
 
-- `v2rayN/v2rayN.Desktop` — программа.
-- `v2rayN/ServiceLib` — подключение, подписки, обновления.
-- `v2rayN/AmazTool` — помощник, который ставит обновление.
+- `departament/departament.Desktop` — программа.
+- `departament/ServiceLib` — подключение, подписки, обновления.
+- `departament/AmazTool` — помощник, который ставит обновление.
 - `installer/departament.iss` — установщик.
 - `.github/workflows/build.yml` — сборка. Каждый пуш в `main` собирает программу, готовые файлы лежат в артефактах запуска. Здесь же закреплены версии ядер Xray и sing-box.
 - `.github/workflows/release.yml` — выпуск.

@@ -20,7 +20,7 @@
   #define SourceDir "..\dist"
 #endif
 #ifndef IconFile
-  #define IconFile "..\v2rayN\v2rayN.Desktop\Assets\AppIcon.ico"
+  #define IconFile "..\departament\departament.Desktop\Assets\AppIcon.ico"
 #endif
 
 [Setup]

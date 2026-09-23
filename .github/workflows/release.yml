@@ -139,7 +139,7 @@ jobs:
               else
                 echo "Описание выпуска: что нового для людей. Отредактируйте его перед публикацией."
               fi
-              printf '\n---\n\nПрограмма основана на [v2rayN](https://github.com/2dust/v2rayN) и распространяется по лицензии GPL-3.0. Исходный код этой версии — в этом репозитории, тег %s.\n' "$TAG"
+              printf '\n---\n\nПрограмма распространяется по лицензии GPL-3.0. Исходный код этой версии — в этом репозитории, тег %s.\n' "$TAG"
             } > "$body"
             flags=(--draft --title "departament для ПК $VERSION" --notes-file "$body")
             [ "$PRERELEASE" = "true" ] && flags+=(--prerelease)

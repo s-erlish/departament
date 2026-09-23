@@ -1,0 +1,10 @@
+[Desktop Entry]
+Type=Application
+Exec=$ExecPath$
+Hidden=false
+NoDisplay=false
+X-GNOME-Autostart-enabled=true
+Name[en_US]=departament
+Name=departament
+Comment[en_US]=departament
+Comment=departament
