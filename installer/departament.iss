@@ -78,11 +78,44 @@ Name: "desktopicon"; Description: "{cm:DesktopIcon}"
 [Files]
 Source: "{#SourceDir}\*"; DestDir: "{app}"; Flags: ignoreversion recursesubdirs createallsubdirs
 
+[Dirs]
+; Каталоги с учётными данными создаём САМИ, чтобы закрыть их права ещё до первого запуска программы
+; (см. [Run] ниже). Иначе их создала бы программа, и первый же записанный туда файл успел бы
+; полежать с правами Program Files, где читать разрешено всем.
+;   guiConfigs — пропуск аккаунта (departament_auth.dat) и база с URL подписки (guiNDB.db);
+;   binConfigs — сгенерированный конфиг ядра, в нём uuid/пароль узла открытым текстом;
+;   guiBackups — backup_*.zip: обычный zip, без шифрования, с полной копией guiConfigs внутри;
+;   guiTemps   — туда резервное копирование раскладывает копию всего guiConfigs перед упаковкой.
+; Последние два обязательны: без них защита обходится одним нажатием «Резервное копирование».
+; guiLogs намеренно не трогаем — там только журнал приложения, без токенов и адресов подписки.
+Name: "{app}\guiConfigs"
+Name: "{app}\binConfigs"
+Name: "{app}\guiBackups"
+Name: "{app}\guiTemps"
+
 [Icons]
 Name: "{autoprograms}\departament VPN"; Filename: "{app}\departament.exe"
 Name: "{autodesktop}\departament VPN"; Filename: "{app}\departament.exe"; Tasks: desktopicon
 
 [Run]
+; Права на каталоги с учётными данными: снять наследование и оставить ровно два разрешения — SYSTEM
+; и встроенную группу администраторов, с наследованием внутрь ((OI)(CI)). По умолчанию Program Files
+; разрешает ЧИТАТЬ всем, то есть пропуск аккаунта, URL подписки и конфиг ядра с паролем узла были
+; открыты любому другому пользователю машины и любой программе, запущенной без прав.
+;
+; Группы названы SID'ами, а не именами: на русской Windows встроенная группа зовётся «СИСТЕМА», и
+; команда с английским именем там просто не нашла бы её. S-1-5-18 — SYSTEM, S-1-5-32-544 —
+; администраторы. Программа, установщик, деинсталлятор и AmazTool работают от администратора, поэтому
+; доступ к своим данным никто из них не теряет.
+;
+; То же самое умеет и сама программа (DataFolderSecurity) — на каждом запуске и идемпотентно. Здесь
+; это нужно для ПЕРВОГО запуска, там — для тех, кто уже установил программу раньше: дальше она
+; обновляется через AmazTool, и установщик у них больше не запускается никогда.
+Filename: "{sys}\icacls.exe"; Parameters: """{app}\guiConfigs"" /inheritance:r /grant:r *S-1-5-18:(OI)(CI)F /grant:r *S-1-5-32-544:(OI)(CI)F"; Flags: runhidden
+Filename: "{sys}\icacls.exe"; Parameters: """{app}\binConfigs"" /inheritance:r /grant:r *S-1-5-18:(OI)(CI)F /grant:r *S-1-5-32-544:(OI)(CI)F"; Flags: runhidden
+Filename: "{sys}\icacls.exe"; Parameters: """{app}\guiBackups"" /inheritance:r /grant:r *S-1-5-18:(OI)(CI)F /grant:r *S-1-5-32-544:(OI)(CI)F"; Flags: runhidden
+Filename: "{sys}\icacls.exe"; Parameters: """{app}\guiTemps"" /inheritance:r /grant:r *S-1-5-18:(OI)(CI)F /grant:r *S-1-5-32-544:(OI)(CI)F"; Flags: runhidden
+
 ; Галочка на последней странице включена сразу. runascurrentuser — запуск с правами самого установщика,
 ; то есть от имени администратора. Без флага Inno запускает postinstall-программу от исходного, не
 ; повышенного пользователя, а программе с requireAdministrator Windows такой запуск отказывает:
