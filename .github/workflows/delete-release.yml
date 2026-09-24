@@ -1,0 +1,100 @@
+name: Удалить выпуск
+
+# Удаляет выпуск вместе с его тегом — например, проверочный. Файлы выпуска пропадают со страницы
+# Releases, программы перестают его предлагать при следующей проверке.
+#
+# Для Android заодно: если «Скачать для Android» в README вела на удалённый выпуск, она переезжает
+# на последний оставшийся выпуск для Android.
+#
+# Номер удалённого выпуска можно выпустить снова. Но у кого он уже стоит, тем такой же номер не
+# предложится — для них нужен следующий.
+
+on:
+  workflow_dispatch:
+    inputs:
+      app:
+        description: Чей выпуск
+        required: true
+        type: choice
+        options:
+          - Android
+          - ПК
+        default: Android
+      version:
+        description: Версия, например 1.0.5
+        required: true
+        type: string
+
+permissions:
+  contents: read
+
+concurrency:
+  group: delete-release
+  cancel-in-progress: false
+
+jobs:
+  delete:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+
+      - name: Delete the release and its tag
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+          IN_APP: ${{ inputs.app }}
+          IN_VERSION: ${{ inputs.version }}
+        run: |
+          set -euo pipefail
+          version="$(printf '%s' "$IN_VERSION" | tr -d '[:space:]')"
+          version="${version#android-}"
+          version="${version#[vV]}"
+          if ! [[ "$version" =~ ^[0-9]+\.[0-9]+\.[0-9]+(-rc\.[0-9]+)?$ ]]; then
+            echo "::error::Версия '$version' не подходит: нужна вида 1.2.3 или 1.2.3-rc.1"
+            exit 1
+          fi
+          if [ "$IN_APP" = "Android" ]; then tag="android-v$version"; else tag="v$version"; fi
+
+          if gh release view "$tag" >/dev/null 2>&1; then
+            gh release delete "$tag" --cleanup-tag --yes
+            echo "Выпуск $tag удалён вместе с тегом" >> "$GITHUB_STEP_SUMMARY"
+          elif git ls-remote --exit-code --tags "https://github.com/$GH_REPO.git" "refs/tags/$tag" >/dev/null; then
+            gh api -X DELETE "repos/$GH_REPO/git/refs/tags/$tag"
+            echo "Выпуска $tag не было, удалён оставшийся тег" >> "$GITHUB_STEP_SUMMARY"
+          else
+            echo "::error::Выпуска $tag нет"
+            exit 1
+          fi
+
+          # «Latest» — у выпуска для ПК: после удаления GitHub мог отдать отметку кому угодно.
+          pc="$(gh api "repos/$GH_REPO/releases?per_page=100" --jq '
+            [.[] | select(.draft == false and .prerelease == false)
+                 | select(.tag_name | test("^v[0-9]+\\.[0-9]+\\.[0-9]+$"))]
+            | sort_by(.tag_name | ltrimstr("v") | split(".") | map(tonumber)) | last
+            | "\(.id) \(.tag_name)"')"
+          if [ -n "$pc" ] && [ "$pc" != "null null" ]; then
+            read -r id pctag <<< "$pc"
+            gh api -X PATCH "repos/$GH_REPO/releases/$id" -f make_latest=true >/dev/null
+          fi
+
+          [ "$IN_APP" = "Android" ] || exit 0
+          grep -q "releases/tag/$tag\b" README.md || exit 0
+          newest="$(gh api "repos/$GH_REPO/releases?per_page=100" --jq '
+            [.[] | select(.draft == false and .prerelease == false)
+                 | select(.tag_name | test("^android-v[0-9]+\\.[0-9]+\\.[0-9]+$"))]
+            | sort_by(.tag_name | ltrimstr("android-v") | split(".") | map(tonumber)) | last
+            | .tag_name // empty')"
+          if [ -z "$newest" ]; then
+            echo "::warning::Выпусков для Android не осталось — ссылку в README поправьте вручную"
+            exit 0
+          fi
+          sed -i -E "s#releases/tag/android-v[0-9]+\.[0-9]+\.[0-9]+#releases/tag/$newest#g" README.md
+          git config user.name erlish
+          git config user.email 90829910+s-erlish@users.noreply.github.com
+          git commit -qam "README: «Скачать для Android» ведёт на ${newest#android-v}"
+          git push origin HEAD:main
+          echo "README: «Скачать для Android» ведёт на $newest" >> "$GITHUB_STEP_SUMMARY"
