@@ -1,0 +1,114 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  «Вышла версия X» — the whole screen, once per app launch (AppUpdateWatcher.takeOffer).
+
+  The owner: «чтобы была не плашка сверху, а появлялось как бы целое окошко во весь экран, которое
+  предлагает обновиться … но и мог закрыть это окно чтобы включить впн». So:
+
+      ✕                                         close, top end — the way out is where it is expected
+      [ 64 tile · cloud glyph ]                 the empty-state hero, the same one the update screen
+      Вышла версия 1.0.3                        draws for «Доступна версия» (view_empty_state.xml)
+      Скачаем и установим обновление…
+      Что нового                                the release's «Что в этом выпуске», without GitHub's
+      • …                                       markup (ReleaseNotesText)
+
+      [        Обновить        ]                the one PRIMARY action, pinned to the bottom
+               Не сейчас                        the quiet tier: closing is allowed, not advertised
+
+  «Обновить» does not download here: it opens CheckUpdateActivity already downloading, so the
+  progress, the permission detour and every failure stay drawn in the one place that owns them.
+-->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="?android:attr/colorBackground"
+    android:fitsSystemWindows="true"
+    android:orientation="vertical"
+    tools:context=".ui.UpdateOfferActivity">
+
+    <FrameLayout
+        android:layout_width="match_parent"
+        android:layout_height="56dp">
+
+        <TextView
+            android:id="@+id/btn_offer_close"
+            android:layout_width="@dimen/view_height_dp48"
+            android:layout_height="@dimen/view_height_dp48"
+            android:layout_gravity="end|center_vertical"
+            android:layout_marginEnd="@dimen/space_4"
+            android:background="@null"
+            android:clickable="true"
+            android:contentDescription="@string/update_offer_close"
+            android:focusable="true"
+            android:gravity="center"
+            android:text="✕"
+            android:textAppearance="@style/TextAppearance.App.Title"
+            android:textColor="?attr/colorOnSurfaceVariant" />
+    </FrameLayout>
+
+    <androidx.core.widget.NestedScrollView
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:fillViewport="true">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:gravity="center_vertical"
+            android:orientation="vertical"
+            android:paddingBottom="@dimen/space_24">
+
+            <include
+                android:id="@+id/offer_hero"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                layout="@layout/view_empty_state" />
+
+            <TextView
+                android:id="@+id/tv_offer_whats_new_title"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/space_32"
+                android:paddingStart="@dimen/screen_gutter"
+                android:paddingEnd="@dimen/screen_gutter"
+                android:text="@string/update_offer_whats_new"
+                android:textAppearance="@style/TextAppearance.App.Title" />
+
+            <TextView
+                android:id="@+id/tv_offer_notes"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/space_8"
+                android:lineSpacingExtra="2dp"
+                android:paddingStart="@dimen/screen_gutter"
+                android:paddingEnd="@dimen/screen_gutter"
+                android:textAppearance="@style/TextAppearance.App.Body"
+                tools:text="•  Плашка о новой версии появляется при каждом запуске." />
+        </LinearLayout>
+    </androidx.core.widget.NestedScrollView>
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:paddingStart="@dimen/screen_gutter"
+        android:paddingTop="@dimen/space_8"
+        android:paddingEnd="@dimen/screen_gutter"
+        android:paddingBottom="@dimen/space_16">
+
+        <include
+            android:id="@+id/offer_update"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            layout="@layout/view_action_primary" />
+
+        <include
+            android:id="@+id/offer_later"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/space_4"
+            layout="@layout/view_action_tertiary" />
+    </LinearLayout>
+</LinearLayout>

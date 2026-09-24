@@ -1,8 +1,11 @@
 package com.v2ray.ang.handler
 
+import android.app.Activity
+import android.app.Application
 import android.app.PendingIntent
 import android.content.Context
 import android.content.Intent
+import android.os.Bundle
 import androidx.work.Constraints
 import androidx.work.CoroutineWorker
 import androidx.work.ExistingPeriodicWorkPolicy
@@ -25,16 +28,19 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicBoolean
+import java.util.concurrent.atomic.AtomicReference
 
 /**
  * Замечает новую версию приложения без того, чтобы человек сам шёл в «Проверить обновления».
  *
  * Владелец: «чтобы при заходе показывало, что вышло обновление и в уведомлениях тоже чтобы
- * приходило раз проверяет раз в час с гитхаба». Отсюда три пути к одной и той же ленте
- * ([UpdateCheckerManager.checkForUpdate]):
+ * приходило раз проверяет раз в час с гитхаба», и потом: «чтобы была не плашка сверху, а появлялось
+ * как бы целое окошко во весь экран, которое предлагает обновиться … но и мог закрыть это окно».
+ * Отсюда три пути к одной и той же ленте ([UpdateCheckerManager.checkForUpdate]):
  *
- *  - **при заходе** — [checkOnLaunch]: плашка «Вышла версия X» на главной, подпись у «Проверить
- *    обновления» и точка на вкладке «Настройки»;
+ *  - **при входе в приложение** — [install]: окно «Вышла версия X» на весь экран (UpdateOfferActivity,
+ *    один раз за запуск приложения, см. [takeOffer]), подпись у «Проверить обновления» и точка на
+ *    вкладке «Настройки»;
  *  - **раз в час в фоне** — [CheckTask] через WorkManager, с сетью: если приложение этой версии ещё
  *    не показывало, приходит уведомление;
  *  - **экран «Проверить обновления»** — [remember] записывает то, что нашёл он.
@@ -51,21 +57,18 @@ object AppUpdateWatcher {
     private const val WORK_NAME = "app_update_check"
     private const val CHECK_INTERVAL_MINUTES = 60L
 
-    /**
-     * Сколько при заходе в уже запущенное приложение считается «только что проверяли». Было
-     * [CHECK_INTERVAL_MINUTES], и это была ошибка, найденная владельцем на телефоне: первый запуск
-     * проверял раньше, чем вышла новая версия, и потом целый час заход в приложение ничего не
-     * спрашивал — плашка появлялась только после «Проверить обновления». Пять минут — чтобы
-     * переключение туда-обратно не ходило в сеть каждый раз: без ключа GitHub отвечает одному адресу
-     * 60 раз в час, а у мобильных операторов один адрес на многих.
-     */
-    private const val FOREGROUND_RECHECK_MS = 5 * 60_000L
+    /** Не больше одной проверки при входе за раз. */
+    private val entryCheckInFlight = AtomicBoolean(false)
 
-    /** Первый заход после запуска процесса проверяет всегда, без оглядки на прошлые проверки. */
-    private val checkedInThisProcess = AtomicBoolean(false)
+    /** Сколько окон приложения сейчас на экране (onStart − onStop). Только главный поток. */
+    private var startedActivities = 0
 
-    /** Не больше одной проверки при заходе за раз. */
-    private val launchCheckInFlight = AtomicBoolean(false)
+    /** Последнее ушедшее окно ушло из-за поворота экрана: его возвращение — не вход. */
+    private var stoppedForConfigChange = false
+
+    /** Кому сказать, что проверка при входе ответила: главному окну, пока оно живо. */
+    @Volatile
+    private var entryListener: (() -> Unit)? = null
 
     /** Постановка работы не на главном потоке: RemoteWorkManager строит свою базу и будит `:bg`. */
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
@@ -77,13 +80,22 @@ object AppUpdateWatcher {
         return version.takeIf { UpdateCheckerManager.compareVersions(it, BuildConfig.VERSION_NAME) > 0 }
     }
 
-    /** Показывать ли плашку на главной: версия есть и её плашку не закрывали. */
-    fun bannerVersion(): String? =
-        availableVersion()?.takeIf { it != MmkvManager.decodeSettingsString(AppConfig.PREF_APP_UPDATE_DISMISSED) }
+    /** Описание найденной версии, как его прислал GitHub. */
+    fun notes(): String? = MmkvManager.decodeSettingsString(AppConfig.PREF_APP_UPDATE_NOTES)
 
-    /** Крестик на плашке: до следующей версии она не вернётся. Подпись и точка в настройках остаются. */
-    fun dismissBanner(version: String) {
-        MmkvManager.encodeSettings(AppConfig.PREF_APP_UPDATE_DISMISSED, version)
+    /** Какую версию окно уже предлагало в этом запуске приложения. */
+    private val offeredInProcess = AtomicReference<String?>(null)
+
+    /**
+     * Версия, которую пора предложить окном, — или null. Окно показывается раз за запуск приложения:
+     * «Не сейчас» закрывает его до следующего запуска, а точка на «Настройках» и подпись у «Проверить
+     * обновления» остаются. Раз окно показано, уведомление об этой версии уже лишнее.
+     */
+    fun takeOffer(): String? {
+        val version = availableVersion() ?: return null
+        if (offeredInProcess.getAndSet(version) == version) return null
+        MmkvManager.encodeSettings(AppConfig.PREF_APP_UPDATE_ANNOUNCED, version)
+        return version
     }
 
     /**
@@ -106,34 +118,66 @@ object AppUpdateWatcher {
     }
 
     /**
-     * Проверка при заходе в приложение. Запуск приложения проверяет всегда; возвращение в уже
-     * запущенное — если с прошлой проверки прошло больше [FOREGROUND_RECHECK_MS] (найденное тогда
-     * уже лежит в [availableVersion]). [onChecked] зовётся на главном потоке после проверки — чтобы
-     * экраны перерисовались.
+     * Проверка при каждом входе в приложение — владелец: «надо, чтобы при входе в приложение как раз
+     * был запрос, даже если ты подключен». Вход — это когда на экране появляется первое окно
+     * приложения: запуск, возвращение с рабочего стола, из недавних или из другого приложения.
+     * Переходы между экранами самого приложения и поворот экрана входом не считаются.
+     *
+     * Раньше проверку делало главное окно в onResume, сначала не чаще раза в час, потом раз в пять
+     * минут, — и владелец на телефоне оба раза видел, что вернувшись в приложение, он о новой версии
+     * не узнаёт. Туннель тут не помеха: лента спрашивается напрямую, а не ответила — через
+     * локальный прокси (UpdateCheckerManager.fetch).
      */
-    fun checkOnLaunch(scope: CoroutineScope, onChecked: () -> Unit) {
-        val firstInProcess = checkedInThisProcess.compareAndSet(false, true)
-        if (!firstInProcess) {
-            val last = MmkvManager.decodeSettingsLong(AppConfig.PREF_APP_UPDATE_CHECKED_AT, 0L)
-            val now = System.currentTimeMillis()
-            if (last in 1..now && now - last < FOREGROUND_RECHECK_MS) return
-        }
-        if (!launchCheckInFlight.compareAndSet(false, true)) return
+    fun install(app: Application) {
+        app.registerActivityLifecycleCallbacks(object : Application.ActivityLifecycleCallbacks {
+            override fun onActivityStarted(activity: Activity) {
+                startedActivities++
+                if (startedActivities == 1 && !stoppedForConfigChange) checkOnEntry()
+                stoppedForConfigChange = false
+            }
+
+            override fun onActivityStopped(activity: Activity) {
+                startedActivities = maxOf(0, startedActivities - 1)
+                stoppedForConfigChange = activity.isChangingConfigurations
+            }
+
+            override fun onActivityCreated(activity: Activity, savedInstanceState: Bundle?) = Unit
+            override fun onActivityResumed(activity: Activity) = Unit
+            override fun onActivityPaused(activity: Activity) = Unit
+            override fun onActivitySaveInstanceState(activity: Activity, outState: Bundle) = Unit
+            override fun onActivityDestroyed(activity: Activity) = Unit
+        })
+    }
+
+    /**
+     * Главное окно подписывается, чтобы после ответа перерисовать точку на «Настройках» и предложить
+     * новую версию окном.
+     */
+    fun setEntryListener(listener: () -> Unit) {
+        entryListener = listener
+    }
+
+    /** Отписывает [listener], если подписан именно он. */
+    fun clearEntryListener(listener: () -> Unit) {
+        if (entryListener === listener) entryListener = null
+    }
+
+    private fun checkOnEntry() {
+        if (!entryCheckInFlight.compareAndSet(false, true)) return
         scope.launch {
             try {
-                val found = check()
-                // Приложение открыто и само покажет плашку — уведомление об этой версии уже лишнее.
-                if (found != null) MmkvManager.encodeSettings(AppConfig.PREF_APP_UPDATE_ANNOUNCED, found)
-                withContext(Dispatchers.Main) { onChecked() }
+                check()
+                withContext(Dispatchers.Main) { entryListener?.invoke() }
             } finally {
-                launchCheckInFlight.set(false)
+                entryCheckInFlight.set(false)
             }
         }
     }
 
     /** Экран «Проверить обновления» нашёл версию (или не нашёл) — остальные поверхности узнают то же. */
-    fun remember(latestVersion: String?) {
+    fun remember(latestVersion: String?, notes: String? = null) {
         MmkvManager.encodeSettings(AppConfig.PREF_APP_UPDATE_VERSION, latestVersion.orEmpty())
+        MmkvManager.encodeSettings(AppConfig.PREF_APP_UPDATE_NOTES, if (latestVersion == null) "" else notes.orEmpty())
         MmkvManager.encodeSettings(AppConfig.PREF_APP_UPDATE_CHECKED_AT, System.currentTimeMillis())
     }
 
@@ -150,11 +194,14 @@ object AppUpdateWatcher {
             return null
         }
         val version = result.latestVersion?.takeIf { result.hasUpdate }
-        remember(version)
+        remember(version, result.releaseNotes)
         return version
     }
 
-    /** Часовая проверка в фоне. Работает в `:bg`, как и обновление подписки. */
+    /**
+     * Часовая проверка в фоне. Работает в `:bg`, как и обновление подписки. Молчит о версии, которую
+     * уже предложило окно при заходе (PREF_APP_UPDATE_ANNOUNCED).
+     */
     class CheckTask(context: Context, params: WorkerParameters) : CoroutineWorker(context, params) {
 
         override suspend fun doWork(): Result {

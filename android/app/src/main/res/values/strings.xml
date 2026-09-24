@@ -27,9 +27,12 @@
     <string name="notification_channel_app_update">Новая версия приложения</string>
     <string name="app_update_notification_title">Доступна версия %1$s</string>
     <string name="app_update_notification_text">Нажмите, чтобы скачать и установить</string>
-    <string name="home_update_cta_title">Вышла версия %1$s</string>
-    <string name="home_update_cta_action">Обновить</string>
-    <string name="home_update_cta_dismiss">Скрыть до следующей версии</string>
+    <string name="update_offer_title">Вышла версия %1$s</string>
+    <string name="update_offer_line">Скачаем и установим обновление. Серверы, подписка и вход останутся на месте.</string>
+    <string name="update_offer_whats_new">Что нового</string>
+    <string name="update_offer_update">Обновить</string>
+    <string name="update_offer_later">Не сейчас</string>
+    <string name="update_offer_close">Закрыть</string>
     <string name="settings_update_available">Вышла %1$s</string>
     <string name="nav_settings_update_badge">Настройки, доступно обновление</string>
     <!-- The ongoing VPN notification, expanded: the live rate and nothing else. -->

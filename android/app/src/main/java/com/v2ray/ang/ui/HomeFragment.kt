@@ -69,7 +69,6 @@ import com.v2ray.ang.dto.entities.trafficFraction
 import com.v2ray.ang.dto.entities.usedTraffic
 import com.v2ray.ang.extension.toSpeedString
 import com.v2ray.ang.extension.toTrafficString
-import com.v2ray.ang.handler.AppUpdateWatcher
 import com.v2ray.ang.handler.MmkvManager
 import com.v2ray.ang.handler.SettingsManager
 import com.v2ray.ang.handler.SubscriptionNaming
@@ -1699,31 +1698,6 @@ class HomeFragment : BaseFragment<FragmentHomeBinding>() {
             MmkvManager.encodeSettings(AppConfig.PREF_LINK_TG_CTA_DISMISSED, true)
             binding.ctaLinkTelegram.isVisible = false
         }
-        // «Вышла версия X»: the banner opens the update screen, the ✕ hides it until the next one.
-        binding.ctaUpdate.onSingleClick { startActivity(Intent(requireContext(), CheckUpdateActivity::class.java)) }
-        binding.btnCtaUpdateDismiss.pressFeedback(R.anim.press_icon)
-        binding.btnCtaUpdateDismiss.onSingleClick {
-            AppUpdateWatcher.bannerVersion()?.let { AppUpdateWatcher.dismissBanner(it) }
-            binding.ctaUpdate.isVisible = false
-        }
-    }
-
-    /**
-     * «Вышла версия X» — shown while [AppUpdateWatcher] knows of a newer version whose banner has not
-     * been dismissed. Not on the начальный экран: there the gate block is the one thing on screen,
-     * and the banner would push it off centre.
-     */
-    private fun paintUpdateCta() {
-        val version = AppUpdateWatcher.bannerVersion()
-        binding.ctaUpdate.isVisible = version != null && !onboardingShell
-        if (version != null) {
-            binding.tvCtaUpdateTitle.text = getString(R.string.home_update_cta_title, version)
-        }
-    }
-
-    /** The launch check has answered: repaint the banner. */
-    fun refreshUpdateCta() {
-        if (isBindingInitialized) paintUpdateCta()
     }
 
     /**
@@ -3001,7 +2975,6 @@ class HomeFragment : BaseFragment<FragmentHomeBinding>() {
         val state = resolveState()
         paintHeader(state)
         paintLinkCta()
-        paintUpdateCta()
         paintCondition(state.condition)
         paintProgress()
         paintConnect(state, animate)
@@ -3570,7 +3543,6 @@ class HomeFragment : BaseFragment<FragmentHomeBinding>() {
         if (onboarding) binding.ctaLinkTelegram.isVisible = false
         if (onboardingShell == onboarding) return
         onboardingShell = onboarding
-        paintUpdateCta()
         applyListInsets()
     }
 

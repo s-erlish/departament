@@ -23,6 +23,7 @@ import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.isVisible
 import androidx.core.view.updatePadding
 import androidx.fragment.app.Fragment
+import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
 import com.google.android.material.color.MaterialColors
 import com.google.android.material.snackbar.Snackbar
@@ -445,6 +446,7 @@ class MainActivity : HelperBaseActivity(), MainHost {
         SubscriptionUpdater.sync()
         // «Вышла версия X» раз в час в фоне, уведомлением. Уже стоящую проверку не сдвигает.
         AppUpdateWatcher.schedule()
+        AppUpdateWatcher.setEntryListener(updateCheckListener)
         mainViewModel.reloadServerList()
 
         checkAndRequestPermission(PermissionType.POST_NOTIFICATIONS) {
@@ -1675,14 +1677,37 @@ class MainActivity : HelperBaseActivity(), MainHost {
         // A login or a subscription change from another screen can add or remove the Аккаунт item
         // and, in the onboarding state, the bar itself.
         refreshNavGates()
-        // Новая версия: точка на «Настройках» по тому, что уже известно, и проверка при заходе — не
-        // чаще раза в час. Ответ перерисовывает все три места, где о версии говорится.
+        // Новая версия: окно «Вышла версия …» и точка на «Настройках» по тому, что уже известно.
+        // Проверку при входе в приложение делает AppUpdateWatcher; её ответ приходит в
+        // onUpdateCheckAnswered.
         paintNavUpdateBadge()
-        AppUpdateWatcher.checkOnLaunch(lifecycleScope) {
-            paintNavUpdateBadge()
-            homeFragment?.refreshUpdateCta()
-            settingsFragment?.paintUpdateRow()
-        }
+        offerUpdateIfDue()
+    }
+
+    /** One instance, so onDestroy unhooks only its own listener and never a recreated window's. */
+    private val updateCheckListener: () -> Unit = { onUpdateCheckAnswered() }
+
+    override fun onDestroy() {
+        AppUpdateWatcher.clearEntryListener(updateCheckListener)
+        super.onDestroy()
+    }
+
+    /** Проверка при входе в приложение ответила: точка, строка в настройках и, если пора, окно. */
+    private fun onUpdateCheckAnswered() {
+        if (isFinishing || isDestroyed) return
+        paintNavUpdateBadge()
+        settingsFragment?.paintUpdateRow()
+        offerUpdateIfDue()
+    }
+
+    /**
+     * «Вышла версия X» на весь экран — раз за запуск приложения, и только поверх главного окна,
+     * когда оно на экране: пока человек в подэкране, окно подождёт возвращения.
+     */
+    private fun offerUpdateIfDue() {
+        if (!lifecycle.currentState.isAtLeast(Lifecycle.State.RESUMED)) return
+        AppUpdateWatcher.takeOffer() ?: return
+        startActivity(Intent(this, UpdateOfferActivity::class.java))
     }
 
     /** The accent dot on the Настройки tab while a newer version of the app is out. */

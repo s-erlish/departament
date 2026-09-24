@@ -103,8 +103,8 @@ object AppConfig {
     /** Версия, о которой уже сказали — уведомлением или плашкой на главной. Второй раз не говорим. */
     const val PREF_APP_UPDATE_ANNOUNCED = "pref_app_update_announced"
 
-    /** Версия, плашку которой закрыли крестиком. Следующая версия плашку вернёт. */
-    const val PREF_APP_UPDATE_DISMISSED = "pref_app_update_dismissed"
+    /** Описание найденной версии с GitHub — для окна «Вышла версия …». */
+    const val PREF_APP_UPDATE_NOTES = "pref_app_update_notes"
 
     /** Когда последний раз спрашивали ленту выпусков, мс. */
     const val PREF_APP_UPDATE_CHECKED_AT = "pref_app_update_checked_at"

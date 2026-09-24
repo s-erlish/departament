@@ -25,6 +25,7 @@ import com.v2ray.ang.handler.AppUpdateWatcher
 import com.v2ray.ang.handler.UpdateCheckerManager
 import com.v2ray.ang.ui.component.EmptyStateBinder
 import com.v2ray.ang.ui.component.Haptic
+import com.v2ray.ang.ui.component.ReleaseNotesText
 import com.v2ray.ang.ui.component.RowBinder
 import com.v2ray.ang.ui.component.SubPage
 import com.v2ray.ang.ui.component.ToolbarBinder
@@ -182,10 +183,16 @@ class CheckUpdateActivity : BaseActivity() {
             try {
                 val result = UpdateCheckerManager.checkForUpdate(includePreRelease())
                 // Главная и «Настройки» говорят о той же версии, что нашёл этот экран.
-                AppUpdateWatcher.remember(result.latestVersion?.takeIf { result.hasUpdate })
+                AppUpdateWatcher.remember(result.latestVersion?.takeIf { result.hasUpdate }, result.releaseNotes)
                 if (result.hasUpdate) {
                     offer = result
-                    showUpdateAvailable(result)
+                    // Пришли из окна «Вышла версия …» кнопкой «Обновить» — второй раз её не спрашиваем.
+                    if (intent.getBooleanExtra(EXTRA_START_DOWNLOAD, false)) {
+                        intent.removeExtra(EXTRA_START_DOWNLOAD)
+                        startDownload()
+                    } else {
+                        showUpdateAvailable(result)
+                    }
                 } else {
                     showUpToDate()
                 }
@@ -519,10 +526,11 @@ class CheckUpdateActivity : BaseActivity() {
         binding.actionArea.isVisible = true
     }
 
+    /** «Что в этом выпуске» без разметки GitHub — см. [ReleaseNotesText]. */
     private fun showReleaseNotes(notes: String?) {
-        val text = notes?.trim().orEmpty()
+        val text = ReleaseNotesText.whatsNew(notes, binding.tvReleaseNotes.paint)
         binding.tvReleaseNotes.text = text
-        binding.tvReleaseNotes.isVisible = text.isNotEmpty()
+        binding.tvReleaseNotes.isVisible = !text.isNullOrEmpty()
     }
 
     /**
@@ -533,8 +541,11 @@ class CheckUpdateActivity : BaseActivity() {
      */
     private fun megabytes(bytes: Long): Float = bytes / 1024f / 1024f
 
-    private companion object {
+    companion object {
         /** How often an unmeasurable download repaints: every half megabyte. */
-        const val PROGRESS_STEP_BYTES = 512L * 1024L
+        private const val PROGRESS_STEP_BYTES = 512L * 1024L
+
+        /** Start downloading as soon as the check confirms the offer (UpdateOfferActivity's «Обновить»). */
+        const val EXTRA_START_DOWNLOAD = "start_download"
     }
 }

@@ -7,6 +7,7 @@ import androidx.multidex.MultiDexApplication
 import androidx.work.Configuration
 import com.tencent.mmkv.MMKV
 import com.v2ray.ang.AppConfig.ANG_PACKAGE
+import com.v2ray.ang.handler.AppUpdateWatcher
 import com.v2ray.ang.handler.SettingsManager
 import java.io.File
 
@@ -88,6 +89,8 @@ class AngApplication : MultiDexApplication(), Configuration.Provider {
         // time it runs.
         if (isInterfaceProcess()) {
             SettingsManager.initApp(this)
+            // «Есть ли новая версия» — при каждом входе в приложение, см. AppUpdateWatcher.install.
+            AppUpdateWatcher.install(this)
         }
 
         // NOTHING CONFIGURES `Toasty` HERE ANY MORE, because nothing uses it. The library's
