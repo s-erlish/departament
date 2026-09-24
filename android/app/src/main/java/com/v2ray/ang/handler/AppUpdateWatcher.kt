@@ -24,6 +24,7 @@ import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.util.concurrent.TimeUnit
+import java.util.concurrent.atomic.AtomicBoolean
 
 /**
  * Замечает новую версию приложения без того, чтобы человек сам шёл в «Проверить обновления».
@@ -32,8 +33,8 @@ import java.util.concurrent.TimeUnit
  * приходило раз проверяет раз в час с гитхаба». Отсюда три пути к одной и той же ленте
  * ([UpdateCheckerManager.checkForUpdate]):
  *
- *  - **при заходе** — [checkOnLaunch], не чаще раза в час: плашка «Вышла версия X» на главной, подпись
- *    у «Проверить обновления» и точка на вкладке «Настройки»;
+ *  - **при заходе** — [checkOnLaunch]: плашка «Вышла версия X» на главной, подпись у «Проверить
+ *    обновления» и точка на вкладке «Настройки»;
  *  - **раз в час в фоне** — [CheckTask] через WorkManager, с сетью: если приложение этой версии ещё
  *    не показывало, приходит уведомление;
  *  - **экран «Проверить обновления»** — [remember] записывает то, что нашёл он.
@@ -49,7 +50,22 @@ object AppUpdateWatcher {
 
     private const val WORK_NAME = "app_update_check"
     private const val CHECK_INTERVAL_MINUTES = 60L
-    private const val CHECK_INTERVAL_MS = CHECK_INTERVAL_MINUTES * 60_000L
+
+    /**
+     * Сколько при заходе в уже запущенное приложение считается «только что проверяли». Было
+     * [CHECK_INTERVAL_MINUTES], и это была ошибка, найденная владельцем на телефоне: первый запуск
+     * проверял раньше, чем вышла новая версия, и потом целый час заход в приложение ничего не
+     * спрашивал — плашка появлялась только после «Проверить обновления». Пять минут — чтобы
+     * переключение туда-обратно не ходило в сеть каждый раз: без ключа GitHub отвечает одному адресу
+     * 60 раз в час, а у мобильных операторов один адрес на многих.
+     */
+    private const val FOREGROUND_RECHECK_MS = 5 * 60_000L
+
+    /** Первый заход после запуска процесса проверяет всегда, без оглядки на прошлые проверки. */
+    private val checkedInThisProcess = AtomicBoolean(false)
+
+    /** Не больше одной проверки при заходе за раз. */
+    private val launchCheckInFlight = AtomicBoolean(false)
 
     /** Постановка работы не на главном потоке: RemoteWorkManager строит свою базу и будит `:bg`. */
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
@@ -90,19 +106,28 @@ object AppUpdateWatcher {
     }
 
     /**
-     * Проверка при заходе в приложение. Раньше чем через час после прошлой проверки в сеть не ходит:
-     * найденное тогда уже лежит в [availableVersion]. [onChecked] зовётся на главном потоке после
-     * проверки — чтобы экраны перерисовались.
+     * Проверка при заходе в приложение. Запуск приложения проверяет всегда; возвращение в уже
+     * запущенное — если с прошлой проверки прошло больше [FOREGROUND_RECHECK_MS] (найденное тогда
+     * уже лежит в [availableVersion]). [onChecked] зовётся на главном потоке после проверки — чтобы
+     * экраны перерисовались.
      */
     fun checkOnLaunch(scope: CoroutineScope, onChecked: () -> Unit) {
-        val last = MmkvManager.decodeSettingsLong(AppConfig.PREF_APP_UPDATE_CHECKED_AT, 0L)
-        val now = System.currentTimeMillis()
-        if (last in 1..now && now - last < CHECK_INTERVAL_MS) return
+        val firstInProcess = checkedInThisProcess.compareAndSet(false, true)
+        if (!firstInProcess) {
+            val last = MmkvManager.decodeSettingsLong(AppConfig.PREF_APP_UPDATE_CHECKED_AT, 0L)
+            val now = System.currentTimeMillis()
+            if (last in 1..now && now - last < FOREGROUND_RECHECK_MS) return
+        }
+        if (!launchCheckInFlight.compareAndSet(false, true)) return
         scope.launch {
-            val found = check()
-            // Приложение открыто и само покажет плашку — уведомление об этой версии уже лишнее.
-            if (found != null) MmkvManager.encodeSettings(AppConfig.PREF_APP_UPDATE_ANNOUNCED, found)
-            withContext(Dispatchers.Main) { onChecked() }
+            try {
+                val found = check()
+                // Приложение открыто и само покажет плашку — уведомление об этой версии уже лишнее.
+                if (found != null) MmkvManager.encodeSettings(AppConfig.PREF_APP_UPDATE_ANNOUNCED, found)
+                withContext(Dispatchers.Main) { onChecked() }
+            } finally {
+                launchCheckInFlight.set(false)
+            }
         }
     }
 
