@@ -156,12 +156,14 @@ jobs:
               printf '\n---\n\nПрограмма распространяется по лицензии GPL-3.0.\n'
             } > "$body"
             if [ "$REPLACE" = "true" ]; then
-              # Пока шла сборка, черновик могли опубликовать: тогда его не трогаем.
-              if [ "$(gh release view "$TAG" --json isDraft -q .isDraft)" != "true" ]; then
+              # Пока шла сборка, черновик могли опубликовать — тогда его не трогаем — или удалить:
+              # тогда просто кладём новый.
+              state="$(gh release view "$TAG" --json isDraft -q .isDraft 2>/dev/null || echo gone)"
+              if [ "$state" = "false" ]; then
                 echo "::error::Выпуск $TAG опубликован, пока шла сборка. Новая сборка не выложена."
                 exit 1
               fi
-              gh release delete "$TAG" --yes
+              [ "$state" = "true" ] && gh release delete "$TAG" --yes
             fi
             flags=(--draft --title "departament $VERSION" --notes-file "$body")
             [ "$PRERELEASE" = "true" ] && flags+=(--prerelease)
