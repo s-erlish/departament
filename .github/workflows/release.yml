@@ -93,8 +93,14 @@ jobs:
               replace=true
             fi
             if git ls-remote --exit-code --tags "https://github.com/$GH_REPO.git" "refs/tags/$tag" >/dev/null; then
-              echo "::error::Тег $tag уже есть. Укажите следующую версию."
-              exit 1
+              # Тег без выпуска остаётся, когда выпуск удалили на странице Releases: GitHub удаляет
+              # выпуск, а тег оставляет. Такой номер никто не получал — тег убираем и собираем заново.
+              if gh api "repos/$GH_REPO/releases/tags/$tag" >/dev/null 2>&1; then
+                echo "::error::Тег $tag уже есть. Укажите следующую версию."
+                exit 1
+              fi
+              echo "::notice::Тег $tag остался от удалённого выпуска — он удалён, выпуск соберётся заново"
+              gh api -X DELETE "repos/$GH_REPO/git/refs/tags/$tag"
             fi
           fi
           {
