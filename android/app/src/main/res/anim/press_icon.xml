@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- THE PRESS LADDER, RUNG 3 — BORDERLESS ICON, scale 0.88 (handoff README §1).
+
+     Attach to: an icon-only affordance with no fill behind it — a toolbar back
+     arrow, a copy glyph, a stepper's + and −, a card's overflow. 12% is a lot,
+     and it has to be: a 22dp glyph inside a 48dp target has almost no area for
+     the eye to measure a change against, so anything gentler is invisible and
+     the tap reads as unacknowledged. The number is inversely proportional to
+     the target, which is the whole idea of the ladder.
+
+     BORDERLESS is the word that decides between this rung and rung 2: this is
+     for the ones that previously carried ?attr/selectableItemBackgroundBorderless
+     and now carry no background at all. A FILLED icon disc
+     (@style/Widget.Departament.Button.Icon.Filled) is an object with a visible
+     boundary, so it presses like a button at 0.965.
+
+     Clock: in @integer/motion_press_in 70ms on ease_press_in, out
+     @integer/motion_press_out 200ms on ease_press_out. -->
+<selector xmlns:android="http://schemas.android.com/apk/res/android">
+    <item android:state_pressed="true">
+        <set>
+            <objectAnimator
+                android:duration="@integer/motion_press_in"
+                android:interpolator="@interpolator/ease_press_in"
+                android:propertyName="scaleX"
+                android:valueTo="0.88"
+                android:valueType="floatType" />
+            <objectAnimator
+                android:duration="@integer/motion_press_in"
+                android:interpolator="@interpolator/ease_press_in"
+                android:propertyName="scaleY"
+                android:valueTo="0.88"
+                android:valueType="floatType" />
+        </set>
+    </item>
+    <item>
+        <set>
+            <objectAnimator
+                android:duration="@integer/motion_press_out"
+                android:interpolator="@interpolator/ease_press_out"
+                android:propertyName="scaleX"
+                android:valueTo="1.0"
+                android:valueType="floatType" />
+            <objectAnimator
+                android:duration="@integer/motion_press_out"
+                android:interpolator="@interpolator/ease_press_out"
+                android:propertyName="scaleY"
+                android:valueTo="1.0"
+                android:valueType="floatType" />
+        </set>
+    </item>
+</selector>

@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  ============================================================================
+  THE SEARCH FIELD. Filters in place; it never navigates.
+  32-master-plan-android.md 8.15, 22-components.md 4, D-7.
+  ============================================================================
+
+  Radius 16 like every other control (D-7 retires bg_search_pill's 14), fill
+  colorSurfaceContainerHighest, 56 as a MINIMUM height so the field and a list row
+  share one rhythm and the box grows at a 200% font scale instead of clipping.
+
+  The trailing clear affordance appears only when the field is non-empty — that is
+  what endIconMode="clear_text" in the style buys, with Material's own glyph and its
+  own content description, so there is no icon-only control here without a name.
+
+  BEHAVIOUR THE CALLER OWNS (8.15):
+      debounce 150ms, then filter in place. Never a screen, never a dialog.
+      the empty result is a DESIGNED state (view_empty_state.xml: «Ничего не найдено»
+        / «Попробуйте другой запрос.» / «Сбросить поиск»), never a blank list.
+      the field keeps its text AND its focus when the result is empty.
+      Back with a non-empty query clears the query before it leaves the screen.
+      searchInput.setHint(...) for a list that is not the server list.
+
+  TWO DEVIATIONS FROM THE STYLE, BOTH DELIBERATE AND BOTH FILED:
+  1. app:errorEnabled="false". Widget.Departament.TextField reserves a helper line
+     under every field so a form never jumps when a validation message appears. A
+     search box has no validation, so on this one control that reservation is dead
+     space above the list. The styles owner is asked to fold this into
+     Widget.Departament.TextField.Search itself.
+  2. No leading glyph. The style's own comment records it: there is no ic_search in
+     res/drawable yet, and pointing app:startIconDrawable at ic_outline_filter_alt_24
+     would put a filter funnel on a search box. The hint carries the affordance until
+     the icon lands, at which point add app:startIconDrawable + app:startIconSize.
+-->
+<com.google.android.material.textfield.TextInputLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/search_field"
+    style="@style/Widget.Departament.TextField.Search"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    app:errorEnabled="false">
+
+    <com.google.android.material.textfield.TextInputEditText
+        android:id="@+id/search_input"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:hint="@string/search_hint"
+        android:imeOptions="actionSearch"
+        android:inputType="text"
+        android:maxLines="1"
+        android:singleLine="true"
+        tools:text="Amsterdam" />
+</com.google.android.material.textfield.TextInputLayout>

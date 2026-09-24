@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Spoken label of the back affordance in the seamless sub-page toolbar
+         (res/layout/view_toolbar.xml, ~15 screens). It lived there as the tree's ONE
+         hardcoded android:contentDescription (M-44), so it was the single user-facing
+         string a locale change could never reach. It sits in this cross-cutting file
+         rather than in a screen's own strings because the toolbar belongs to no screen.
+         values/ is the Russian master (docs/agents/state/DECISION-localisation.md). -->
+    <string name="cd_back">Назад</string>
+
+    <!-- The gold chip on a server row that marks an operator xray-json template.
+         A format name, so it is the same four Latin characters in every locale —
+         it is here rather than hardcoded in the layout so it stays translatable
+         if that ever stops being true. -->
+    <string name="server_row_chip_json" translatable="false">JSON</string>
+</resources>

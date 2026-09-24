@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  View tags declared as real id resources (22-components.md 20.1).
+
+  A View.setTag(Object) call with no key clobbers whatever else stored a tag on
+  that view; setTag(int key, Object) with a declared id is collision-proof, and
+  an id resource is the only way to get a key that aapt guarantees is unique.
+-->
+<resources>
+    <!-- R9, the double-press guard: the SystemClock.elapsedRealtime() of the last
+         accepted click, stashed on the view itself so the input_debounce 500ms
+         re-entry window survives recycling and needs no per-screen state.
+
+         Consumed by ui/component/SingleClick.kt — View.acceptClick() reads and writes
+         it, View.clearClick() nulls it. It was declared before that file existed and
+         spent a while as an id nothing read (D24); it is read now, and this note is
+         here so the next sweep does not re-file it as dead. -->
+    <item name="tag_last_click" type="id" />
+</resources>

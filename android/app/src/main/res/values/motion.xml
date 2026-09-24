@@ -1,0 +1,150 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Motion duration tokens (ms). One tempo for the whole app so every surface
+  presses, reveals and settles on the same clock.
+
+  THE SOURCE IS NOW THE DESIGN HANDOFF, README §8's timing table, which the owner
+  assembled and handed over on 2026-08-04 with the instruction to reproduce it
+  1:1. Where it and the older docs/design2026 numbers disagree, §8 wins; where a
+  token already carried the right number it keeps its name and its value, because
+  four screen waves are about to reference these by name.
+
+      §8 row                    token                       curve
+      ........................  ..........................  ...................
+      Нажатие (вход)      70    motion_press_in             ease_press_in
+      Нажатие (возврат)  200    motion_press_out            ease_press_out
+      Переключатель      220    motion_state                ease_out_quart
+      Смена цвета        220    motion_state                ease_out_quart
+      Полоска навигации  280    motion_nav_indicator        ease_out_quart
+      Окошко выбора      260    motion_popup                ease_out_quart
+                       / 180    motion_popup_fade           ease_out_quart
+      Раскрытие блока    340    motion_expand               ease_out_quart
+      Смена экрана   520-600    motion_screen 560           ease_screen
+      Появление      460-720    motion_appear 460 /         ease_out_quint
+                                motion_appear_slow 720
+      Сонар              600    motion_emphasis             ease_out_quint
+      Оборот дуги       1100    motion_spin                 linear
+      Затухание кольца  5500    motion_ring_fade            ease_in_out
+
+  Curves live in res/interpolator/: ease_press_in (.4,0,.6,1) and ease_press_out
+  (.34,1.25,.64,1) for the two halves of a press, ease_out_quart (.25,1,.5,1) for
+  reveals and state, ease_out_quint (.22,1,.36,1) for appearance and the hero
+  moment, ease_screen (.33,0,.2,1) for a whole-screen hand-off, ease_standard
+  (.2,0,0,1) for two-way tint, ease_in_out (.42,0,.58,1) for the ring decay, and
+  ease_out_expo (.16,1,.3,1) reserved for the single auth -> home hand-off.
+
+  Honor reduced motion at the call site: when
+  Settings.Global.ANIMATOR_DURATION_SCALE == 0 the system collapses these to 0
+  and views jump straight to the end state (see MotionUtils). A declarative
+  stateListAnimator collapses automatically.
+-->
+<resources>
+    <!-- Finger-down press. 70, not 90: §1 wants the squeeze to land inside the
+         frame the finger arrives on. Curve: ease_press_in. -->
+    <integer name="motion_press_in">70</integer>
+    <!-- Release and settle back to rest, WITH the ~2% overshoot of
+         ease_press_out. 200, not 160: the rebound needs room to overshoot and
+         come back, and a spring cut short reads as a glitch rather than a
+         relax. Curve: ease_press_out. -->
+    <integer name="motion_press_out">200</integer>
+    <!-- Parity token with the desktop hover fade. Android has no hover state and
+         must not design for one; this exists only so the two scales stay 1:1. -->
+    <integer name="motion_hover">150</integer>
+    <!-- State changes: a switch flipping, a selection, a tint crossfade, the
+         row value dimming while its select popup is open. §8 puts «Переключатель»
+         and «Смена цвета» on the same 220. Curve: ease_out_quart. -->
+    <integer name="motion_state">220</integer>
+    <!-- Reverse of motion_state (75% of enter). -->
+    <integer name="motion_state_exit">165</integer>
+    <!-- The bottom navigation's travelling indicator bar. §8 «Полоска
+         навигации». Curve: ease_out_quart. -->
+    <integer name="motion_nav_indicator">280</integer>
+    <!-- THE SELECT POPUP's clip (§6): the body is revealed top to bottom, never
+         scaled — a scale re-rasterises the option labels and they judder
+         (README §6). Curve: ease_out_quart. See SelectPopup. -->
+    <integer name="motion_popup">260</integer>
+    <!-- The same popup's opacity, deliberately shorter than its clip so the
+         surface is fully opaque before it has finished unrolling. -->
+    <integer name="motion_popup_fade">180</integer>
+    <!-- An in-place block opening: a tariff card unfolding into its terms, a
+         section expanding. §8 «Раскрытие блока». Curve: ease_out_quart. -->
+    <integer name="motion_expand">340</integer>
+    <!-- Reveal: show/hide, sheet and sub-page entrance.
+         Curve: ease_out_quint. -->
+    <integer name="motion_reveal">300</integer>
+    <!-- Reverse of motion_reveal (75% of enter). Screen / sub-page exit. -->
+    <integer name="motion_reveal_exit">225</integer>
+    <!-- The caret on a select row rotating 180° while its popup is open. §6
+         states 300 explicitly, which is longer than motion_state on purpose:
+         the rotation has to still be turning when the popup finishes unrolling.
+         Curve: ease_out_quart. -->
+    <integer name="motion_caret">300</integer>
+    <!-- A WHOLE-SCREEN hand-off. §8 gives the band 520–600; 560 is the value
+         this product ships and the one every screen wave must use, so two
+         screens cannot pick different ends of the band. Curve: ease_screen. -->
+    <integer name="motion_screen">560</integer>
+    <!-- An element arriving on a screen that is already there. §8 gives 460–720:
+         the first element takes motion_appear, the last takes
+         motion_appear_slow, and motion_stagger spaces the ones between.
+         Curve: ease_out_quint. -->
+    <integer name="motion_appear">460</integer>
+    <integer name="motion_appear_slow">720</integer>
+    <!-- The single auth -> home hand-off, and nothing else.
+         Curve: ease_out_expo. -->
+    <integer name="motion_slow">450</integer>
+    <!-- Per-item delay for list/grid stagger. Cap the staggered count so the
+         total never exceeds 400ms: 10 items, then the rest appear together. -->
+    <integer name="motion_stagger">40</integer>
+    <!-- Emphasis: the one hero moment in the whole product — §8's «Сонар», the
+         connect sonar / assemble. Longest transition token; reserve for the
+         single primary action, never chrome. Curve: ease_out_quint. -->
+    <integer name="motion_emphasis">600</integer>
+    <!-- Skeleton pulse, opacity 0.45 <-> 1.0, infinite reverse. Loading feedback
+         is state, which 8.1 permits, and at 1000ms it is slower than the hero
+         moment rather than competing with it. Reduced motion holds the
+         skeleton static at opacity 0.7. Curve: ease_standard. -->
+    <integer name="motion_pulse">1000</integer>
+    <!-- The connect arc's WIND-UP: one revolution out of rest at the instant the
+         sweep appears, on ease_out_quint, so the arc runs up to its steady spin
+         instead of flashing on at full speed. It is a one-shot entrance and
+         therefore eased, unlike motion_spin below. -->
+    <integer name="motion_windup">200</integer>
+    <!-- One revolution of the 20dp inline indeterminate spinner arc, and of the
+         connect ring's sweep. LINEAR, and the only linear animation in the
+         product: a spinner is a continuous rotation, not a transition between
+         two states, and an eased revolution visibly stutters once per turn.
+         §8 «Оборот дуги». -->
+    <integer name="motion_spin">1100</integer>
+    <!-- §8 «Затухание кольца»: the connect ring's brightness decaying after a
+         successful connect. The longest number in the product, and the only
+         consumer of ease_in_out. README §11 grabl 8 — brightness only, never a
+         repeating scale pulse, which the owner found nagging. -->
+    <integer name="motion_ring_fade">5500</integer>
+    <!-- Not an animation: the re-entry window that makes a double-press
+         impossible by construction on a tap that is not command-gated (R9).
+         It lives here because it is a duration, and durations live here. -->
+    <integer name="input_debounce">500</integer>
+
+    <!-- ===================================================================== -->
+    <!-- THE PRESS LADDER (README §1). The travel is inversely proportional to  -->
+    <!-- the size of the target, so a 328dp card and a 40dp glyph feel like the -->
+    <!-- same push. Four rungs and no fifth; every rung runs on the one clock   -->
+    <!-- above (in 70 ease_press_in, out 200 ease_press_out).                   -->
+    <!--                                                                        -->
+    <!--   row / card ........ 0.975   @anim/press_row                          -->
+    <!--   button / chip /                                                      -->
+    <!--   select option ..... 0.965   @anim/press_button                       -->
+    <!--   borderless icon ... 0.88    @anim/press_icon                         -->
+    <!--   connect button .... 0.97    @anim/press_connect                      -->
+    <!--                                                                        -->
+    <!-- Held as fractions as well as in the animators so an imperative animator -->
+    <!-- and res/anim/ cannot drift apart.                                       -->
+    <!-- ===================================================================== -->
+    <item name="press_scale_row" type="fraction">97.5%</item>
+    <item name="press_scale_button" type="fraction">96.5%</item>
+    <item name="press_scale_icon" type="fraction">88%</item>
+    <item name="press_scale_connect" type="fraction">97%</item>
+    <!-- The pre-handoff single value, kept alive because it is a public token
+         name. It now spells the BUTTON rung; new work names the rung it means. -->
+    <item name="press_scale" type="fraction">96.5%</item>
+</resources>

@@ -1,0 +1,281 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  ============================================================================
+  A-13 servers/server/{guid} - форма «сервер вручную», WireGuard.  H3 - R4.
+  ============================================================================
+
+  ДВЕ ГРУППЫ ВМЕСТО ОДНОГО СТОЛБИКА ИЗ ШЕСТИ ПОЛЕЙ: ключи - это одно, параметры
+  интерфейса - другое, и читать их подряд без разделения незачем.
+
+  ЧЕТЫРЕ ПОДПИСИ ИЗ ШЕСТИ несли инструкцию в скобках: «Reserved (необязательно,
+  через запятую)», «MTU (необязательно, по умолчанию 1420)». Инструкция ушла в
+  подсказку под полем - место, которое у поля и так зарезервировано.
+
+  Reserved стоял внутри лишнего горизонтального LinearLayout на одно поле.
+
+  РАМКА, общая у восьми протокольных форм и у трёх перенесённых редакторов рядом:
+  бесшовная шапка подстраницы, тело в NestedScrollView, «Сохранить» - Primary.Tall
+  под последним полем, «Удалить сервер» - разрушающая строка.
+
+  ЛЕКАЛО ПОЛЯ - layout_address_port.xml: заголовок группы предложением, подпись
+  сверху и всегда видимая, поле 56 радиусом 16, зарезервированная строка снизу -
+  подсказка, а при отказе сообщение о том, что исправить.
+-->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="?android:attr/colorBackground"
+    android:fitsSystemWindows="true"
+    android:orientation="vertical"
+    tools:context=".ui.ServerActivity">
+
+    <include
+        android:id="@+id/toolbar"
+        layout="@layout/view_toolbar" />
+
+    <androidx.core.widget.NestedScrollView
+        android:id="@+id/main_content"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:clipToPadding="false"
+        android:paddingBottom="@dimen/space_32"
+        android:scrollbars="none">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical">
+
+            <include layout="@layout/layout_address_port" />
+
+            <TextView
+                style="@style/SettingsSectionLabel"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="@string/srv_section_keys" />
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:labelFor="@id/et_id"
+                android:paddingStart="@dimen/screen_gutter"
+                android:paddingEnd="@dimen/screen_gutter"
+                android:text="@string/server_lab_secret_key"
+                android:textAppearance="@style/TextAppearance.App.Title.Medium" />
+
+            <com.google.android.material.textfield.TextInputLayout
+                android:id="@+id/til_id"
+                style="@style/Widget.Departament.TextField"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="@dimen/screen_gutter"
+                android:layout_marginTop="@dimen/space_8"
+                android:layout_marginEnd="@dimen/screen_gutter">
+
+                <com.google.android.material.textfield.TextInputEditText
+                    android:id="@+id/et_id"
+                    style="@style/Widget.Departament.TextField.EditText"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:imeOptions="actionNext"
+                    android:inputType="textVisiblePassword|textNoSuggestions"
+                    android:maxLines="1"
+                    tools:ignore="TextFields" />
+            </com.google.android.material.textfield.TextInputLayout>
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/space_12"
+                android:labelFor="@id/et_public_key"
+                android:paddingStart="@dimen/screen_gutter"
+                android:paddingEnd="@dimen/screen_gutter"
+                android:text="@string/server_lab_public_key"
+                android:textAppearance="@style/TextAppearance.App.Title.Medium" />
+
+            <com.google.android.material.textfield.TextInputLayout
+                android:id="@+id/til_public_key"
+                style="@style/Widget.Departament.TextField"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="@dimen/screen_gutter"
+                android:layout_marginTop="@dimen/space_8"
+                android:layout_marginEnd="@dimen/screen_gutter">
+
+                <com.google.android.material.textfield.TextInputEditText
+                    android:id="@+id/et_public_key"
+                    style="@style/Widget.Departament.TextField.EditText"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:imeOptions="actionNext"
+                    android:inputType="text|textNoSuggestions"
+                    android:maxLines="1"
+                    tools:ignore="TextFields" />
+            </com.google.android.material.textfield.TextInputLayout>
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/space_12"
+                android:labelFor="@id/et_preshared_key"
+                android:paddingStart="@dimen/screen_gutter"
+                android:paddingEnd="@dimen/screen_gutter"
+                android:text="@string/srv_preshared_key_label"
+                android:textAppearance="@style/TextAppearance.App.Title.Medium" />
+
+            <com.google.android.material.textfield.TextInputLayout
+                android:id="@+id/til_preshared_key"
+                style="@style/Widget.Departament.TextField"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="@dimen/screen_gutter"
+                android:layout_marginTop="@dimen/space_8"
+                android:layout_marginEnd="@dimen/screen_gutter"
+                app:helperText="@string/srv_hint_optional">
+
+                <com.google.android.material.textfield.TextInputEditText
+                    android:id="@+id/et_preshared_key"
+                    style="@style/Widget.Departament.TextField.EditText"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:imeOptions="actionNext"
+                    android:inputType="text|textNoSuggestions"
+                    android:maxLines="1"
+                    tools:ignore="TextFields" />
+            </com.google.android.material.textfield.TextInputLayout>
+
+            <TextView
+                style="@style/SettingsSectionLabel"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="@string/srv_section_interface" />
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:labelFor="@id/et_reserved1"
+                android:paddingStart="@dimen/screen_gutter"
+                android:paddingEnd="@dimen/screen_gutter"
+                android:text="@string/srv_reserved_label"
+                android:textAppearance="@style/TextAppearance.App.Title.Medium" />
+
+            <com.google.android.material.textfield.TextInputLayout
+                android:id="@+id/til_reserved1"
+                style="@style/Widget.Departament.TextField"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="@dimen/screen_gutter"
+                android:layout_marginTop="@dimen/space_8"
+                android:layout_marginEnd="@dimen/screen_gutter"
+                app:helperText="@string/srv_hint_reserved">
+
+                <com.google.android.material.textfield.TextInputEditText
+                    android:id="@+id/et_reserved1"
+                    style="@style/Widget.Departament.TextField.EditText"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:digits="0123456789,"
+                    android:imeOptions="actionNext"
+                    android:inputType="text|textNoSuggestions"
+                    android:maxLines="1"
+                    tools:ignore="TextFields" />
+            </com.google.android.material.textfield.TextInputLayout>
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/space_12"
+                android:labelFor="@id/et_local_address"
+                android:paddingStart="@dimen/screen_gutter"
+                android:paddingEnd="@dimen/screen_gutter"
+                android:text="@string/srv_local_address_label"
+                android:textAppearance="@style/TextAppearance.App.Title.Medium" />
+
+            <com.google.android.material.textfield.TextInputLayout
+                android:id="@+id/til_local_address"
+                style="@style/Widget.Departament.TextField"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="@dimen/screen_gutter"
+                android:layout_marginTop="@dimen/space_8"
+                android:layout_marginEnd="@dimen/screen_gutter"
+                app:helperText="@string/srv_hint_local_address">
+
+                <com.google.android.material.textfield.TextInputEditText
+                    android:id="@+id/et_local_address"
+                    style="@style/Widget.Departament.TextField.EditText"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:imeOptions="actionNext"
+                    android:inputType="text|textNoSuggestions"
+                    android:maxLines="1"
+                    tools:ignore="TextFields" />
+            </com.google.android.material.textfield.TextInputLayout>
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/space_12"
+                android:labelFor="@id/et_local_mtu"
+                android:paddingStart="@dimen/screen_gutter"
+                android:paddingEnd="@dimen/screen_gutter"
+                android:text="@string/srv_mtu_label"
+                android:textAppearance="@style/TextAppearance.App.Title.Medium" />
+
+            <com.google.android.material.textfield.TextInputLayout
+                android:id="@+id/til_local_mtu"
+                style="@style/Widget.Departament.TextField"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="@dimen/screen_gutter"
+                android:layout_marginTop="@dimen/space_8"
+                android:layout_marginEnd="@dimen/screen_gutter"
+                app:helperText="@string/srv_hint_mtu">
+
+                <com.google.android.material.textfield.TextInputEditText
+                    android:id="@+id/et_local_mtu"
+                    style="@style/Widget.Departament.TextField.EditText"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:imeOptions="actionDone"
+                    android:inputType="number"
+                    android:maxLines="1"
+                    tools:ignore="TextFields" />
+            </com.google.android.material.textfield.TextInputLayout>
+
+            <!-- СОСТОЯНИЕ «СОХРАНЯЕМ» (7.1, «держит ширину, прячет подпись, крутит дугу
+                 20dp»). Кнопка и дуга лежат в одном FrameLayout, поэтому кнопка не
+                 меняет ни размер, ни положение, пока идёт запись, а форма под ней не
+                 дёргается. -->
+            <FrameLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="@dimen/screen_gutter"
+                android:layout_marginTop="@dimen/space_24"
+                android:layout_marginEnd="@dimen/screen_gutter">
+
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/btn_save"
+                    style="@style/Widget.Departament.Button.Primary.Tall"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="@string/editor_save" />
+
+                <com.google.android.material.progressindicator.CircularProgressIndicator
+                    android:id="@+id/pb_save"
+                    style="@style/Widget.Departament.Progress.Circular.Inline.OnAccent"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="center"
+                    android:visibility="gone" />
+            </FrameLayout>
+
+            <include
+                android:id="@+id/row_delete"
+                layout="@layout/view_row" />
+        </LinearLayout>
+    </androidx.core.widget.NestedScrollView>
+</LinearLayout>

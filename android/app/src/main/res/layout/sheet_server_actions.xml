@@ -1,0 +1,271 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    Long-press server-actions bottom sheet (Incy "Servers" redesign, S3).
+    Dark rounded surface, flat rows styled after layout_setting_row.xml: 40dp blue
+    icon tile + 22dp themed glyph + label, tokenised spacing. One blue accent
+    throughout; only Удалить carries the destructive red. Row visibility/enabled
+    state is managed in ServerActionsSheet.kt (share/edit/duplicate are hidden for
+    locked profiles).
+-->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/sheet_actions_root"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:background="@drawable/bg_sheet_top"
+    android:orientation="vertical"
+    android:paddingBottom="@dimen/space_12">
+
+    <!-- Grab handle -->
+    <View
+        android:layout_width="36dp"
+        android:layout_height="4dp"
+        android:layout_gravity="center_horizontal"
+        android:layout_marginTop="@dimen/space_8"
+        android:background="@drawable/bg_sheet_handle" />
+
+    <!-- Sheet title = server name -->
+    <TextView
+        android:id="@+id/tv_sheet_title"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="@dimen/space_12"
+        android:ellipsize="end"
+        android:maxLines="1"
+        android:paddingStart="@dimen/space_16"
+        android:paddingEnd="@dimen/space_16"
+        android:paddingBottom="@dimen/space_8"
+        android:textAppearance="@style/TextAppearance.App.Title"
+        tools:text="🇳🇱 Amsterdam · Fast" />
+
+    <!-- Поделиться (QR) -->
+    <LinearLayout
+        android:id="@+id/row_share_qr"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="?attr/selectableItemBackground"
+        android:clickable="true"
+        android:focusable="true"
+        android:gravity="center_vertical"
+        android:minHeight="@dimen/row_min_height"
+        android:orientation="horizontal"
+        android:paddingStart="@dimen/space_16"
+        android:paddingEnd="@dimen/space_16"
+        android:paddingVertical="@dimen/space_12">
+
+        <FrameLayout
+            android:layout_width="@dimen/tile_size"
+            android:layout_height="@dimen/tile_size"
+            android:background="@drawable/bg_icon_blue">
+
+            <ImageView
+                android:layout_width="@dimen/tile_glyph"
+                android:layout_height="@dimen/tile_glyph"
+                android:layout_gravity="center"
+                android:importantForAccessibility="no"
+                app:srcCompat="@drawable/ic_scan_24dp"
+                app:tint="?attr/iconTintBlue" />
+        </FrameLayout>
+
+        <TextView
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="@dimen/space_16"
+            android:layout_weight="1"
+            android:text="@string/server_action_share_qr"
+            android:textAppearance="@style/TextAppearance.App.Body" />
+    </LinearLayout>
+
+    <!-- Поделиться (буфер) -->
+    <LinearLayout
+        android:id="@+id/row_share_clipboard"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="?attr/selectableItemBackground"
+        android:clickable="true"
+        android:focusable="true"
+        android:gravity="center_vertical"
+        android:minHeight="@dimen/row_min_height"
+        android:orientation="horizontal"
+        android:paddingStart="@dimen/space_16"
+        android:paddingEnd="@dimen/space_16"
+        android:paddingVertical="@dimen/space_12">
+
+        <FrameLayout
+            android:layout_width="@dimen/tile_size"
+            android:layout_height="@dimen/tile_size"
+            android:background="@drawable/bg_icon_blue">
+
+            <ImageView
+                android:layout_width="@dimen/tile_glyph"
+                android:layout_height="@dimen/tile_glyph"
+                android:layout_gravity="center"
+                android:importantForAccessibility="no"
+                app:srcCompat="@drawable/ic_copy"
+                app:tint="?attr/iconTintBlue" />
+        </FrameLayout>
+
+        <TextView
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="@dimen/space_16"
+            android:layout_weight="1"
+            android:text="@string/server_action_share_clipboard"
+            android:textAppearance="@style/TextAppearance.App.Body" />
+    </LinearLayout>
+
+    <!-- Изменить -->
+    <LinearLayout
+        android:id="@+id/row_edit"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="?attr/selectableItemBackground"
+        android:clickable="true"
+        android:focusable="true"
+        android:gravity="center_vertical"
+        android:minHeight="@dimen/row_min_height"
+        android:orientation="horizontal"
+        android:paddingStart="@dimen/space_16"
+        android:paddingEnd="@dimen/space_16"
+        android:paddingVertical="@dimen/space_12">
+
+        <FrameLayout
+            android:layout_width="@dimen/tile_size"
+            android:layout_height="@dimen/tile_size"
+            android:background="@drawable/bg_icon_blue">
+
+            <ImageView
+                android:layout_width="@dimen/tile_glyph"
+                android:layout_height="@dimen/tile_glyph"
+                android:layout_gravity="center"
+                android:importantForAccessibility="no"
+                app:srcCompat="@drawable/ic_edit_24dp"
+                app:tint="?attr/iconTintBlue" />
+        </FrameLayout>
+
+        <TextView
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="@dimen/space_16"
+            android:layout_weight="1"
+            android:text="@string/server_action_edit"
+            android:textAppearance="@style/TextAppearance.App.Body" />
+    </LinearLayout>
+
+    <!-- Дублировать -->
+    <LinearLayout
+        android:id="@+id/row_duplicate"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="?attr/selectableItemBackground"
+        android:clickable="true"
+        android:focusable="true"
+        android:gravity="center_vertical"
+        android:minHeight="@dimen/row_min_height"
+        android:orientation="horizontal"
+        android:paddingStart="@dimen/space_16"
+        android:paddingEnd="@dimen/space_16"
+        android:paddingVertical="@dimen/space_12">
+
+        <FrameLayout
+            android:layout_width="@dimen/tile_size"
+            android:layout_height="@dimen/tile_size"
+            android:background="@drawable/bg_icon_blue">
+
+            <ImageView
+                android:layout_width="@dimen/tile_glyph"
+                android:layout_height="@dimen/tile_glyph"
+                android:layout_gravity="center"
+                android:importantForAccessibility="no"
+                app:srcCompat="@drawable/ic_add_24dp"
+                app:tint="?attr/iconTintBlue" />
+        </FrameLayout>
+
+        <TextView
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="@dimen/space_16"
+            android:layout_weight="1"
+            android:text="@string/server_action_duplicate"
+            android:textAppearance="@style/TextAppearance.App.Body" />
+    </LinearLayout>
+
+    <!-- Сделать основным -->
+    <LinearLayout
+        android:id="@+id/row_set_default"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="?attr/selectableItemBackground"
+        android:clickable="true"
+        android:focusable="true"
+        android:gravity="center_vertical"
+        android:minHeight="@dimen/row_min_height"
+        android:orientation="horizontal"
+        android:paddingStart="@dimen/space_16"
+        android:paddingEnd="@dimen/space_16"
+        android:paddingVertical="@dimen/space_12">
+
+        <FrameLayout
+            android:layout_width="@dimen/tile_size"
+            android:layout_height="@dimen/tile_size"
+            android:background="@drawable/bg_icon_blue">
+
+            <ImageView
+                android:layout_width="@dimen/tile_glyph"
+                android:layout_height="@dimen/tile_glyph"
+                android:layout_gravity="center"
+                android:importantForAccessibility="no"
+                app:srcCompat="@drawable/ic_pin_24dp"
+                app:tint="?attr/iconTintBlue" />
+        </FrameLayout>
+
+        <TextView
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="@dimen/space_16"
+            android:layout_weight="1"
+            android:text="@string/server_action_set_default"
+            android:textAppearance="@style/TextAppearance.App.Body" />
+    </LinearLayout>
+
+    <!-- Удалить (destructive: keeps the red tile + red label) -->
+    <LinearLayout
+        android:id="@+id/row_delete"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="?attr/selectableItemBackground"
+        android:clickable="true"
+        android:focusable="true"
+        android:gravity="center_vertical"
+        android:minHeight="@dimen/row_min_height"
+        android:orientation="horizontal"
+        android:paddingStart="@dimen/space_16"
+        android:paddingEnd="@dimen/space_16"
+        android:paddingVertical="@dimen/space_12">
+
+        <FrameLayout
+            android:layout_width="@dimen/tile_size"
+            android:layout_height="@dimen/tile_size"
+            android:background="@drawable/bg_icon_red">
+
+            <ImageView
+                android:layout_width="@dimen/tile_glyph"
+                android:layout_height="@dimen/tile_glyph"
+                android:layout_gravity="center"
+                android:importantForAccessibility="no"
+                app:srcCompat="@drawable/ic_delete_24dp"
+                app:tint="?attr/iconTintRed" />
+        </FrameLayout>
+
+        <TextView
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="@dimen/space_16"
+            android:layout_weight="1"
+            android:text="@string/server_action_delete"
+            android:textAppearance="@style/TextAppearance.App.Body"
+            android:textColor="?attr/iconTintRed" />
+    </LinearLayout>
+
+</LinearLayout>

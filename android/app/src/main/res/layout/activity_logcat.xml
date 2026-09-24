@@ -1,0 +1,146 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  ============================================================================
+  A-35  settings/about/log - Журнал.  H3 · R3.
+  24-tab-conformance.md A-35.
+  ============================================================================
+
+  The screen was a bare SwipeRefreshLayout around a RecyclerView with a toast on
+  entry telling the user to pull down - i.e. it showed nothing at all until the user
+  guessed. It now loads on open, shows a skeleton while it does, and has the empty
+  state it never had («Записей пока нет»). Search moved out of the vanished ActionBar
+  onto the screen; copy / share / clear moved out of the same overflow into the
+  editors' shared sheet.
+
+  2026-08 REDESIGN (handoff README §7): the sub-page lekalo header.
+
+  §7 DRAWS A MONOSPACED SLAB WITH «Копировать» AND «Очистить» UNDER IT, and this
+  screen is that now (docs/design2026/port-shots-2/47-log.png):
+
+      поиск
+      слаб      · @drawable/bg_log_slab — radius 16, ?attr/colorPressBg, 11sp mono
+      карточка  · «Копировать» · «Очистить», обе акцентные строки действия
+
+  The list STAYS a list inside the slab. The prototype's block is five fixed demo
+  lines; this screen carries a searchable log with a level chip per line, a pull to
+  refresh, a skeleton, an empty state and a long press that copies one line, and
+  collapsing it into a static TextView would delete all six (П-14). Giving the
+  RecyclerView the slab's own background is what makes it read as the block the
+  prototype draws without taking any of that away.
+
+  «Поделиться файлом» is the only thing left behind @id/toolbar_action: the two
+  actions the design names have rows, and an action reachable from two places is one
+  place too many.
+-->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="?android:attr/colorBackground"
+    android:fitsSystemWindows="true"
+    android:orientation="vertical"
+    tools:context=".ui.LogcatActivity">
+
+    <include
+        android:id="@+id/toolbar"
+        layout="@layout/view_sub_header" />
+
+    <FrameLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:paddingStart="@dimen/screen_gutter"
+        android:paddingTop="@dimen/screen_gutter"
+        android:paddingEnd="@dimen/screen_gutter"
+        android:paddingBottom="@dimen/space_12">
+
+        <include
+            android:id="@+id/search"
+            layout="@layout/view_search_field" />
+    </FrameLayout>
+
+    <FrameLayout
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_marginStart="@dimen/screen_gutter"
+        android:layout_marginEnd="@dimen/screen_gutter"
+        android:layout_weight="1"
+        android:background="@drawable/bg_log_slab"
+        android:clipToOutline="true">
+
+        <androidx.swiperefreshlayout.widget.SwipeRefreshLayout
+            android:id="@+id/refresh_layout"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent">
+
+            <androidx.recyclerview.widget.RecyclerView
+                android:id="@+id/recycler_view"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:clipToPadding="false"
+                android:paddingTop="@dimen/space_12"
+                android:paddingBottom="@dimen/space_12"
+                android:scrollbars="vertical"
+                tools:listitem="@layout/item_recycler_logcat" />
+        </androidx.swiperefreshlayout.widget.SwipeRefreshLayout>
+
+        <LinearLayout
+            android:id="@+id/skeleton"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:importantForAccessibility="noHideDescendants"
+            android:orientation="vertical"
+            android:visibility="gone">
+
+            <include
+                android:id="@+id/skeleton_1"
+                layout="@layout/view_skeleton_row" />
+
+            <include
+                android:id="@+id/skeleton_2"
+                layout="@layout/view_skeleton_row" />
+
+            <include
+                android:id="@+id/skeleton_3"
+                layout="@layout/view_skeleton_row" />
+
+            <include
+                android:id="@+id/skeleton_4"
+                layout="@layout/view_skeleton_row" />
+        </LinearLayout>
+
+        <include
+            android:id="@+id/empty_state"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center_vertical"
+            layout="@layout/view_empty_state" />
+    </FrameLayout>
+
+    <!-- §7's second group: the two actions as accent rows, under the slab and outside
+         the scroller, so they stay reachable however long the log is. -->
+    <com.google.android.material.card.MaterialCardView
+        style="@style/Widget.Departament.CardSection"
+        android:layout_marginTop="@dimen/space_12"
+        android:layout_marginBottom="@dimen/space_16">
+
+        <LinearLayout style="@style/Widget.Departament.CardSection.Body">
+
+            <include
+                android:id="@+id/row_copy"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                layout="@layout/view_row" />
+
+            <com.google.android.material.divider.MaterialDivider
+                style="@style/Widget.Departament.Divider.Full"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content" />
+
+            <include
+                android:id="@+id/row_clear"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                layout="@layout/view_row" />
+        </LinearLayout>
+    </com.google.android.material.card.MaterialCardView>
+</LinearLayout>

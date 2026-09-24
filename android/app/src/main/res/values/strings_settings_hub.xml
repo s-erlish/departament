@@ -1,0 +1,82 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Строки вкладки настроек (SettingsTabFragment + fragment_settings_tab.xml).
+
+         Словарь: то, что раньше называлось «провайдером», везде называется
+         подпиской; departament пишется строчными. -->
+
+    <string name="settings_local_proxy">Локальный прокси</string>
+
+    <string name="settings_provider">Настройки подписок</string>
+
+    <!-- Подзаголовок строки «Другие способы добавления». Заголовок берётся из
+         @string/add_other_methods_title — той же строки, что стоит в шапке
+         открывающегося выбора, чтобы строка и её экран никогда не разошлись
+         в словах.
+
+         Владелец оставил в меню «Добавить подписку» только QR и буфер обмена
+         (OWNER C1); три остальных способа — ссылка, сервер вручную, файл
+         конфигурации — переехали в MainActivity.showAdvancedAddMethods() и до этой
+         строки не вызывались ниоткуда. Способы не удалены, у них сменился вход. -->
+
+    <string name="settings_url_scheme">Схемы URL-адресов</string>
+
+    <!-- Режим подключения: ДВА значения, «TUN» и «Только прокси» (@string/hub_mode_proxy).
+           TUN            - PREF_MODE = VPN
+           Только прокси  - PREF_MODE = «Proxy only»
+         «TUN» латиницей, поэтому translatable="false".
+
+         `settings_mode_value_tun_proxy` («TUN + Proxy») УДАЛЕНА вместе с третьим значением.
+         Третьего режима не было: строка показывалась, когда включён переключатель «Доступ
+         через хотспот» на экране «Локальный прокси» - отдельная возможность, работающая в
+         ЛЮБОМ режиме. Строка называла её режимом, список из-за неё открывался без выбранного
+         пункта, а выбор «TUN» молча выключал раздачу в сеть. См. SettingsTabFragment.pickMode. -->
+    <string name="settings_mode_value_tun" translatable="false">TUN</string>
+
+    <!-- Оформление (выбор темы: светлая / тёмная / чёрно-белая) -->
+    <string name="settings_appearance">Оформление</string>
+    <string name="settings_appearance_light">Светлая</string>
+    <string name="settings_appearance_dark">Тёмная</string>
+    <string name="settings_appearance_mono">Чёрно-белая</string>
+
+    <!-- IPv6 -->
+    <string name="settings_ipv6">IPv6</string>
+
+    <!-- Постоянный VPN и блокировка трафика без VPN -->
+    <string name="settings_always_on_hint">Включите постоянный VPN и блокировку без VPN в системных настройках</string>
+    <string name="settings_always_on_unavailable">На этом устройстве нет системных настроек VPN</string>
+
+    <!-- Автообновление подписки: нет подписок. Значение строки повторяет ps_no_subs_value
+         на экране «Настройки подписок» — одно состояние называется одинаково на обоих
+         экранах, иначе строка читается как «выключено», хотя включать нечего. -->
+    <string name="settings_sub_auto_update_empty">Сначала добавьте подписку</string>
+    <string name="settings_sub_auto_update_none">Нет подписок</string>
+
+    <!-- DNS-пресеты -->
+    <string name="settings_dns_custom">Свой…</string>
+
+    <!-- Поле «Свой…» принимало ЛЮБОЙ текст, а SettingsManager.getVpnDnsServers оставляет
+         только чистые IP и при пустом остатке молча возвращается к 1.1.1.1. Строка в
+         настройках показывала набранное, туннель работал на другом. Правило экрана
+         «Дополнительно» - не сохранять значение, которое читающий код выбросит, - теперь
+         действует и здесь, а сообщение называет, что именно ввести. -->
+    <string name="settings_dns_error">Нужен IP-адрес, например 1.1.1.1. Несколько адресов пишите через запятую.</string>
+
+    <string-array name="dns_preset_names">
+        <item>Cloudflare</item>
+        <item>Google</item>
+        <item>Cloudflare + Google</item>
+        <item>AdGuard</item>
+        <item>Quad9</item>
+        <item>@string/settings_dns_custom</item>
+    </string-array>
+
+    <string-array name="dns_preset_values">
+        <item>1.1.1.1</item>
+        <item>8.8.8.8</item>
+        <item>1.1.1.1,8.8.8.8</item>
+        <item>94.140.14.14</item>
+        <item>9.9.9.9</item>
+        <item></item>
+    </string-array>
+</resources>

@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  R7 names "filled icon buttons" in the INNER focus case alongside Primary and
+  Destructive, so a filled icon button draws its ring inside, in its own on-colour
+  at 40% — onSurface over the neutral surfaceHighest disc. The outer accent ring is
+  for unfilled controls; using it here would be the letter of the rule broken by a
+  guess that a neutral fill is "not really filled".
+-->
+<selector xmlns:android="http://schemas.android.com/apk/res/android">
+    <item
+        android:alpha="0.40"
+        android:color="?attr/colorOnSurface"
+        android:state_focused="true" />
+    <item android:color="@android:color/transparent" />
+</selector>

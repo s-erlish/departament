@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Bottom-nav active-item indicator: a short blue pill (28x3) at the bottom of the
+     bar. The ONE accent, used to mark the active tab.
+
+     THERE IS EXACTLY ONE OF THESE ON THE PANEL and it TRAVELS (handoff README §4).
+     It used to be three — one parked in each tab column, toggled VISIBLE/INVISIBLE
+     as the selection moved, so the mark blinked off here and on over there and the
+     eye had nothing to follow. MainActivity.positionNavIndicator now slides the
+     single view to the selected column over @integer/motion_nav_indicator on
+     ease_out_quart, alongside the icon/label colour tween. -->
+<shape xmlns:android="http://schemas.android.com/apk/res/android" android:shape="rectangle">
+    <solid android:color="?attr/colorPrimary" />
+    <corners android:radius="2dp" />
+</shape>

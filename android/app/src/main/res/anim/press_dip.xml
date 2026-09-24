@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- THE PARALLAX DIP — the second and third layers of the connect object's press, and
+     the reason the desktop's press reads as physical where Android's read as flat.
+
+     The desktop presses the DISC to 0.94 and, nested inside it, the shield glyph to a
+     further 0.97, so the glyph sinks into the disc rather than travelling with it
+     (ConnectHeroView.axaml.cs: «press диска — scale 0.94 … Глиф-щит parallax-dip на
+     press (1.0→0.97) … глиф «вдавливается» в диск чуть глубже самого диска»). Android
+     scaled the 224dp FRAME by 0.97 and nothing else, so the whole assembly shrank as
+     one rigid card and the owner read it as almost no animation at all:
+     «при нажатии на кнопку практически нет никакой анимации, только пульсация».
+
+     Applied to the disc AND to the two shields, on top of @anim/press_connect on the
+     frame, the scales compose to the desktop's figures exactly:
+
+         frame 0.97 x disc 0.97               = 0.941   (desktop disc  0.94)
+         frame 0.97 x disc 0.97 x shield 0.97 = 0.913   (desktop glyph 0.94 x 0.97
+                                                         = 0.912)
+
+     Same clock as @anim/press_connect and @anim/press_scrim, so the four layers cannot
+     drift: in over motion_press_in 70ms on ease_press_in, out over
+     motion_press_out 200ms on ease_press_out. Attach with android:stateListAnimator on a view that
+     duplicates the frame's pressed state; reduced motion collapses it to 0ms
+     declaratively, exactly like every other press in the product.
+
+     R5 still holds and this does not breach it: the connect object is an OBJECT, not a
+     row. Never attach this to a row. -->
+<selector xmlns:android="http://schemas.android.com/apk/res/android">
+    <item android:state_pressed="true">
+        <set>
+            <objectAnimator
+                android:duration="@integer/motion_press_in"
+                android:interpolator="@interpolator/ease_press_in"
+                android:propertyName="scaleX"
+                android:valueTo="0.97"
+                android:valueType="floatType" />
+            <objectAnimator
+                android:duration="@integer/motion_press_in"
+                android:interpolator="@interpolator/ease_press_in"
+                android:propertyName="scaleY"
+                android:valueTo="0.97"
+                android:valueType="floatType" />
+        </set>
+    </item>
+    <item>
+        <set>
+            <objectAnimator
+                android:duration="@integer/motion_press_out"
+                android:interpolator="@interpolator/ease_press_out"
+                android:propertyName="scaleX"
+                android:valueTo="1.0"
+                android:valueType="floatType" />
+            <objectAnimator
+                android:duration="@integer/motion_press_out"
+                android:interpolator="@interpolator/ease_press_out"
+                android:propertyName="scaleY"
+                android:valueTo="1.0"
+                android:valueType="floatType" />
+        </set>
+    </item>
+</selector>

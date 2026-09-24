@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="buy_title">Купить подписку</string>
+
+    <!-- README §7 «Купить подписку», из прототипа дословно. -->
+    <string name="buy_note">Выберите тариф и срок</string>
+    <string name="buy_current">Текущий</string>
+    <string name="buy_per_month">в месяц</string>
+    <string name="buy_saving">Выгода %1$s</string>
+    <string name="buy_pay_amount">Оплатить %1$s</string>
+
+    <!-- Tariff card summary: "Устройства: 3 · Трафик: ∞" -->
+    <string name="buy_tariff_devices">Устройства: %1$d</string>
+    <string name="buy_tariff_traffic">Трафик: %1$s</string>
+    <string name="buy_unlimited">∞</string>
+
+    <!-- Price-option row: "30 дн." -->
+    <string name="buy_option_duration">%1$d дн.</string>
+
+    <!-- Extra devices -->
+    <string name="buy_extra_devices_title">Дополнительные устройства</string>
+    <string name="buy_extra_devices_count">%1$d</string>
+    <string name="buy_extra_devices_cost">+ %1$s</string>
+    <string name="buy_extra_devices_minus">Убрать устройство</string>
+    <string name="buy_extra_devices_plus">Добавить устройство</string>
+
+    <!-- Total + CTA -->
+    <string name="buy_total">Итого</string>
+    <string name="buy_pay">Купить</string>
+    <string name="buy_pick_method_title">Способ оплаты</string>
+
+    <!-- States -->
+    <string name="buy_empty">Тарифов пока нет. Загляните позже, список обновляется автоматически.</string>
+    <string name="buy_error">Не удалось загрузить тарифы. Проверьте подключение и повторите.</string>
+    <string name="buy_retry">Повторить</string>
+    <string name="buy_select_option_first">Сначала выберите срок подписки</string>
+    <string name="buy_success">Подписка оплачена</string>
+    <string name="buy_no_browser">Не удалось открыть страницу оплаты. Попробуйте другой способ оплаты.</string>
+    <string name="buy_no_methods">Способы оплаты недоступны. Повторите попытку позже.</string>
+
+    <!-- Post-checkout feedback -->
+    <string name="buy_checkout_return">Завершите оплату в браузере</string>
+    <string name="buy_pending">Платёж обрабатывается…</string>
+</resources>

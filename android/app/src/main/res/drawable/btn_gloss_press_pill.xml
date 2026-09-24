@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  btn_gloss_press on @dimen/radius_pill — the pressed disc of a filled icon button.
+  See btn_gloss_press for the light model and btn_gloss_rest_pill for why the pill
+  radius is safe on a 48x48 box.
+-->
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <item>
+        <shape android:shape="rectangle">
+            <corners android:radius="@dimen/radius_pill" />
+            <gradient
+                android:angle="270"
+                android:centerColor="@color/btn_gloss_clear_dark"
+                android:centerY="0.26"
+                android:endColor="@color/btn_gloss_clear_dark"
+                android:startColor="@color/btn_gloss_press_top"
+                android:type="linear" />
+        </shape>
+    </item>
+
+    <item>
+        <shape android:shape="rectangle">
+            <corners android:radius="@dimen/radius_pill" />
+            <gradient
+                android:angle="270"
+                android:centerColor="@color/btn_gloss_clear"
+                android:centerY="0.76"
+                android:endColor="@color/btn_gloss_press_bottom"
+                android:startColor="@color/btn_gloss_clear"
+                android:type="linear" />
+        </shape>
+    </item>
+
+</layer-list>

@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  A SECTION CARD WITH EXACTLY ONE ROW IN IT. @drawable/bg_row with all four
+  corners at @dimen/radius_row_edge 19 — the top and the bottom of the card are
+  the same row. See @drawable/bg_row_top for why the row carries the corner
+  (README §6, §11 grabl 4).
+-->
+<selector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:enterFadeDuration="@integer/motion_press_in"
+    android:exitFadeDuration="@integer/motion_press_out">
+    <item android:state_pressed="true">
+        <shape android:shape="rectangle">
+            <solid android:color="?attr/colorPressBg" />
+            <corners android:radius="@dimen/radius_row_edge" />
+        </shape>
+    </item>
+    <item android:state_focused="true">
+        <shape android:shape="rectangle">
+            <solid android:color="@android:color/transparent" />
+            <stroke
+                android:width="@dimen/stroke_focus"
+                android:color="?attr/colorPrimary" />
+            <corners android:radius="@dimen/radius_row_edge" />
+        </shape>
+    </item>
+    <item android:state_activated="true">
+        <shape android:shape="rectangle">
+            <solid android:color="?attr/colorAccentFill" />
+            <corners android:radius="@dimen/radius_row_edge" />
+        </shape>
+    </item>
+    <item>
+        <shape android:shape="rectangle">
+            <solid android:color="@android:color/transparent" />
+        </shape>
+    </item>
+</selector>

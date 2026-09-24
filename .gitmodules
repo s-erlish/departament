@@ -1,3 +1,9 @@
 [submodule "departament/GlobalHotKeys"]
 	path = departament/GlobalHotKeys
 	url = https://github.com/2dust/GlobalHotKeys
+[submodule "android/hev-socks5-tunnel"]
+	path = android/hev-socks5-tunnel
+	url = https://github.com/heiher/hev-socks5-tunnel
+[submodule "android/AndroidLibXrayLite"]
+	path = android/AndroidLibXrayLite
+	url = https://github.com/2dust/AndroidLibXrayLite

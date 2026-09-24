@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- PRESS DEPTH — the connect disc's «колодец». The desktop's P1-2: a black scrim
+     rides 0 -> 12% under the glyph while the object is held, so the disc darkens INTO
+     the press instead of only shrinking. The shield draws over it and stays solid.
+
+     Android had the scale and not the depth, which is half of the desktop's press —
+     «саму кнопку не доделал как на ПК». This is the other half, and it is additive:
+     @anim/press_connect still runs on the frame, unchanged.
+
+     Same clock as the scale, so the two cannot drift: in over motion_press_in 70ms on
+     ease_press_in, out over motion_press_out 200ms on ease_press_out. Attached with
+     android:stateListAnimator on a view that duplicates the frame's pressed state, so
+     reduced motion collapses it to 0ms declaratively, like every other press here. -->
+<selector xmlns:android="http://schemas.android.com/apk/res/android">
+    <item android:state_pressed="true">
+        <objectAnimator
+            android:duration="@integer/motion_press_in"
+            android:interpolator="@interpolator/ease_press_in"
+            android:propertyName="alpha"
+            android:valueTo="0.12"
+            android:valueType="floatType" />
+    </item>
+    <item>
+        <objectAnimator
+            android:duration="@integer/motion_press_out"
+            android:interpolator="@interpolator/ease_press_out"
+            android:propertyName="alpha"
+            android:valueTo="0.0"
+            android:valueType="floatType" />
+    </item>
+</selector>

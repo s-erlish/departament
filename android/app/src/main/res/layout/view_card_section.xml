@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  ============================================================================
+  THE GROUPED CARD SECTION, for a screen that builds its rows in code.
+  Owner decision, 2026-08-02: sub-screen CONTENT goes back to the grouped-card
+  composition it had at 5e8cd54; the shared toolbar stays.
+  ============================================================================
+
+  A screen whose sections are declared in XML applies @style/Widget.Departament.CardSection
+  directly (see activity_about.xml). A screen whose sections are DATA — today only
+  «Схемы URL-адресов», whose nine schemes live in one table in UrlSchemeListActivity —
+  inflates this instead and adds its rows into @id/card_body, so the two cannot drift:
+  both spellings resolve to the same style.
+
+  NO NESTED CARDS: rows added into @id/card_body are rows (@layout/view_row), never
+  @layout/view_row_card.
+-->
+<com.google.android.material.card.MaterialCardView xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/card_section"
+    style="@style/Widget.Departament.CardSection">
+
+    <LinearLayout
+        android:id="@+id/card_body"
+        style="@style/Widget.Departament.CardSection.Body" />
+
+</com.google.android.material.card.MaterialCardView>

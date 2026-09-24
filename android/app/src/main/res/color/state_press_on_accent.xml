@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  ALIAS of @color/ripple_on_accent. 10-design-system.md 4.6 spells the ripple over a
+  filled accent surface state_press_on_accent; 22-components.md 2.9 spells the same
+  thing ripple_on_accent. Both spellings resolve, so neither can break a build —
+  the same defence dimens.xml already uses for radius_control / radius_button.
+  Prefer ripple_on_accent in new work.
+-->
+<selector xmlns:android="http://schemas.android.com/apk/res/android">
+    <item
+        android:alpha="0.12"
+        android:color="?attr/colorOnPrimary"
+        android:state_pressed="true" />
+    <item
+        android:alpha="0.10"
+        android:color="?attr/colorOnPrimary"
+        android:state_focused="true" />
+    <item
+        android:alpha="0.08"
+        android:color="?attr/colorOnPrimary"
+        android:state_hovered="true" />
+    <item android:alpha="0.12" android:color="?attr/colorOnPrimary" />
+</selector>

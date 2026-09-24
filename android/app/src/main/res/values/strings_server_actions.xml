@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    Strings for the long-press server-actions bottom sheet (Incy "Servers" redesign, S3).
+    Kept in a separate file to avoid merge collisions with strings.xml, which other
+    agents edit concurrently. All user-facing copy is in Russian.
+-->
+<resources>
+    <string name="server_actions_title">Действия с сервером</string>
+    <string name="server_action_share_qr">Поделиться (QR)</string>
+    <string name="server_action_share_clipboard">Поделиться (буфер)</string>
+    <string name="server_action_edit">Изменить</string>
+    <string name="server_action_duplicate">Дублировать</string>
+    <string name="server_action_set_default">Сделать основным</string>
+    <string name="server_action_delete">Удалить</string>
+    <!-- Suffix appended to the remarks of a duplicated server -->
+    <string name="server_action_duplicate_suffix"> (копия)</string>
+</resources>

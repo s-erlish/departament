@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  THE CONNECTED PILL'S PLATE. One shape, one job: make «Подключено» read as a badge the
+  tunnel earned rather than as another sentence on the screen.
+
+  It is a HAIRLINE OUTLINE ON THE SCREEN'S OWN GROUND, not a filled accent capsule, and
+  that is deliberate. Главная already carries the accent in three places at this moment —
+  the three rings, the filled shield, the server name — and a fourth solid accent block
+  200dp under the object would make the eye choose between them. The outline states the
+  fact and lets the object stay the loudest thing on the screen.
+
+  It also keeps the text at full contrast: the label is drawn on the page background, so
+  it is `colorAccentFigure` against the same ground everything else is measured against
+  (5.97:1 blue, 5.99:1 mono light) instead of on a tinted plate whose contrast would have
+  to be re-measured per theme. `radius_pill` because it is a capsule, not a chip.
+-->
+<shape xmlns:android="http://schemas.android.com/apk/res/android"
+    android:shape="rectangle">
+    <solid android:color="@android:color/transparent" />
+    <stroke
+        android:width="@dimen/stroke_hairline"
+        android:color="?attr/colorAccentFigure" />
+    <corners android:radius="@dimen/radius_pill" />
+</shape>

@@ -1,0 +1,732 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  ============================================================================
+  «Локальный прокси» (LocalProxyActivity) — handoff README §7, «Единое лекало».
+  ============================================================================
+
+      кнопка назад 44dp → заголовок 24sp/700 → группы карточек с теми же
+      строками, что и в настройках
+
+  The header is @layout/view_sub_header, so the screen no longer runs through
+  BaseActivity.setContentViewWithToolbar and its 16sp MaterialToolbar title.
+
+  WHAT CHANGED IN EVERY ROW, and why each one is one line of §6's «Строка»:
+
+      плитка 40dp r12, нейтральный фон, глиф 22dp   @style/Widget.Departament.Tile
+      → 16dp → заголовок 14sp/400 + подпись 12.5sp  Body + Caption
+      → справа значение 13sp или переключатель      Subtitle / MaterialSwitch
+      правый отступ 12dp только при значении/тумблере
+      высота от 56dp, растёт с подписью             @style/Widget.Departament.Row
+
+  RIPPLE IS GONE, and this file is where most of the app's last ripples lived.
+  ?attr/selectableItemBackground became @drawable/bg_row (a ColorStateList with
+  state_pressed stepping DOWN to ?attr/colorPressBg) plus @anim/press_row 0.975 on
+  the stateListAnimator; ?attr/selectableItemBackgroundBorderless on the copy /
+  reveal glyphs became @drawable/bg_control_disc plus @anim/press_icon 0.88. §1:
+  «Никакой подсветки вокруг кнопки и никакого ripple».
+
+  THE TILES ARE NEUTRAL NOW. They were purple / red / green / orange, which is a
+  category system this product does not have (D-5) and which the prototype does not
+  draw — every tile on every sub-screen in it is the one neutral plate. §9 also
+  forbids painting a tile from a layout at all; @style/Widget.Departament.Tile
+  resolves both the fill and the glyph tint from the theme.
+
+  WHAT IS ON THIS SCREEN THAT §7 DOES NOT LIST, AND STAYS:
+
+    · Адрес / Порт локального прокси. §7's «Локальный прокси» group names five
+      toggles and no fields; the port is the one value on this screen a user has an
+      actual reason to change, and it was already unreachable once (it used to hide
+      behind SOCKS5 auth). Kept.
+    · The hotspot detail block — endpoint, login, password, three copy glyphs, the
+      «открыт для всей локальной сети» warning. §7 lists «Доступ через хотспот» as
+      a bare toggle; a toggle that opens a proxy to the LAN without showing the
+      address to point a device at is a dead switch.
+    · «Сбросить учётные данные». §7 spells it «Сбросить логин/пароль» as a link row;
+      the repo's string and its confirm flow are the ones that exist.
+
+  WHAT §7 LISTS AND THIS SCREEN DOES NOT HAVE: the «Память» group («Лимит
+  оперативной памяти», «Снять ограничение»), «Скрыть значок (только прокси)» and
+  «Маршрутизация по домену». All three were removed by an EARLIER owner decision
+  recorded in LocalProxyActivity's own header — the memory limit because no shipped
+  libv2ray build exposes a setter for it, so the control changed nothing; the other
+  two because they were second homes for settings that live in «Дополнительно».
+  The handoff was drawn from the pre-decision screen, so it is not asking for them
+  back. Not re-added.
+-->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="?android:attr/colorBackground"
+    android:fitsSystemWindows="true"
+    android:orientation="vertical"
+    tools:context=".ui.LocalProxyActivity">
+
+    <include
+        android:id="@+id/toolbar"
+        layout="@layout/view_sub_header" />
+
+    <androidx.core.widget.NestedScrollView
+        android:id="@+id/main_content"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:clipToPadding="false"
+        android:paddingBottom="@dimen/space_32"
+        android:scrollbars="none">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical">
+
+            <!-- ==================== ПРОКСИ И ДОСТУП ====================
+                 Мастер-переключатель всей группы стоит первым на экране: он решает,
+                 существуют ли инбаунды вообще, а логин с паролем ниже — деталь одного
+                 из них. -->
+            <TextView
+                style="@style/SettingsSectionLabel"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="@string/lp_section_local" />
+
+            <com.google.android.material.card.MaterialCardView style="@style/Widget.Departament.CardSection">
+
+                <LinearLayout style="@style/Widget.Departament.CardSection.Body">
+
+                    <!-- Локальный прокси: SOCKS5/HTTP инбаунды ядра (PREF_ENABLE_LOCAL_PROXY) -->
+                    <LinearLayout
+                        android:id="@+id/row_local_proxy"
+                        style="@style/Widget.Departament.Row"
+                        android:baselineAligned="false">
+
+                        <ImageView
+                            style="@style/Widget.Departament.Tile"
+                            android:backgroundTint="?attr/colorSurfaceContainerHighest"
+                            android:layout_marginEnd="@dimen/space_16"
+                            android:importantForAccessibility="no"
+                            app:srcCompat="@drawable/ic_hub_local_proxy" />
+
+                        <LinearLayout
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_marginEnd="@dimen/space_12"
+                            android:layout_weight="1"
+                            android:orientation="vertical">
+
+                            <TextView
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:text="@string/lp_local_proxy"
+                                android:textAppearance="@style/TextAppearance.App.Body" />
+
+                            <TextView
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:layout_marginTop="@dimen/space_4"
+                                android:text="@string/lp_local_proxy_sub"
+                                android:textAppearance="@style/TextAppearance.App.Caption" />
+                        </LinearLayout>
+
+                        <com.google.android.material.materialswitch.MaterialSwitch
+                            android:id="@+id/switch_local_proxy"
+                            style="@style/Widget.Departament.Switch"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:clickable="false"
+                            android:focusable="false"
+                            android:importantForAccessibility="no" />
+                    </LinearLayout>
+
+                    <com.google.android.material.divider.MaterialDivider
+                        style="@style/Widget.Departament.Divider.Full"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content" />
+
+                    <!-- Адрес и порт локального прокси. Раньше оба поля лежали внутри
+                         group_socks_details и показывались, только когда включена
+                         SOCKS5-авторизация: при выключенной авторизации, а это состояние по
+                         умолчанию, порт локального прокси нельзя было ни увидеть, ни изменить. -->
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="vertical"
+                        android:paddingStart="@dimen/screen_gutter"
+                        android:paddingTop="@dimen/space_12"
+                        android:paddingEnd="@dimen/screen_gutter"
+                        android:paddingBottom="@dimen/space_16">
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="@string/lp_socks_address"
+                            android:textAppearance="@style/TextAppearance.App.Caption" />
+
+                        <EditText
+                            android:id="@+id/et_socks_addr"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="@dimen/space_4"
+                            android:background="@drawable/bg_lp_input"
+                            android:enabled="false"
+                            android:focusable="false"
+                            android:inputType="none"
+                            android:maxLines="1"
+                            android:padding="@dimen/space_12"
+                            android:text="127.0.0.1"
+                            android:textAppearance="@style/TextAppearance.App.Body"
+                            android:textColor="?attr/colorOnSurfaceVariant"
+                            tools:ignore="HardcodedText,LabelFor" />
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="@dimen/space_12"
+                            android:text="@string/lp_socks_port"
+                            android:textAppearance="@style/TextAppearance.App.Caption" />
+
+                        <EditText
+                            android:id="@+id/et_socks_port"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="@dimen/space_4"
+                            android:background="@drawable/bg_lp_input"
+                            android:inputType="number"
+                            android:maxLines="1"
+                            android:padding="@dimen/space_12"
+                            android:textAppearance="@style/TextAppearance.App.Body"
+                            android:textColor="?attr/colorOnSurface"
+                            tools:ignore="LabelFor"
+                            tools:text="10808" />
+                    </LinearLayout>
+
+                    <com.google.android.material.divider.MaterialDivider
+                        style="@style/Widget.Departament.Divider.Full"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content" />
+
+                    <!-- UDP через прокси -->
+                    <LinearLayout
+                        android:id="@+id/row_udp"
+                        style="@style/Widget.Departament.Row"
+                        android:baselineAligned="false">
+
+                        <ImageView
+                            style="@style/Widget.Departament.Tile"
+                            android:backgroundTint="?attr/colorSurfaceContainerHighest"
+                            android:layout_marginEnd="@dimen/space_16"
+                            android:importantForAccessibility="no"
+                            app:srcCompat="@drawable/ic_lp_udp" />
+
+                        <LinearLayout
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_marginEnd="@dimen/space_12"
+                            android:layout_weight="1"
+                            android:orientation="vertical">
+
+                            <TextView
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:text="@string/lp_udp"
+                                android:textAppearance="@style/TextAppearance.App.Body" />
+
+                            <TextView
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:layout_marginTop="@dimen/space_4"
+                                android:text="@string/lp_udp_sub"
+                                android:textAppearance="@style/TextAppearance.App.Caption" />
+                        </LinearLayout>
+
+                        <com.google.android.material.materialswitch.MaterialSwitch
+                            android:id="@+id/switch_udp"
+                            style="@style/Widget.Departament.Switch"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:clickable="false"
+                            android:focusable="false"
+                            android:importantForAccessibility="no" />
+                    </LinearLayout>
+
+                    <com.google.android.material.divider.MaterialDivider
+                        style="@style/Widget.Departament.Divider.Full"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content" />
+
+                    <!-- Системный HTTP-прокси -->
+                    <LinearLayout
+                        android:id="@+id/row_http_proxy"
+                        style="@style/Widget.Departament.Row"
+                        android:baselineAligned="false">
+
+                        <ImageView
+                            style="@style/Widget.Departament.Tile"
+                            android:backgroundTint="?attr/colorSurfaceContainerHighest"
+                            android:layout_marginEnd="@dimen/space_16"
+                            android:importantForAccessibility="no"
+                            app:srcCompat="@drawable/ic_lp_http" />
+
+                        <LinearLayout
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_marginEnd="@dimen/space_12"
+                            android:layout_weight="1"
+                            android:orientation="vertical">
+
+                            <TextView
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:text="@string/lp_http_proxy"
+                                android:textAppearance="@style/TextAppearance.App.Body" />
+
+                            <TextView
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:layout_marginTop="@dimen/space_4"
+                                android:text="@string/lp_http_proxy_sub"
+                                android:textAppearance="@style/TextAppearance.App.Caption" />
+                        </LinearLayout>
+
+                        <com.google.android.material.materialswitch.MaterialSwitch
+                            android:id="@+id/switch_http_proxy"
+                            style="@style/Widget.Departament.Switch"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:clickable="false"
+                            android:focusable="false"
+                            android:importantForAccessibility="no" />
+                    </LinearLayout>
+
+                    <com.google.android.material.divider.MaterialDivider
+                        style="@style/Widget.Departament.Divider.Full"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content" />
+
+                    <!-- Доступ через хотспот -->
+                    <LinearLayout
+                        android:id="@+id/row_hotspot"
+                        style="@style/Widget.Departament.Row"
+                        android:baselineAligned="false">
+
+                        <ImageView
+                            style="@style/Widget.Departament.Tile"
+                            android:backgroundTint="?attr/colorSurfaceContainerHighest"
+                            android:layout_marginEnd="@dimen/space_16"
+                            android:importantForAccessibility="no"
+                            app:srcCompat="@drawable/ic_lp_hotspot" />
+
+                        <LinearLayout
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_marginEnd="@dimen/space_12"
+                            android:layout_weight="1"
+                            android:orientation="vertical">
+
+                            <TextView
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:text="@string/lp_hotspot"
+                                android:textAppearance="@style/TextAppearance.App.Body" />
+
+                            <TextView
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:layout_marginTop="@dimen/space_4"
+                                android:text="@string/lp_hotspot_sub"
+                                android:textAppearance="@style/TextAppearance.App.Caption" />
+                        </LinearLayout>
+
+                        <com.google.android.material.materialswitch.MaterialSwitch
+                            android:id="@+id/switch_hotspot"
+                            style="@style/Widget.Departament.Switch"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:clickable="false"
+                            android:focusable="false"
+                            android:importantForAccessibility="no" />
+                    </LinearLayout>
+
+                    <!-- Эндпоинт для подключаемых устройств (виден при включённом доступе) -->
+                    <LinearLayout
+                        android:id="@+id/group_hotspot_details"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="vertical"
+                        android:paddingStart="@dimen/screen_gutter"
+                        android:paddingEnd="@dimen/screen_gutter"
+                        android:paddingBottom="@dimen/space_16"
+                        android:visibility="gone"
+                        tools:visibility="visible">
+
+                        <!-- Пояснение: ручной SOCKS5-прокси, а не сквозной перехват -->
+                        <TextView
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:text="@string/lp_hotspot_hint"
+                            android:textAppearance="@style/TextAppearance.App.Caption" />
+
+                        <!-- Предупреждение о локальной сети. Единственный цветной текст на
+                             экране: ?attr/warning — это роль «истекает / внимание», и она
+                             существует ровно для такой строки (colors.xml, attrs.xml). -->
+                        <TextView
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="@dimen/space_8"
+                            android:text="@string/lp_hotspot_warning"
+                            android:textAppearance="@style/TextAppearance.App.Caption"
+                            android:textColor="?attr/warning" />
+
+                        <!-- SOCKS5 адрес:порт -->
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="@dimen/space_12"
+                            android:text="@string/lp_hotspot_endpoint"
+                            android:textAppearance="@style/TextAppearance.App.Caption" />
+
+                        <LinearLayout
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="@dimen/space_4"
+                            android:baselineAligned="false"
+                            android:gravity="center_vertical"
+                            android:orientation="horizontal">
+
+                            <EditText
+                                android:id="@+id/et_hotspot_endpoint"
+                                android:layout_width="0dp"
+                                android:layout_height="wrap_content"
+                                android:layout_weight="1"
+                                android:background="@drawable/bg_lp_input"
+                                android:enabled="false"
+                                android:focusable="false"
+                                android:inputType="none"
+                                android:maxLines="1"
+                                android:padding="@dimen/space_12"
+                                android:textAppearance="@style/TextAppearance.App.Body"
+                                android:textColor="?attr/colorOnSurface"
+                                tools:ignore="LabelFor"
+                                tools:text="SOCKS5  192.168.1.42:10810" />
+
+                            <ImageButton
+                                android:id="@+id/btn_copy_hotspot_endpoint"
+                                android:layout_width="@dimen/view_height_dp48"
+                                android:layout_height="@dimen/view_height_dp48"
+                                android:layout_marginStart="@dimen/space_4"
+                                android:background="@drawable/bg_control_disc"
+                                android:contentDescription="@string/lp_copy"
+                                android:stateListAnimator="@anim/press_icon"
+                                app:srcCompat="@drawable/ic_copy"
+                                app:tint="?attr/colorOnSurfaceVariant" />
+                        </LinearLayout>
+
+                        <!-- Логин -->
+                        <LinearLayout
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="@dimen/space_12"
+                            android:baselineAligned="false"
+                            android:gravity="bottom"
+                            android:orientation="horizontal">
+
+                            <LinearLayout
+                                android:layout_width="0dp"
+                                android:layout_height="wrap_content"
+                                android:layout_weight="1"
+                                android:orientation="vertical">
+
+                                <TextView
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:text="@string/lp_socks_login"
+                                    android:textAppearance="@style/TextAppearance.App.Caption" />
+
+                                <EditText
+                                    android:id="@+id/et_hotspot_user"
+                                    android:layout_width="match_parent"
+                                    android:layout_height="wrap_content"
+                                    android:layout_marginTop="@dimen/space_4"
+                                    android:background="@drawable/bg_lp_input"
+                                    android:enabled="false"
+                                    android:focusable="false"
+                                    android:inputType="none"
+                                    android:maxLines="1"
+                                    android:padding="@dimen/space_12"
+                                    android:textAppearance="@style/TextAppearance.App.Body"
+                                    android:textColor="?attr/colorOnSurface"
+                                    tools:ignore="LabelFor"
+                                    tools:text="dep_a1b2c3" />
+                            </LinearLayout>
+
+                            <ImageButton
+                                android:id="@+id/btn_copy_hotspot_user"
+                                android:layout_width="@dimen/view_height_dp48"
+                                android:layout_height="@dimen/view_height_dp48"
+                                android:layout_marginStart="@dimen/space_4"
+                                android:background="@drawable/bg_control_disc"
+                                android:contentDescription="@string/lp_copy"
+                                android:stateListAnimator="@anim/press_icon"
+                                app:srcCompat="@drawable/ic_copy"
+                                app:tint="?attr/colorOnSurfaceVariant" />
+                        </LinearLayout>
+
+                        <!-- Пароль -->
+                        <LinearLayout
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="@dimen/space_12"
+                            android:baselineAligned="false"
+                            android:gravity="bottom"
+                            android:orientation="horizontal">
+
+                            <LinearLayout
+                                android:layout_width="0dp"
+                                android:layout_height="wrap_content"
+                                android:layout_weight="1"
+                                android:orientation="vertical">
+
+                                <TextView
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:text="@string/lp_socks_password"
+                                    android:textAppearance="@style/TextAppearance.App.Caption" />
+
+                                <EditText
+                                    android:id="@+id/et_hotspot_pass"
+                                    android:layout_width="match_parent"
+                                    android:layout_height="wrap_content"
+                                    android:layout_marginTop="@dimen/space_4"
+                                    android:background="@drawable/bg_lp_input"
+                                    android:enabled="false"
+                                    android:focusable="false"
+                                    android:inputType="textPassword"
+                                    android:maxLines="1"
+                                    android:padding="@dimen/space_12"
+                                    android:textAppearance="@style/TextAppearance.App.Body"
+                                    android:textColor="?attr/colorOnSurface"
+                                    tools:ignore="LabelFor"
+                                    tools:text="a1b2c3d4e5f6" />
+                            </LinearLayout>
+
+                            <ImageButton
+                                android:id="@+id/btn_toggle_hotspot_pass"
+                                android:layout_width="@dimen/view_height_dp48"
+                                android:layout_height="@dimen/view_height_dp48"
+                                android:layout_marginStart="@dimen/space_4"
+                                android:background="@drawable/bg_control_disc"
+                                android:contentDescription="@string/lp_show_password"
+                                android:stateListAnimator="@anim/press_icon"
+                                app:srcCompat="@drawable/ic_lp_eye"
+                                app:tint="?attr/colorOnSurfaceVariant" />
+
+                            <ImageButton
+                                android:id="@+id/btn_copy_hotspot_pass"
+                                android:layout_width="@dimen/view_height_dp48"
+                                android:layout_height="@dimen/view_height_dp48"
+                                android:background="@drawable/bg_control_disc"
+                                android:contentDescription="@string/lp_copy"
+                                android:stateListAnimator="@anim/press_icon"
+                                app:srcCompat="@drawable/ic_copy"
+                                app:tint="?attr/colorOnSurfaceVariant" />
+                        </LinearLayout>
+                    </LinearLayout>
+                </LinearLayout>
+            </com.google.android.material.card.MaterialCardView>
+
+            <!-- ==================== УЧЁТНЫЕ ДАННЫЕ ==================== -->
+            <TextView
+                style="@style/SettingsSectionLabel"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="@string/lp_section_socks" />
+
+            <com.google.android.material.card.MaterialCardView style="@style/Widget.Departament.CardSection">
+
+                <LinearLayout style="@style/Widget.Departament.CardSection.Body">
+
+                    <!-- Мастер-переключатель -->
+                    <LinearLayout
+                        android:id="@+id/row_socks_auth"
+                        style="@style/Widget.Departament.Row"
+                        android:baselineAligned="false">
+
+                        <ImageView
+                            style="@style/Widget.Departament.Tile"
+                            android:backgroundTint="?attr/colorSurfaceContainerHighest"
+                            android:layout_marginEnd="@dimen/space_16"
+                            android:importantForAccessibility="no"
+                            app:srcCompat="@drawable/ic_lp_key" />
+
+                        <LinearLayout
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_marginEnd="@dimen/space_12"
+                            android:layout_weight="1"
+                            android:orientation="vertical">
+
+                            <TextView
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:text="@string/lp_socks_auth"
+                                android:textAppearance="@style/TextAppearance.App.Body" />
+
+                            <TextView
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:layout_marginTop="@dimen/space_4"
+                                android:text="@string/lp_socks_auth_sub"
+                                android:textAppearance="@style/TextAppearance.App.Caption" />
+                        </LinearLayout>
+
+                        <com.google.android.material.materialswitch.MaterialSwitch
+                            android:id="@+id/switch_socks_auth"
+                            style="@style/Widget.Departament.Switch"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:clickable="false"
+                            android:focusable="false"
+                            android:importantForAccessibility="no" />
+                    </LinearLayout>
+
+                    <com.google.android.material.divider.MaterialDivider
+                        android:id="@+id/divider_socks"
+                        style="@style/Widget.Departament.Divider.Full"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content" />
+
+                    <!-- Поля авторизации (видны при включённом мастере) -->
+                    <LinearLayout
+                        android:id="@+id/group_socks_details"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="vertical"
+                        android:paddingStart="@dimen/screen_gutter"
+                        android:paddingTop="@dimen/space_12"
+                        android:paddingEnd="@dimen/screen_gutter"
+                        android:paddingBottom="@dimen/space_16"
+                        android:visibility="gone"
+                        tools:visibility="visible">
+
+                        <!-- Логин -->
+                        <LinearLayout
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:baselineAligned="false"
+                            android:gravity="bottom"
+                            android:orientation="horizontal">
+
+                            <LinearLayout
+                                android:layout_width="0dp"
+                                android:layout_height="wrap_content"
+                                android:layout_weight="1"
+                                android:orientation="vertical">
+
+                                <TextView
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:text="@string/lp_socks_login"
+                                    android:textAppearance="@style/TextAppearance.App.Caption" />
+
+                                <EditText
+                                    android:id="@+id/et_socks_user"
+                                    android:layout_width="match_parent"
+                                    android:layout_height="wrap_content"
+                                    android:layout_marginTop="@dimen/space_4"
+                                    android:background="@drawable/bg_lp_input"
+                                    android:inputType="text"
+                                    android:maxLines="1"
+                                    android:padding="@dimen/space_12"
+                                    android:textAppearance="@style/TextAppearance.App.Body"
+                                    android:textColor="?attr/colorOnSurface"
+                                    tools:ignore="LabelFor"
+                                    tools:text="dep_a1b2c3" />
+                            </LinearLayout>
+
+                            <ImageButton
+                                android:id="@+id/btn_copy_user"
+                                android:layout_width="@dimen/view_height_dp48"
+                                android:layout_height="@dimen/view_height_dp48"
+                                android:layout_marginStart="@dimen/space_4"
+                                android:background="@drawable/bg_control_disc"
+                                android:contentDescription="@string/lp_copy"
+                                android:stateListAnimator="@anim/press_icon"
+                                app:srcCompat="@drawable/ic_copy"
+                                app:tint="?attr/colorOnSurfaceVariant" />
+                        </LinearLayout>
+
+                        <!-- Пароль -->
+                        <LinearLayout
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="@dimen/space_12"
+                            android:baselineAligned="false"
+                            android:gravity="bottom"
+                            android:orientation="horizontal">
+
+                            <LinearLayout
+                                android:layout_width="0dp"
+                                android:layout_height="wrap_content"
+                                android:layout_weight="1"
+                                android:orientation="vertical">
+
+                                <TextView
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:text="@string/lp_socks_password"
+                                    android:textAppearance="@style/TextAppearance.App.Caption" />
+
+                                <EditText
+                                    android:id="@+id/et_socks_pass"
+                                    android:layout_width="match_parent"
+                                    android:layout_height="wrap_content"
+                                    android:layout_marginTop="@dimen/space_4"
+                                    android:background="@drawable/bg_lp_input"
+                                    android:inputType="textPassword"
+                                    android:maxLines="1"
+                                    android:padding="@dimen/space_12"
+                                    android:textAppearance="@style/TextAppearance.App.Body"
+                                    android:textColor="?attr/colorOnSurface"
+                                    tools:ignore="LabelFor"
+                                    tools:text="a1b2c3d4e5f6" />
+                            </LinearLayout>
+
+                            <ImageButton
+                                android:id="@+id/btn_toggle_pass"
+                                android:layout_width="@dimen/view_height_dp48"
+                                android:layout_height="@dimen/view_height_dp48"
+                                android:layout_marginStart="@dimen/space_4"
+                                android:background="@drawable/bg_control_disc"
+                                android:contentDescription="@string/lp_show_password"
+                                android:stateListAnimator="@anim/press_icon"
+                                app:srcCompat="@drawable/ic_lp_eye"
+                                app:tint="?attr/colorOnSurfaceVariant" />
+
+                            <ImageButton
+                                android:id="@+id/btn_copy_pass"
+                                android:layout_width="@dimen/view_height_dp48"
+                                android:layout_height="@dimen/view_height_dp48"
+                                android:background="@drawable/bg_control_disc"
+                                android:contentDescription="@string/lp_copy"
+                                android:stateListAnimator="@anim/press_icon"
+                                app:srcCompat="@drawable/ic_copy"
+                                app:tint="?attr/colorOnSurfaceVariant" />
+                        </LinearLayout>
+
+                        <!-- Сбросить учётные данные -->
+                        <com.google.android.material.button.MaterialButton
+                            android:id="@+id/btn_reset_creds"
+                            style="@style/Widget.Departament.Button.Secondary"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="@dimen/space_16"
+                            android:text="@string/lp_socks_reset"
+                            app:icon="@drawable/ic_refresh_24dp"
+                            app:iconGravity="textStart" />
+                    </LinearLayout>
+                </LinearLayout>
+            </com.google.android.material.card.MaterialCardView>
+        </LinearLayout>
+    </androidx.core.widget.NestedScrollView>
+</LinearLayout>

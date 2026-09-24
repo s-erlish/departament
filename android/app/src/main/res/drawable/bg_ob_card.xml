@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- §2.4: карточка найденной подписки. radius 20dp, поверхность на шаг выше фона,
+     хайрлайн 1dp. Нажимается вся карточка — внутри неё ровно одно действие. -->
+<selector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:enterFadeDuration="@integer/motion_press_in"
+    android:exitFadeDuration="@integer/motion_press_out">
+    <item android:state_pressed="true">
+        <shape android:shape="rectangle">
+            <solid android:color="?attr/colorPressBg" />
+            <stroke
+                android:width="@dimen/stroke_hairline"
+                android:color="?attr/colorOutlineVariant" />
+            <corners android:radius="@dimen/radius_card" />
+        </shape>
+    </item>
+    <item>
+        <shape android:shape="rectangle">
+            <solid android:color="?attr/colorSurface" />
+            <stroke
+                android:width="@dimen/stroke_hairline"
+                android:color="?attr/colorOutlineVariant" />
+            <corners android:radius="@dimen/radius_card" />
+        </shape>
+    </item>
+</selector>

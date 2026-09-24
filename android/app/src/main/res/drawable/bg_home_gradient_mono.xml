@@ -1,0 +1,11 @@
+<shape xmlns:android="http://schemas.android.com/apk/res/android" android:shape="rectangle">
+    <!-- Mono (light) background: pure white centre fading to a soft neutral grey edge. -->
+    <gradient
+        android:type="radial"
+        android:gradientRadius="560dp"
+        android:centerX="0.5"
+        android:centerY="0.30"
+        android:startColor="#FFFFFF"
+        android:centerColor="#F3F3F4"
+        android:endColor="#E5E5E7" />
+</shape>

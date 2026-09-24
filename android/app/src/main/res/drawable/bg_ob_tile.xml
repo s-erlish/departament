@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- §2.4: плитка 40dp в карточке найденной подписки. Нейтральная, как все плитки
+     прототипа: ?attr/colorSurfaceContainerHighest, radius 12dp. -->
+<shape xmlns:android="http://schemas.android.com/apk/res/android"
+    android:shape="rectangle">
+    <solid android:color="?attr/colorSurfaceContainerHighest" />
+    <corners android:radius="@dimen/radius_tile" />
+</shape>

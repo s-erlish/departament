@@ -1,0 +1,98 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  ============================================================================
+  THE STATUS STRIP. The app's ONE feedback channel.
+  32-master-plan-android.md 8.10, 00-rules.md 9.4 / 9.6 / 15.
+  ============================================================================
+
+  The app ships zero Snackbars, about forty Toasts, and one deprecated custom-view
+  Toast pinned at a magic 110dp offset that is invisible on Android 12+ when the app
+  is not in the foreground. All of it collapses here.
+
+      [ 1dp hairline                                                          ]
+      [ 16 ][ 20 glyph ][ 12 ][ message, Body, max 2 lines ][ 12 ][ action ][ 16 ]
+
+  It is anchored directly above the bottom navigation, respects the navigation-bar
+  inset, and NEVER floats, never overlays the connect control, never appears over a
+  dialog or a sheet. One strip at a time: a new message replaces the current one with
+  a 220ms crossfade of the text, it does not stack.
+
+  TIMING IS A CONTRACT: successes auto-dismiss at 5s, ERRORS PERSIST until acted on
+  or dismissed. An error the user did not see is an error we did not report.
+  Enter motion_reveal 300 ease_out_quint (translationY 8dp to 0 plus alpha), exit 225
+  standard, and reduced motion snaps to the end state.
+
+  HEIGHT: the 12dp breathing room is padding on the MESSAGE, not on the bar, so the
+  bar is exactly the spec'd 48 minimum whether or not the 48dp action is showing —
+  and it still grows for a two-line message or a 200% font scale.
+
+  SEVERITY is the glyph plus the tone, and the message always carries the words:
+      info     ic_dl_info    ?attr/colorOnSurfaceVariant   (the default below)
+      warning  ic_warning    ?attr/warning
+      error    ic_error      @color/color_destructive_text
+  ICON GAP: res/drawable has no ic_warning and no ic_error yet; filed with the icon
+  owner. Until they land, the warning and error severities carry the info glyph in
+  the correct tone, which keeps two channels rather than one.
+
+  Copy is 9.4's shape — cause plus fix, never a code, never «Что-то пошло не так».
+-->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/status_strip"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical">
+
+    <View
+        android:id="@+id/status_strip_hairline"
+        android:layout_width="match_parent"
+        android:layout_height="@dimen/stroke_hairline"
+        android:background="?attr/colorOutlineVariant" />
+
+    <LinearLayout
+        android:id="@+id/status_strip_bar"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="?attr/colorSurfaceContainerHigh"
+        android:baselineAligned="false"
+        android:gravity="center_vertical"
+        android:minHeight="@dimen/view_height_dp48"
+        android:orientation="horizontal"
+        android:paddingStart="@dimen/screen_gutter"
+        android:paddingEnd="@dimen/screen_gutter">
+
+        <ImageView
+            android:id="@+id/status_strip_icon"
+            android:layout_width="@dimen/glyph_20"
+            android:layout_height="@dimen/glyph_20"
+            android:layout_marginEnd="@dimen/space_12"
+            android:importantForAccessibility="no"
+            android:src="@drawable/ic_dl_info"
+            android:tint="?attr/colorOnSurfaceVariant" />
+
+        <TextView
+            android:id="@+id/status_strip_text"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:accessibilityLiveRegion="polite"
+            android:ellipsize="end"
+            android:maxLines="2"
+            android:paddingTop="@dimen/space_12"
+            android:paddingBottom="@dimen/space_12"
+            android:textAppearance="@style/TextAppearance.App.Body"
+            tools:text="Нет сети. Показаны последние данные." />
+
+        <!-- One word: «Повторить», «Отменить», «Отключить». Tertiary, always — the
+             strip is transient and never carries a filled button. -->
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/status_strip_action"
+            style="@style/Widget.Departament.Button.Tertiary"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="@dimen/space_12"
+            android:visibility="gone"
+            tools:text="Повторить"
+            tools:visibility="visible" />
+    </LinearLayout>
+</LinearLayout>

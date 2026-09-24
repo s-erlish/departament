@@ -1,0 +1,128 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  ============================================================================
+  A-13 - группа «Сервер», общая у восьми протокольных форм.
+  ============================================================================
+
+  ЭТО ЛЕКАЛО ПОЛЯ, и ниже оно повторяется на каждом экране формы:
+
+      заголовок группы            @style/SettingsSectionLabel, предложением
+      подпись поля                Title.Medium, всегда видима, labelFor
+      поле 56, радиус 16          @style/Widget.Departament.TextField
+      строка подсказки / отказа   зарезервирована стилем, errorEnabled
+
+  Было: голый EditText под безымянным TextView. У поля не было ни границы, ни
+  заливки, ни высоты - его рисовала подчёркивающая линия из AppCompat, то есть
+  ровно тот компонент, по которому приложение и опознаётся как форк. И ни одного
+  состояния ошибки: «Сохранить» с пустым адресом отвечало тостом поверх экрана,
+  который не показывал, какое из двадцати полей он имеет в виду.
+
+  ПОДПИСЬ СВЕРХУ, А НЕ ПЛЕЙСХОЛДЕР (7.4): подпись видна и когда в поле уже
+  что-то введено. Плейсхолдер - пример значения, поэтому он только у адреса, где
+  форма значения не очевидна.
+-->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical">
+
+    <!-- Первая группа без заголовка, как в «Подписке» и «Группе серверов»: заголовок
+         «Сервер» над формой одного сервера ничего не сообщает, а 24dp сверху и так
+         отделяют форму от шапки. Заголовки начинаются со второй группы, где им есть
+         что различать. -->
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="@dimen/space_24"
+        android:labelFor="@id/et_remarks"
+        android:paddingStart="@dimen/screen_gutter"
+        android:paddingEnd="@dimen/screen_gutter"
+        android:text="@string/server_lab_remarks"
+        android:textAppearance="@style/TextAppearance.App.Title.Medium" />
+
+    <com.google.android.material.textfield.TextInputLayout
+        android:id="@+id/til_remarks"
+        style="@style/Widget.Departament.TextField"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="@dimen/screen_gutter"
+        android:layout_marginTop="@dimen/space_8"
+        android:layout_marginEnd="@dimen/screen_gutter">
+
+        <com.google.android.material.textfield.TextInputEditText
+            android:id="@+id/et_remarks"
+            style="@style/Widget.Departament.TextField.EditText"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:imeOptions="actionNext"
+            android:inputType="text"
+            android:maxLines="1" />
+    </com.google.android.material.textfield.TextInputLayout>
+
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="@dimen/space_12"
+        android:labelFor="@id/et_address"
+        android:paddingStart="@dimen/screen_gutter"
+        android:paddingEnd="@dimen/screen_gutter"
+        android:text="@string/server_lab_address3"
+        android:textAppearance="@style/TextAppearance.App.Title.Medium" />
+
+    <com.google.android.material.textfield.TextInputLayout
+        android:id="@+id/til_address"
+        style="@style/Widget.Departament.TextField"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="@dimen/screen_gutter"
+        android:layout_marginTop="@dimen/space_8"
+        android:layout_marginEnd="@dimen/screen_gutter"
+        app:helperText="@string/srv_hint_address">
+
+        <com.google.android.material.textfield.TextInputEditText
+            android:id="@+id/et_address"
+            style="@style/Widget.Departament.TextField.EditText"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:hint="@string/srv_ph_address"
+            android:imeOptions="actionNext"
+            android:inputType="textUri"
+            android:maxLines="1"
+            tools:ignore="TextFields" />
+    </com.google.android.material.textfield.TextInputLayout>
+
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="@dimen/space_12"
+        android:labelFor="@id/et_port"
+        android:paddingStart="@dimen/screen_gutter"
+        android:paddingEnd="@dimen/screen_gutter"
+        android:text="@string/server_lab_port3"
+        android:textAppearance="@style/TextAppearance.App.Title.Medium" />
+
+    <com.google.android.material.textfield.TextInputLayout
+        android:id="@+id/til_port"
+        style="@style/Widget.Departament.TextField"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="@dimen/screen_gutter"
+        android:layout_marginTop="@dimen/space_8"
+        android:layout_marginEnd="@dimen/screen_gutter"
+        app:helperText="@string/srv_hint_port">
+
+        <!-- Цифровое поле берёт брендовую цифру поверх шрифта поля: 3.4, «brand -
+             цифры, единицы, латинские технические токены». -->
+        <com.google.android.material.textfield.TextInputEditText
+            android:id="@+id/et_port"
+            style="@style/Widget.Departament.TextField.EditText"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:imeOptions="actionNext"
+            android:inputType="number"
+            android:maxLines="1"
+            tools:ignore="TextFields" />
+    </com.google.android.material.textfield.TextInputLayout>
+</LinearLayout>

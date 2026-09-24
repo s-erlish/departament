@@ -1,0 +1,937 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  ============================================================================
+  ГЛАВНАЯ. The screen the app opens on.
+  ============================================================================
+
+  READ THIS BEFORE CHANGING THE SHAPE OF THIS FILE.
+
+  `docs/design2026/13-start-screen.md` carries an OWNER OVERRULE dated 2026-07-26:
+  its SCOPE is void and only its VISUAL language survives. A wave built this screen
+  "from nothing" out of that document, replaced the inline server list and the
+  subscription card with two navigation rows, and replaced the connect object -
+  concentric rings, the running animation, the country flag - with a bare disc. The
+  owner compared the two builds and rejected it:
+
+      «как выглядела главная по функционалу такая и должна остаться»
+      «и дизайн кнопки другой совсем, хотя был другой раньше и анимация была»
+      «все должно быть вернуто с пилюлей и инфой о подписке под кнопкой»
+
+  So: **Главная is a RESTYLE.** Same controls, same capabilities, same information,
+  same motion, drawn on the component layer with tokens and the type ramp.
+
+  WHAT IS ON THIS SCREEN, top to bottom:
+
+      [ 56 ] the account row, FIRST                   layout_home_account.xml
+      [ 48 ] the add action, alone on its line, right
+      [ 56 ] the «Привязать Telegram» banner, in one state only
+      [  1 ] hairline, alpha 0 until the content scrolls
+      [ 48 ] the status strip, only when a condition applies
+      [ 24 ]
+      [214 ] the connect object: three concentric rings, one disc, one glyph
+      [ 16 ]
+      [ 28 ] the status pill: Не подключено / Подключаемся… / Подключено
+      [ 24 ] the ledger: ↑ 1,0 KB/s   00:11:52   ↓ 1,2 KB/s   - one line, no captions
+      [ 22 ] the flag and the server, ONE centred line in the accent, bold
+      [ 24 ]
+      [  * ] the subscription card, one page per subscription
+      [  * ] the server list, inline - this is the ONLY place a server is picked
+      [ 24 ]
+
+  THE ACCOUNT ROW IS AT THE TOP AND THE LEDGER HAS NO CAPTIONS, and both are the owner
+  measuring this build against the one he approved, on 2026-08-03:
+
+      «плюсик лучше сделать ниже аккаунта»          - the add action held the first band
+      «↑ 1,0 KB/s  00:11:52  ↓ 1,2 KB/s»            - one line, arrows, no labels
+      «No «Отключено» word above it, and no grey circular flag tile»
+
+  Do not put the stacked «Отдача, Мбит/с» / «Время сессии» / «Приём, Мбит/с» captions
+  back, and do not put a status word above the server line. Read the notes at each.
+
+  or, when there is not one server to connect to, the gate block in place of the
+  card and the list (layout_home_empty.xml). Never both.
+
+  ONE OF THE GATE'S FOUR SHAPES IS NOT THIS SCREEN AT ALL. In SIGN_IN — signed out,
+  no servers — README §2 asks for НАЧАЛЬНЫЙ ЭКРАН: the gate block alone, centred
+  vertically, and the shell has already taken the bottom navigation away
+  (MainActivity.updateBottomNavVisibility) on that same condition. Every band listed
+  above is switched off for it by HomeFragment.paintSlot and the block is floated by
+  @id/onboard_lead / @id/onboard_trail at the bottom of this file. The other three
+  shapes are ordinary Главная with a gate in the slot, and keep all of it.
+
+  THE RINGS ARE BACK AND THEY ARE NOT DECORATION. The connect object's own three
+  concentric rings are its state channel - one hue at three opacities, a geometry
+  that never changes size - and they are the reason the owner recognised the screen.
+  They come back. The halo glow does not.
+
+  THE BLUE GROUND IS THE OWNER'S, AND THIS ROOT MUST STAY TRANSPARENT.
+  The shell (`activity_main.xml`, `home_root`) paints `@drawable/bg_home_gradient` -
+  the brand's blue ground, with a light and a `drawable-night` twin - behind every
+  tab. Настройки and Аккаунт let it through; this file used to paint
+  `?android:attr/colorBackground` over it, an opaque flat token that covered the
+  gradient in BOTH themes. That is exactly what the owner reported on 2026-08-02:
+  «синего фона нет на светлой и темной версии на главной». The blue was never
+  removed from the tokens - it was hidden by one attribute on one view.
+  So: `@android:color/transparent`. The screen's ground is the shell's gradient, and
+  the mono overlay's neutral variant reaches it through
+  `MainActivity.applyThemeDecorations`. Do not reintroduce an opaque fill here.
+
+  ZERO RAW VALUES, AND NO EXCEPTIONS LEFT. No dp, no sp, no hex, no fontFamily, no
+  textSize anywhere in this file - every number is a token and every text element
+  carries only a textAppearance.
+
+  The connect object was the last holdout: the 2026-08 handoff §4 re-measured it at
+  214dp overall, 150dp disc, the active ring at inset 22 (so the sweep travels a
+  170dp circle) and a 68dp shield, while `res/values/` still belonged to the
+  foundation wave and `@dimen/connect_disc` still read 176. The four numbers were
+  written out here under a note asking for tokens rather than silently forked into
+  a second set of names. The foundation wave is over and they landed:
+  @dimen/connect_object, @dimen/connect_sweep, @dimen/connect_disc and
+  @dimen/shield_glyph now carry them, and dimens.xml holds the note about why the
+  four move together.
+
+  clipChildren / clipToPadding are false the whole way down because the confirm
+  ring scales past its own frame: 170dp thrown to 1.6x is 272dp around a 214dp
+  box, so `connect_frame`, `home_content` and `home_tab_root` all have to stop
+  trimming their own child. It stops at `home_tab_root`. `tab_host` above it
+  keeps its clip and must: it carries the status-bar inset as padding, and that
+  is the one place unclipping puts content over the system bar. It costs the
+  ring nothing — tab_host trims `home_tab_root` to `home_tab_root`'s bounds, and
+  those are the whole screen.
+-->
+<androidx.core.widget.NestedScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/home_tab_root"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@android:color/transparent"
+    android:clipChildren="false"
+    android:clipToPadding="false"
+    android:fillViewport="true"
+    android:scrollbars="none">
+
+    <LinearLayout
+        android:id="@+id/home_content"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:clipChildren="false"
+        android:clipToPadding="false"
+        android:orientation="vertical"
+        android:paddingBottom="@dimen/space_24">
+
+        <!-- THE ACCOUNT ROW IS THE FIRST THING ON THE SCREEN, and that is an owner
+             instruction, not a preference: «сверху где отображается на главной аккаунт
+             типа управление аккаунтом, оно НЕ В САМОМ ВЕРХУ, выше плюсик и это лишнее
+             пространство занимает, плюсик лучше сделать НИЖЕ аккаунта». The add action
+             used to hold a 48dp band above it, holding nothing else since the ledger
+             moved under the connect object, so the screen opened on an empty strip.
+
+             Rows bleed to the screen edge so their press feedback does; each row
+             carries the 16dp gutter itself, from @style/Widget.Departament.Row. -->
+        <include
+            android:id="@+id/layout_home_account"
+            layout="@layout/layout_home_account" />
+
+        <!--
+          THE ADD ACTION, UNDER THE ACCOUNT ROW. Adding a subscription is the one thing
+          this screen owns that is not the connection, so it sits alone at the right and
+          opens the SAME menu every other add entry point does. 48dp box, 24dp glyph:
+          the touch-target floor with no fixed height on its row.
+
+          THE LEDGER USED TO SHARE ITS LINE, AND IT DOES NOT ANY MORE. отдача · время
+          сессии · приём now sit UNDER the connect object — «скорость почему-то вверху,
+          хотя должны быть под кнопкой» — which is also where the desktop carries them
+          (ConnectHeroView.axaml, StatsRow: «Стата-строка ПОД щитом, НАД именем
+          сервера»). See @id/numeric_strip.
+        -->
+        <LinearLayout
+            android:id="@+id/home_top_row"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:baselineAligned="false"
+            android:gravity="center_vertical|end"
+            android:orientation="horizontal"
+            android:paddingStart="@dimen/screen_gutter"
+            android:paddingEnd="@dimen/space_4">
+
+            <!-- No background at all, and @anim/press_icon for the response. The
+                 borderless ripple that used to be here has been transparent product-wide
+                 since colorControlHighlight was cleared (themes.xml), so «+» answered a
+                 tap with nothing whatever — and §1 puts an icon on the 0.88 rung.
+
+                 ITS PADDING IS ASYMMETRIC AND THAT IS THE ALIGNMENT. 12 all round drew
+                 the glyph in the middle of the box, and ic_add_24dp leaves 5dp of its own
+                 viewport empty behind its ink, so the «+» stopped at 21 from the screen
+                 edge while the title, the cards and every row under it stop at 16 — «вот
+                 нашел что плюсик сверху он левее, надо правее опять сделать». 17 / 7
+                 moves the GLYPH the 5dp instead of moving the box, which keeps the whole
+                 48dp target on screen and leaves the popup anchored to this box where it
+                 was. It is safe here and only here: with no background there is no press
+                 plate to be left behind by an off-centre glyph. See
+                 @dimen/home_add_pad_lead. -->
+            <ImageView
+                android:id="@+id/btn_home_add"
+                android:layout_width="@dimen/view_height_dp48"
+                android:layout_height="@dimen/view_height_dp48"
+                android:background="@null"
+                android:stateListAnimator="@anim/press_icon"
+                android:clickable="true"
+                android:contentDescription="@string/home_add_subscription"
+                android:focusable="true"
+                android:paddingStart="@dimen/home_add_pad_lead"
+                android:paddingTop="@dimen/space_12"
+                android:paddingEnd="@dimen/home_add_pad_trail"
+                android:paddingBottom="@dimen/space_12"
+                android:scaleType="fitCenter"
+                app:srcCompat="@drawable/ic_add_24dp"
+                app:tint="?attr/colorOnSurface" />
+        </LinearLayout>
+
+        <!--
+          THE «ПРИВЯЗАТЬ TELEGRAM» BANNER, restored from 5e8cd54 (owner rule,
+          2026-08-02: an element that was on screen and is now gone is a
+          regression).
+
+          It exists for exactly one state, and nothing else on this screen covers
+          it: a user who PASTED a departament подписка and has never signed in. He
+          has servers, so there is no gate block at all; and the gate's own
+          «Привязать Telegram» secondary belongs to the signed-in-with-no-подписка
+          shape, so it never reaches him.
+
+          DISMISSIBLE, and the dismissal is remembered: this is an offer, not an
+          error, and an offer that returns on every launch is nagging. The ✕ is a
+          40dp target beside a row that is itself the primary action, which is the
+          one place two targets on one line are sanctioned (a banner is not a row).
+        -->
+        <LinearLayout
+            android:id="@+id/cta_link_telegram"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="@dimen/screen_gutter"
+            android:layout_marginTop="@dimen/space_8"
+            android:layout_marginEnd="@dimen/screen_gutter"
+            android:background="@drawable/bg_server_card"
+            android:baselineAligned="false"
+            android:clickable="true"
+            android:focusable="true"
+            android:gravity="center_vertical"
+            android:minHeight="@dimen/row_min_height"
+            android:orientation="horizontal"
+            android:paddingStart="@dimen/space_12"
+            android:paddingTop="@dimen/space_8"
+            android:paddingEnd="@dimen/space_4"
+            android:paddingBottom="@dimen/space_8"
+            android:stateListAnimator="@anim/press_scale"
+            android:visibility="gone"
+            tools:visibility="visible">
+
+            <ImageView
+                android:layout_width="@dimen/tile_glyph"
+                android:layout_height="@dimen/tile_glyph"
+                android:importantForAccessibility="no"
+                android:src="@drawable/ic_telegram_24dp" />
+
+            <TextView
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="@dimen/space_12"
+                android:layout_weight="1"
+                android:text="@string/auth_link_telegram_cta"
+                android:textAppearance="@style/TextAppearance.App.Subtitle" />
+
+            <!-- Same as «+» above: the ripple named here draws nothing. The scale comes
+                 from Kotlin (HomeFragment.wireLinkCta) rather than from a
+                 stateListAnimator, because this one is TEXT and needs the hardware layer
+                 pressFeedback adds — грабля №1, a glyph that twitches on the rebound. -->
+            <TextView
+                android:id="@+id/btn_cta_dismiss"
+                android:layout_width="@dimen/view_height_dp48"
+                android:layout_height="@dimen/view_height_dp48"
+                android:background="@null"
+                android:clickable="true"
+                android:contentDescription="@string/auth_link_telegram_cta_dismiss"
+                android:focusable="true"
+                android:gravity="center"
+                android:text="✕"
+                android:textAppearance="@style/TextAppearance.App.Subtitle"
+                android:textColor="?attr/colorOnSurfaceVariant" />
+        </LinearLayout>
+
+        <!--
+          THERE IS NO HAIRLINE HERE ANY MORE, and its removal is the owner's:
+          «полоска появляется под плюсиком и над кнопкой подключения».
+
+          It was a full-bleed 1dp rule that faded in the instant the page scrolled
+          one pixel. That is a STICKY-HEADER affordance — it exists to separate a
+          pinned header from content moving under it — and this screen has no pinned
+          header: the account row and the «+» scroll away with everything else, and
+          the rule scrolled with them. So it never divided anything. It just drew a
+          line across the screen between the «+» and the connect object the moment
+          the user touched the page.
+
+          Nothing replaces it. The screen's separation is rhythm and the 16dp gutter,
+          which is what every other surface in the product uses.
+        -->
+
+        <!-- The shared status-strip component in its INLINE placement: a persistent
+             CONDITION, no auto-dismiss. Its hairline is hidden and its bar is
+             clipped to @dimen/radius_control from HomeFragment, which is the only
+             difference from the shell's docked placement of the same file. -->
+        <include
+            android:id="@+id/layout_status_strip"
+            layout="@layout/view_status_strip"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="@dimen/screen_gutter"
+            android:layout_marginTop="@dimen/space_12"
+            android:layout_marginEnd="@dimen/screen_gutter" />
+
+        <!-- The three rhythm gaps of the connect block carry ids for ONE reason: the
+             начальный экран takes the block away (see @id/onboard_lead below) and
+             64dp of spacing between things that are no longer there is 64dp the
+             centred gate block would be pushed down by. They are ordinary spacers
+             in every other state. -->
+        <Space
+            android:id="@+id/gap_before_connect"
+            android:layout_width="match_parent"
+            android:layout_height="@dimen/space_24" />
+
+        <!--
+          THE CONNECT OBJECT. THREE CONCENTRIC RINGS, ONE DISC, ONE GLYPH.
+
+          The rings are the reason the owner recognised the screen, and the reason he
+          did not recognise the build that dropped them. They are not decoration
+          around the object - they ARE the object's state channel: one colour at
+          three rising opacities, outermost faintest, so the whole assembly reads
+          idle grey, negotiating amber-blue, connected accent, failed red, on a
+          geometry that never changes size.
+
+          THE WHOLE ASSEMBLY IS THE CONTROL. connect_frame is a flat 214dp box of touch
+          target - handoff §4, down from 224 - and @anim/press_connect scales rings, disc
+          and shield together at 0.97, because they are one object. The ring colours, the
+          ripple and the 2dp focus ring are built in HomeFragment from theme attributes -
+          a drawable file cannot carry a runtime-tinted stroke without the raw hex the old
+          bg_connect_ring.xml shipped, and two of that file's six hex literals
+          measured 2.33:1 and 1.29:1 against the ground.
+
+          IT IS AN EXPLICIT SQUARE AND NOT wrap_content + padding, and the sweep is why.
+          §4 puts the active ring at inset 22, i.e. on a 170dp circle, and the disc at
+          150 - so the arc has to be WIDER than the disc it used to ride. A wrap_content
+          frame would have grown to fit that child (170 + padding = 234) and the object
+          would have come out 20dp too big. A fixed 214 box holds every part at the size
+          the handoff measured and cannot be dragged out of shape by any child.
+
+          The banned parts of the old hero did NOT come back with the rings: there is
+          no accent glow bleeding out behind the shield and no page gradient under
+          the screen. The breathing that used to live on that glow lives on the rings
+          now, where it is the object telling you it is negotiating.
+
+          IT IS ALIVE AT REST TOO, AND THE PRESS GOES THREE LAYERS DEEP. The owner:
+          «при нажатии на кнопку практически нет никакой анимации, только пульсация, а
+          на ПК по другому анимация сделана». Both halves of that are the desktop's, and
+          both are here now:
+
+            - the AMBIENT layer (HomeFragment.startAmbient) - a six-second breath on the
+              two outer rings and a wave leaving the disc (@id/connect_ring_ambient),
+              running at rest AND while connected, out of phase so the pair reads as
+              alive rather than as a metronome. It stands down for the negotiating
+              breath, under reduced motion, and while the app is in the background.
+              ConnectHeroView.axaml: AmbientRing.breathe-idle/-live +
+              AmbientSonar.rest-idle/-live.
+            - the PARALLAX PRESS - @anim/press_scale 0.97 on this frame, @anim/press_dip
+              0.97 again on the disc, and once more on the glyph, composing to the
+              desktop's own 0.94 disc and 0.91 glyph. Plus the scrim already here.
+        -->
+        <FrameLayout
+            android:id="@+id/connect_frame"
+            android:layout_width="@dimen/connect_object"
+            android:layout_height="@dimen/connect_object"
+            android:layout_gravity="center_horizontal"
+            android:clickable="true"
+            android:clipChildren="false"
+            android:clipToPadding="false"
+            android:focusable="true"
+            android:stateListAnimator="@anim/press_connect"
+            tools:ignore="ContentDescription">
+
+            <!-- ALL THREE RINGS ARE LAYERS OF THIS VIEW'S BACKGROUND, at §4's insets:
+                 outer 0 / 1.5dp, middle 10dp / 1.5dp, inner 22dp / 2dp - the inner one
+                 being the ACTIVE ring, the one the negotiating arc rides and the one
+                 that carries the connected hue at full strength. They are layers rather
+                 than views because three empty views would cost three measure passes to
+                 draw three ovals, and because a LayerDrawable's insets are exactly the
+                 language §4 states the geometry in.
+
+                 The inner ring used to be the DISC's own edge, which was right while the
+                 disc was 176 inside a 224 box and wrong now: at 150 inside 214 the disc
+                 sits 10dp inboard of the active ring, so the ring cannot be its border.
+                 The disc keeps its fill and nothing else. All of it is built in
+                 HomeFragment.buildConnectObject. -->
+            <!-- THE AMBIENT WAVE IS RETIRED, and its View with it.
+
+                 It was a fourth ring under the disc, looping outwards on a 6-second
+                 scale-and-fade at rest and a 5.5-second one while connected. Handoff §4
+                 does not have it: «Кольцо не пульсирует постоянно — только меняет
+                 яркость, БЕЗ МАСШТАБА» (§11 grabl 8), and its state table gives the object
+                 exactly three looks — muted and STATIC when off, one travelling arc while
+                 negotiating, and a slow 5.5s brightness decay once connected. A permanent
+                 scale loop is the one thing all three of those rule out, so the loop is
+                 gone and the decay (HomeFragment.settleRing, @integer/motion_ring_fade) is
+                 what says "alive" now.
+
+                 The View is gone rather than left at alpha 0: an invisible child still
+                 measures and lays out on every pass of a frame that is re-measured with
+                 the scroll. What it taught is worth keeping though, so: a child of this
+                 frame MUST be sized in dp. This frame is wrap_content inside a
+                 fillViewport ScrollView, a bare View returns its AT_MOST size verbatim
+                 (View.getDefaultSize), and a `match_parent` child therefore swallowed the
+                 whole remaining viewport and dragged the frame — and its two background
+                 ovals — out with it, in both axes. That is what the owner saw as «two
+                 gigantic flattened ovals» and as a first-run screen whose buttons had been
+                 pushed off the bottom. The sweep and the disc below are sized by
+                 @dimen/connect_sweep and @dimen/connect_disc for that reason — an absolute
+                 length, never match_parent — and must stay that way. -->
+
+            <!-- THE NEGOTIATING SWEEP, AND IT RIDES THE ACTIVE RING (§4, code_reference
+                 «Кнопка подключения»: `circle r=85 stroke-width=2` in a 214 box, i.e. the
+                 inner ring at inset 22). ONE arc, never a train of segments — §11 grabl 7 —
+                 which `indeterminateAnimationType=disjoint` gives.
+
+                 §4's «оборот 1100 мс» IS THE NUMBER NOW, and this view is why it finally
+                 is. It used to be a Material `CircularProgressIndicator`, which owns its
+                 own clock — the revolution lives in IndeterminateAnimatorDelegate, there
+                 is no attribute and no setter for it, and its `disjoint` arc additionally
+                 GROWS AND SHRINKS as it travels. Frame-by-frame against the prototype
+                 («Прототип departament (один файл).html», Главная, «Нажмите щит») that is
+                 plainly a different animation: the design's arc is a FIXED 19.5% of the
+                 circle turning at a steady 1100ms, and it never changes length.
+
+                 So this is now what the prototype itself is: one static arc
+                 (@drawable/ic_connect_arc, cut at the prototype's own r=85 / stroke 2 /
+                 dasharray 104-of-534) turned by ONE infinite ObjectAnimator on ROTATION at
+                 @integer/motion_spin, linear — the route @id/flow_arc already takes on the
+                 прогрузка ring (FlowOverlay.startArc). One animator, stopped when the arc
+                 goes and when the app leaves the foreground; no drawable-owned clock left
+                 to disagree with the token.
+
+                 214dp AND NOT 170: the vector's viewport IS 214, so the arc's own radius
+                 of 85 places it on the active ring without this view having to know where
+                 that ring is. The static inner ring underneath IS its track, so the arc
+                 carries no track of its own.
+
+                 The entrance out of rest stays ours (HomeFragment.playArcWindUp) but it is
+                 opacity now, not rotation: rotation belongs to the 1100ms revolution and
+                 two animators on one property is how the steady spin used to be snapped. -->
+            <ImageView
+                android:id="@+id/connect_sweep"
+                android:layout_width="@dimen/connect_object"
+                android:layout_height="@dimen/connect_object"
+                android:layout_gravity="center"
+                android:importantForAccessibility="no"
+                android:visibility="gone"
+                app:srcCompat="@drawable/ic_connect_arc"
+                app:tint="?attr/colorAccentFigure"
+                tools:visibility="visible" />
+
+            <!-- THE CONFIRM PAYOFF — «При подтверждении — один сонар» (§4), emitted at the
+                 instant the tunnel confirms and by no other event in the product.
+
+                 IT RIDES THE ACTIVE RING, NOT THE DISC, and that is the correction this
+                 pair needed. The prototype draws it at `inset:22px` inside the 214 box —
+                 the same 170dp circle the arc travels — and throws it out to 1.6×, i.e.
+                 272dp, well clear of the whole object. These two Views used to be children
+                 of @id/connect_disc at 150dp and travelled to 1.35×, which lands at 202dp:
+                 INSIDE the outermost ring, so the confirmation never actually left the
+                 object. Frame 2230ms of the prototype's cycle shows the ring already
+                 outside all three. So they are siblings of the arc now, at
+                 @dimen/connect_sweep, and the prototype's own 1 → 1.6 at full opacity is
+                 what HomeFragment.emitConfirmRings plays.
+
+                 THEY MOVE ON THEIR OWN AND NOT THROUGH THIS FRAME. The pair used to be
+                 driven by @anim/connect_confirm through View.startAnimation, and a legacy
+                 view animation belongs to the PARENT — this 214dp box resolved it every
+                 frame and applied it inside its own draw, which is the box getting into
+                 the geometry of a circle whose whole purpose is to leave it. They are
+                 property animators on their own RenderNodes now; see the note over
+                 emitConfirmRings for the whole of why. The clipChildren/clipToPadding
+                 above are still required and still stop at @id/home_tab_root.
+
+                 They sit BEFORE the disc so the disc draws over their first frames and the
+                 ring reads as leaving the object's edge, which is the prototype's stacking
+                 order too.
+
+                 The lead ring is the prototype's sonar exactly; the echo follows it a beat
+                 later, dimmer and travelling slightly less far, which is the desktop's
+                 Sonar.pulsing + Sonar.pulsing-echo pair and its own note, «максимум ДВА
+                 кольца, не радар». Neither loops. -->
+            <View
+                android:id="@+id/connect_ring_pulse_echo"
+                android:layout_width="@dimen/connect_sweep"
+                android:layout_height="@dimen/connect_sweep"
+                android:layout_gravity="center"
+                android:importantForAccessibility="no"
+                android:visibility="invisible" />
+
+            <View
+                android:id="@+id/connect_ring_pulse"
+                android:layout_width="@dimen/connect_sweep"
+                android:layout_height="@dimen/connect_sweep"
+                android:layout_gravity="center"
+                android:importantForAccessibility="no"
+                android:visibility="invisible" />
+
+            <FrameLayout
+                android:id="@+id/connect_disc"
+                android:layout_width="@dimen/connect_disc"
+                android:layout_height="@dimen/connect_disc"
+                android:layout_gravity="center"
+                android:clipChildren="false"
+                android:duplicateParentState="true"
+                android:stateListAnimator="@anim/press_dip">
+
+                <!-- PRESS DEPTH. The disc darkens into the press — the desktop's
+                     «колодец» (ConnectHeroView.axaml PressScrim, P1-2) — under the
+                     shield, which draws over it and stays solid. It duplicates the
+                     frame's pressed state through the disc, so @anim/press_scrim runs
+                     in unison with @anim/press_scale on the frame; the object now has
+                     the depth as well as the scale. Not hit-testable: the tap belongs
+                     to the frame. -->
+                <View
+                    android:id="@+id/connect_press_scrim"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:layout_gravity="center"
+                    android:alpha="0"
+                    android:background="@drawable/bg_connect_press_scrim"
+                    android:duplicateParentState="true"
+                    android:importantForAccessibility="no"
+                    android:stateListAnimator="@anim/press_scrim" />
+
+                <!-- Two shields, crossfaded. Never tint-animated: the filled shield
+                     is accent from frame zero and only its alpha moves.
+
+                     THE GLYPH SINKS DEEPER THAN THE DISC. @anim/press_dip runs on both
+                     shields as well as on the disc, so the press composes frame 0.97 ->
+                     disc 0.97 -> glyph 0.97 and the glyph is pressed INTO the disc
+                     rather than carried by it. That is the desktop's parallax dip
+                     (ConnectHeroView.axaml.cs, «глиф вдавливается в диск чуть глубже
+                     самого диска») and its figures land within a thousandth of ours.
+                     duplicateParentState is what feeds them the frame's pressed state
+                     through the disc. -->
+                <ImageView
+                    android:id="@+id/shield_outline"
+                    android:layout_width="@dimen/shield_glyph"
+                    android:layout_height="@dimen/shield_glyph"
+                    android:layout_gravity="center"
+                    android:duplicateParentState="true"
+                    android:importantForAccessibility="no"
+                    android:stateListAnimator="@anim/press_dip"
+                    app:srcCompat="@drawable/ic_shield_outline"
+                    app:tint="?attr/colorOnSurfaceVariant" />
+
+                <ImageView
+                    android:id="@+id/shield_filled"
+                    android:layout_width="@dimen/shield_glyph"
+                    android:layout_height="@dimen/shield_glyph"
+                    android:layout_gravity="center"
+                    android:alpha="0"
+                    android:duplicateParentState="true"
+                    android:importantForAccessibility="no"
+                    android:stateListAnimator="@anim/press_dip"
+                    app:srcCompat="@drawable/ic_shield_filled"
+                    app:tint="?attr/colorAccentFigure" />
+            </FrameLayout>
+        </FrameLayout>
+
+        <Space
+            android:id="@+id/gap_after_connect"
+            android:layout_width="match_parent"
+            android:layout_height="@dimen/space_16" />
+
+        <!--
+          THE STATUS PILL. Outlined, 14sp/500, and ON SCREEN IN EVERY STATE.
+
+          THREE STATES, AND THAT IS AN OWNER DECISION OF 2026-08-04 that reverses his own
+          earlier one. This pill shipped as a one-state CONFIRMATION — present only while
+          the tunnel was up — because on 2026-08-03 he had the word «Отключено» taken out
+          of this region («No «Отключено» word above it»). The 2026-08 handoff §4 asks for
+          a field instead: «Пилюля статуса — контурная, 14sp/500. Не подключено /
+          Подключаемся… / Подключено», and asked directly, he chose the handoff. So the
+          pill is a status readout again, it never leaves, and HomeFragment.paintStatusPill
+          resolves the three words.
+
+          IT NO LONGER MOVES THE SCREEN. As a confirmation it was GONE at rest and the
+          ledger under it slid 28dp on every connect and disconnect — acceptable for a
+          badge that is usually absent, wrong for a field that is always there. Always
+          laid out means the block below it is nailed down in every state, which is the
+          same rule the identity line under it already follows.
+
+          IT IS NOT ON THE IDENTITY LINE, and that half of the instruction stands. The line
+          below the ledger keeps naming the server; the state lives HERE, above the ledger,
+          which is also where the desktop puts it (ConnectHeroView.axaml StatusText: the
+          state under the shield, the stats row under that, the server name last).
+
+          The outline and the label are tinted together, per state, in Kotlin — the shape
+          is @drawable/bg_status_pill with its stroke tinted through backgroundTintList,
+          so there is one description of the pill and not three drawables.
+        -->
+        <TextView
+            android:id="@+id/tv_connected_pill"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center_horizontal"
+            android:layout_marginBottom="@dimen/space_12"
+            android:background="@drawable/bg_status_pill"
+            android:gravity="center"
+            android:paddingStart="@dimen/space_12"
+            android:paddingTop="@dimen/space_4"
+            android:paddingEnd="@dimen/space_12"
+            android:paddingBottom="@dimen/space_4"
+            android:text="@string/home_not_connected"
+            android:textAppearance="@style/TextAppearance.App.Body"
+            android:textColor="?attr/colorOnSurfaceVariant"
+            android:textFontWeight="500"
+            tools:ignore="UnusedAttribute" />
+
+        <!--
+          THE STATUS LINE, AND IT IS TWO LINES AND NEVER THREE: the ledger, then the
+          server. This and an empty state are the only centred text in the product.
+
+          THE STATUS WORD ABOVE THE SERVER IS GONE. The owner measured this build
+          against the one he approved and reported the difference: «No «Отключено»
+          word above it, and no grey circular flag tile». Nothing is lost with it —
+          the word only ever repeated what the object beside it was already saying in
+          colour (grey idle, accent connected, red failed), and the ONE line below the
+          ledger now carries the server when there is one and the state word when
+          there is not, which is what the reference build did. See paintStatusLine.
+        -->
+        <LinearLayout
+            android:id="@+id/status_line"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:accessibilityLiveRegion="polite"
+            android:gravity="center_horizontal"
+            android:orientation="vertical"
+            android:paddingStart="@dimen/screen_gutter"
+            android:paddingEnd="@dimen/screen_gutter">
+
+            <!--
+              THE LEDGER: ↑ отдача · время сессии · ↓ приём, ONE COMPACT LINE with no
+              captions under it, UNDER the connect object and ABOVE the server. That is
+              the reference build, described by the owner to the character — «↑ 1,0 KB/s
+              00:11:52 ↓ 1,2 KB/s», blue arrows, tabular figures, the timer in the
+              middle — and the stacked «Отдача, Мбит/с» / «Время сессии» / «Приём,
+              Мбит/с» captions this build grew are what he rejected. It is also the
+              desktop's order (ConnectHeroView.axaml StatsRow, «ПОД щитом, НАД именем
+              сервера»).
+
+              THE ARROW IS THE LABEL. It costs one accent glyph instead of a two-word
+              caption, it needs no translation, and it is what the anchor build drew.
+              The unit rides WITH the value (0 КБ/с -> 1,2 МБ/с), because that is what
+              the owner's screenshot shows; the caption that used to own the unit no
+              longer exists to hold it. The unit is Russian since the copy pass: the
+              same figures as his «1,0 KB/s», in the words the rest of the app uses
+              («12,4 ГБ»), and @string/home_speed_zero is exactly Long.toSpeedString's
+              zero.
+
+              THE TWO VALUES HANG OFF THE CENTRE, AND THAT IS WHY THIS ROW LOOKED
+              CROOKED. Three equal weights already put the timer on the true centre
+              line, but each value carried `minEms="4"` and no gravity, so the reserve's
+              slack sat AFTER the digits on both sides: on the left it fell between the
+              value and the timer, on the right it fell outside everything. The screen
+              read «↑ 1,0 KB/s␣␣␣␣␣␣ 00:11:52 ↓ 1,2 KB/s» — one gap ~32dp wider than the
+              other, which is exactly what the owner measured.
+
+              The reserve is gone and the two groups are pinned by their INNER edge
+              instead: the up column is `end`-aligned in its third, the down column is
+              `start`-aligned in its own. Both inner edges are one third from the middle,
+              so the gap either side of the timer is identical AT EVERY VALUE WIDTH, and
+              a value that grows grows OUTWARD, away from the timer, instead of pushing
+              at it. Nothing on the inner edge can move, which is what the reserve was
+              added to guarantee, and the arrow stays welded to its own number rather
+              than to a fixed-width box the number floats inside.
+
+              @style/TextAppearance.App.Numeric puts tabular figures on both, so a value
+              changing 1,0 -> 9,9 is zero motion; only a digit-count or unit change moves
+              the outer edge at all.
+
+              The strip is on screen at rest, reading zeroes, exactly as it was: this
+              is the screen's ledger, not a reward for connecting, and a row that
+              vanishes when idle is a row the user cannot find. HomeFragment lands the
+              figures on it while a tunnel is up and returns them to zero when it goes.
+            -->
+            <LinearLayout
+                android:id="@+id/numeric_strip"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/space_8"
+                android:baselineAligned="false"
+                android:gravity="center_vertical"
+                android:orientation="horizontal">
+
+                <LinearLayout
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:baselineAligned="true"
+                    android:gravity="end|center_vertical"
+                    android:orientation="horizontal">
+
+                    <TextView
+                        android:id="@+id/tv_up_arrow"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginEnd="@dimen/space_4"
+                        android:contentDescription="@string/home_strip_up_label"
+                        android:text="@string/home_strip_up_arrow"
+                        android:textAppearance="@style/TextAppearance.App.Subtitle"
+                        android:textColor="?attr/colorPrimary" />
+
+                    <TextView
+                        android:id="@+id/tv_up"
+                        style="@style/TextAppearance.App.Numeric"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:maxLines="1"
+                        android:text="@string/home_speed_zero"
+                        android:textAppearance="@style/TextAppearance.App.Subtitle"
+                        tools:text="1,0 КБ/с" />
+                </LinearLayout>
+
+                <!-- The session clock. Dead centre, because "how long have I been
+                     protected" is a different question from "how fast is it". -->
+                <TextView
+                    android:id="@+id/tv_uptime"
+                    style="@style/TextAppearance.App.Numeric"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:gravity="center"
+                    android:maxLines="1"
+                    android:text="@string/home_uptime_zero"
+                    android:textAppearance="@style/TextAppearance.App.Title"
+                    tools:text="00:11:52" />
+
+                <LinearLayout
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:baselineAligned="true"
+                    android:gravity="start|center_vertical"
+                    android:orientation="horizontal">
+
+                    <TextView
+                        android:id="@+id/tv_down_arrow"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginEnd="@dimen/space_4"
+                        android:contentDescription="@string/home_strip_down_label"
+                        android:text="@string/home_strip_down_arrow"
+                        android:textAppearance="@style/TextAppearance.App.Subtitle"
+                        android:textColor="?attr/colorPrimary" />
+
+                    <TextView
+                        android:id="@+id/tv_down"
+                        style="@style/TextAppearance.App.Numeric"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:maxLines="1"
+                        android:text="@string/home_speed_zero"
+                        android:textAppearance="@style/TextAppearance.App.Subtitle"
+                        tools:text="1,2 КБ/с" />
+                </LinearLayout>
+            </LinearLayout>
+
+            <!-- WHAT IT RUNS THROUGH: the flag and the server, ONE centred line under
+                 the ledger, in the accent and bold. This is the second of the three
+                 questions this screen answers, and in the reference build it is the
+                 only text under the object.
+
+                 THE FLAG IS A BARE GLYPH. It used to sit in a grey circular tile
+                 (@drawable/bg_flag_tile) and the owner named that as a difference from
+                 what he had: a tile is a LIST affordance — it gives the rows below a
+                 common leading edge — and there is no column to align to here, so all
+                 it did was hang a grey disc off the middle of a centred line.
+
+                 ALWAYS VISIBLE, and that is what keeps the block below it still: the
+                 line resolves to a server, a state word or an instruction in every
+                 state there is, so it never has to be emptied and nothing under it can
+                 move. It starts INVISIBLE only for the frames before the first render.
+                 -->
+            <LinearLayout
+                android:id="@+id/server_identity"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/space_12"
+                android:baselineAligned="true"
+                android:gravity="center"
+                android:minHeight="@dimen/tile_glyph"
+                android:orientation="horizontal"
+                android:visibility="invisible"
+                tools:visibility="visible">
+
+                <TextView
+                    android:id="@+id/tv_server_flag"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginEnd="@dimen/space_8"
+                    android:gravity="center"
+                    android:importantForAccessibility="no"
+                    android:textAppearance="@style/TextAppearance.App.Title"
+                    tools:text="🇳🇱" />
+
+                <TextView
+                    android:id="@+id/tv_status_detail"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:ellipsize="end"
+                    android:gravity="center"
+                    android:maxLines="1"
+                    android:textAppearance="@style/TextAppearance.App.Title"
+                    android:textColor="?attr/colorPrimary"
+                    tools:text="Hybrid (Автовыбор)" />
+            </LinearLayout>
+        </LinearLayout>
+
+        <Space
+            android:id="@+id/gap_before_slot"
+            android:layout_width="match_parent"
+            android:layout_height="@dimen/space_24" />
+
+        <!--
+          THE SUBSCRIPTION SLOT. The subscription card and the server list, or the
+          gate block, never both. HomeFragment crossfades between them in place.
+        -->
+        <LinearLayout
+            android:id="@+id/subscription_slot"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical">
+
+            <!--
+              THE SUBSCRIPTION CARD - a swipeable carousel, one page per subscription,
+              carrying that subscription's name, its traffic pill, its last update and
+              auto-update interval, the operator's notice, and its own actions:
+              refresh, ping, pin, support, Telegram, delete (long press), and the
+              chevron that collapses the list below.
+
+              It is a CARD on this screen and not a «Подписка» row that navigates
+              away: the owner's screen shows the subscription here, and the actions
+              act on the page you are looking at.
+
+              ViewPager2 cannot wrap_content, so HomeFragment measures every page and
+              fixes the height to the tallest - one stable height, so peeking
+              neighbours stay aligned. Page dots appear only past one subscription.
+            -->
+            <LinearLayout
+                android:id="@+id/group_home_meta"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical">
+
+                <androidx.viewpager2.widget.ViewPager2
+                    android:id="@+id/vp_home_meta"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:clipToPadding="false"
+                    android:paddingStart="@dimen/screen_gutter"
+                    android:paddingEnd="@dimen/screen_gutter" />
+
+                <LinearLayout
+                    android:id="@+id/ll_home_meta_dots"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="center_horizontal"
+                    android:layout_marginTop="@dimen/space_8"
+                    android:gravity="center_vertical"
+                    android:orientation="horizontal"
+                    android:visibility="gone" />
+            </LinearLayout>
+
+            <!--
+              THE SERVER LIST, INLINE, right below the card that owns it.
+
+              This is the ONLY place in the product a server can be picked: the
+              owner removed the Серверы destination on 2026-07-26 and none of its
+              functions were moved elsewhere, so a Главная without this list would
+              leave the app with no server selection at all.
+
+              Tapping a row SELECTS, and never connects; when a tunnel is up the
+              shell offers an explicit «применить». That contract lives in
+              MainActivity.setSelectServer and is not this screen's to change.
+
+              nestedScrollingEnabled=false: it scrolls with the page, it does not
+              scroll inside it. HomeFragment pads its bottom by the shell's
+              listBottomInset so the last row clears the overlaid bottom bar.
+            -->
+            <androidx.recyclerview.widget.RecyclerView
+                android:id="@+id/rv_home_servers"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/space_8"
+                android:clipToPadding="false"
+                android:nestedScrollingEnabled="false"
+                android:scrollbars="none" />
+
+            <!-- Offline: the card and the rows keep their last value and the screen
+                 says so, rather than emptying. -->
+            <TextView
+                android:id="@+id/tv_stale_hint"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="@dimen/screen_gutter"
+                android:layout_marginTop="@dimen/space_8"
+                android:layout_marginEnd="@dimen/screen_gutter"
+                android:text="@string/home_stale_hint"
+                android:textAppearance="@style/TextAppearance.App.Caption"
+                android:visibility="gone"
+                tools:visibility="visible" />
+        </LinearLayout>
+
+        <!--
+          НАЧАЛЬНЫЙ ЭКРАН (README §2): THE GATE IS THE WHOLE SCREEN, AND IT IS
+          FLOATED, NOT STACKED.
+
+          The gate block has four shapes (PORT-DELTA П-01) and only ONE of them is
+          the start screen. In SIGN_IN — signed out, not one server — README §2
+          asks for the gate block ALONE and centred vertically, and the shell
+          agrees: MainActivity.updateBottomNavVisibility takes the whole bottom
+          navigation off screen on exactly that condition. Everything above this
+          include is switched off for it by HomeFragment.paintSlot, and these two
+          spacers are what put what is left in the middle.
+
+          In BUY, ADD_SUBSCRIPTION, SYNC_SERVERS and SYNC_FAILED the user is signed
+          in or has servers: the screen stays ordinary Главная — account row, «+»,
+          connect object, pill, ledger, server name — with the gate block sitting in
+          the subscription slot's place. These spacers are GONE in all four, and a
+          GONE child contributes neither height nor weight, so they cannot move a
+          single pixel of that screen.
+
+          3 ABOVE, 4 BELOW, which is layout_auth_gate.xml's composition and for the
+          same reason: an even split parks the block on the mathematical centre,
+          while 3:4 puts it a touch above the optical one — where the eye lands, and
+          where the thumb already is. They are the composition and not left-over
+          room: this scroll view is fillViewport, so a short viewport (landscape,
+          split screen, font scale 200%) collapses both to nothing and the column
+          scrolls instead. Nothing is ever clipped.
+        -->
+        <Space
+            android:id="@+id/onboard_lead"
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="3"
+            android:visibility="gone" />
+
+        <include
+            android:id="@+id/layout_gate"
+            layout="@layout/layout_home_empty" />
+
+        <Space
+            android:id="@+id/onboard_trail"
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="4"
+            android:visibility="gone" />
+    </LinearLayout>
+</androidx.core.widget.NestedScrollView>

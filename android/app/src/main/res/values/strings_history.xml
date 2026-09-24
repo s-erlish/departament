@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Dedicated payment history screen -->
+    <string name="history_title">История платежей</string>
+    <string name="history_empty">Платежей пока нет</string>
+    <string name="history_error_network">Ошибка сети. Проверьте подключение</string>
+    <string name="history_error_generic">Не удалось загрузить историю платежей</string>
+</resources>

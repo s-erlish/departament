@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Skeleton block: the card-shaped placeholder. radius_card 20 so it matches the real
+  card it stands in for; no border, because a skeleton has no boundary to promise.
+-->
+<shape xmlns:android="http://schemas.android.com/apk/res/android"
+    android:shape="rectangle">
+    <solid android:color="?attr/colorSurfaceContainerHighest" />
+    <corners android:radius="@dimen/radius_card" />
+</shape>

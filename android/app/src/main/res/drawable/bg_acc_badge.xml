@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  THE TARIFF BADGE — «Base» beside the срок on the account tab, «Текущий» on the
+  buy screen. One shape, because the prototype draws them with one rule:
+
+      padding 3x9, border-radius 100;
+      background: var(accBg);  color: var(accFg);
+
+  `accBg` / `accFg` are #17325C / #CFE0FF, which TOKENS.md records as the
+  primaryContainer PAIR — so the plate is ?attr/colorPrimaryContainer and its
+  label is ?attr/colorOnPrimaryContainer, and every theme answers for itself:
+  #D8E4FF / #001A43 light, #2A2A2E / #FFFFFF mono dark, #E6E6E8 / #111214 mono
+  light. No colour RESOURCE is named here, which is the only reason
+  ThemeOverlay.Mono can reach it.
+
+  radius_pill and not radius_chip: a badge is a lozenge whose width is its word.
+  The fill was ?attr/iconTileBgBlue — a translucent #334C8DFF that belongs to the
+  ICON TILE, not to the accent container, and that reads as a faded plate rather
+  than as the solid the design draws.
+-->
+<shape xmlns:android="http://schemas.android.com/apk/res/android"
+    android:shape="rectangle">
+    <solid android:color="?attr/colorPrimaryContainer" />
+    <corners android:radius="@dimen/radius_pill" />
+</shape>

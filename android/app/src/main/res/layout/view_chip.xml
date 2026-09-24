@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  ============================================================================
+  THE CHIP. A LABEL, never a control.
+  22-components.md 10, 32-master-plan-android.md 8.4.
+  ============================================================================
+
+  Android ships no chip component at all today: five TextViews wearing shape
+  drawables do the job, one of them with 2dp vertical padding, and the protocol chip
+  measures 4.0:1. This is the replacement.
+
+  A chip is NEVER clickable. A clickable pill is a Tertiary button or a Segment —
+  that is the whole boundary between this component and those, and the style already
+  nails it shut (clickable false, checkable false, ensureMinTouchTargetSize false:
+  expanding a label to 48dp would push every row apart for nothing).
+
+  IT NEVER SHRINKS AND NEVER ELLIPSISES ITS OWN LABEL (5.6). It measures
+  wrap_content and the text beside it yields. singleLine is here to keep a chip one
+  line tall, not to truncate it.
+
+  COLOUR IS NEVER THE ONLY SIGNAL (6.3): every status chip carries the WORD. A bare
+  coloured dot next to a label that already states the state is decoration and gets
+  deleted. There is no fourth status hue (R12) — «Отменён» is neutral, because a
+  cancelled payment is not a warning.
+
+  THE CLASS IS A STYLE, AND A STYLE BINDS AT INFLATION. This file is the Neutral
+  class — protocol, transport, «Отменён», «Это устройство». A chip whose class is
+  known at build time declares its own class directly at the call site:
+      style="@style/Widget.Departament.Chip"             neutral, Russian label
+      style="@style/Widget.Departament.Chip.Technical"   Latin token or figure
+      style="@style/Widget.Departament.Chip.Accent"      THE tariff badge, and nothing else
+      style="@style/Widget.Departament.Chip.Status.Ok"   «Оплачено», «Активна»
+      style="@style/Widget.Departament.Chip.Status.Warn" «В обработке», «Истекает»
+      style="@style/Widget.Departament.Chip.Status.Error" «Ошибка», «Истекла»
+  A chip whose class CHANGES at runtime (a subscription's health) needs a binder that
+  maps state to class — see the note filed with the ui/component owner. Do not hand
+  -paint a fill or a text colour onto this view; that is how the four-hue drift
+  started.
+-->
+<com.google.android.material.chip.Chip
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/chip"
+    style="@style/Widget.Departament.Chip"
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content"
+    android:singleLine="true"
+    tools:text="Активна" />

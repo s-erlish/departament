@@ -1,0 +1,101 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    Главная's own measurements — the ones no other screen has a use for.
+
+    A SEPARATE FILE AND NOT `dimens.xml`, for the same reason `strings_hub.xml` and
+    `strings_flow.xml` exist: several waves work this tree at once, `dimens.xml` is
+    the foundation's, and three agents appending to the bottom of one file is three
+    conflicts in the same six lines. Android merges every `values/*.xml` into one
+    table, so a name declared here is a name declared once.
+
+    Nothing here starts a second ladder. Скругления, отступы, движение and the glyph
+    sizes all live in `dimens.xml` / `motion.xml` and are referenced from there;
+    what is below is either a WIDTH measured off one specific string, or an OPTICAL
+    correction, and neither belongs on a shared scale.
+-->
+<resources>
+
+    <!--
+        «Добавить подписку» — the flyout's content width, sized to its longest
+        option, «Добавить из буфера обмена», the same rule the `select_popup_w_*`
+        set already follows. It carries a leading glyph and no check column:
+        [ 10 ][ glyph 18 ][ 10 ][ label ][ 10 ].
+    -->
+    <dimen name="select_popup_w_add">216dp</dimen>
+
+    <!--
+        …and where it hangs. §6's 48 / 8 are measured off a full-width settings row
+        inside a card; @id/btn_home_add is a 48dp icon with a 24dp glyph sitting
+        4dp from the screen edge, so the same pair would open the flyout ON the
+        button's bottom edge and leave its right edge 4dp short of the 16dp gutter
+        every other block on Главная starts from.
+
+        44 puts the top edge 8dp under the glyph's own bottom (12dp of padding +
+        24dp of glyph = 36); 12 puts the right edge on the gutter (4dp of row
+        padding + 12 = 16).
+    -->
+    <dimen name="select_popup_offset_top_add">44dp</dimen>
+    <dimen name="select_popup_offset_right_add">12dp</dimen>
+
+    <!--
+        THE OPTICAL PULL FOR A GLYPH IN A 48dp TOUCH TARGET.
+
+        A 22dp glyph centred in a 48dp box sits 13dp inside it, so a control laid
+        out ON a gutter draws its glyph 13dp off that gutter and reads as indented
+        from every line of text beside it. The sub-page toolbar solves the same
+        problem from the other end (view_toolbar.xml: the back button is inset
+        space_4 so its 24dp glyph lands ON the 16dp gutter); a control already
+        sitting inside a padded card has no inset left to take, so it takes a pull.
+
+        Negative on purpose, and it is NOT a spacing step: nothing may reach for it
+        as a gap. One name, so the next control that needs it does not invent a
+        second number.
+    -->
+    <dimen name="optical_nudge_touch_target">-10dp</dimen>
+
+    <!--
+        THE GAP AFTER THAT SAME BOX, and it is the other half of the pull above.
+
+        The pull moves where the glyph is DRAWN; it does not make the box narrower. The
+        chevron's 48dp box still ends 13dp past the right edge of its 22dp glyph, so a
+        title laid out against the BOX begins 13dp further right than it looks — on top of
+        whatever gap was asked for. With space_8 that made a 21dp trench between the glyph
+        and the first letter of the подписка's name where the design asks for 16, and the
+        owner read it as exactly that: «ник подписки … должно было сместится тоже левее
+        вместе с этой кнопкой … чем много пустого пространства оставлять».
+
+        16 (the design's gap after a leading element, view_row.xml) − 13 (the box's overhang
+        past its glyph) = 3. So the OPTICAL gap is the design's 16 and the number here is
+        what is left after the box's own overhang is paid for.
+
+        Not a spacing step either, for the same reason as the pull: it is one arithmetic
+        result, valid for a 22dp glyph in a 48dp box, and it moves only if the box or the
+        glyph does.
+    -->
+    <dimen name="space_after_touch_target">3dp</dimen>
+
+    <!--
+        THE «+» AT THE TOP OF ГЛАВНАЯ, AND THE ONLY WAY ITS INK REACHES THE GUTTER.
+
+        Same complaint as the sub-page header's action, one screen over: «вот нашел что
+        плюсик сверху он левее, надо правее опять сделать». @id/btn_home_add is a 48dp
+        target whose box ends 4dp from the screen edge (@id/home_top_row's paddingEnd,
+        which @dimen/select_popup_offset_right_add is measured against and must keep), so
+        with 12dp of padding all round its 24dp glyph drew at 12 and ic_add_24dp's own
+        5dp of trailing air put the ink at 4 + 12 + 5 = 21 — five dp inside the 16 every
+        block under it starts from.
+
+        THE BOX DOES NOT MOVE, THE GLYPH DOES. Pulling the box would hang it off the
+        screen and cost a dp of touch target for nothing; this control has no press plate
+        at all (background is @null, the response is @anim/press_icon's 0.88), so the one
+        thing an off-centre glyph would normally break — a plate that no longer sits under
+        it — does not exist here. So the padding goes asymmetric by exactly ic_add's air:
+
+            trailing  12 − 5 = 7      leading  48 − 24 − 7 = 17      ink  4 + 12 = 16
+
+        The 48dp target is untouched, and so is the popup anchored to the box.
+    -->
+    <dimen name="home_add_pad_lead">17dp</dimen>
+    <dimen name="home_add_pad_trail">7dp</dimen>
+
+</resources>

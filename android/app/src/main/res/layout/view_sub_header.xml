@@ -1,0 +1,208 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  ============================================================================
+  THE SUB-PAGE HEADER — handoff README §7, «Единое лекало».
+  ============================================================================
+
+      кнопка назад 44dp (смещена на −10dp влево)
+        → крупный заголовок 24sp/700
+        → необязательное пояснение 13sp
+        → группы карточек
+
+  It is @layout/view_toolbar's replacement ON SUB-SCREENS ONLY, and it is a
+  different object rather than a variant of one: view_toolbar draws a 16sp title
+  BESIDE the back arrow, which is the shape a tab screen and a form want. §7 puts
+  the title UNDER the arrow at 24sp/700, which turns the top of the page into a
+  heading the eye lands on before it starts reading rows. Home and the tab screens
+  keep view_toolbar; nothing here changes for them.
+
+  THE IDS ARE view_toolbar's ON PURPOSE. ToolbarSlots resolves toolbar_back,
+  toolbar_leading_gap, toolbar_title, toolbar_action and toolbar_hairline by id,
+  so every screen that already calls ToolbarBinder.bind / attachTo keeps working
+  after nothing more than swapping the include's layout= attribute. A screen that
+  wants the optional note reaches for @id/toolbar_note itself — that slot is this
+  file's own and ships gone.
+
+  THE GUTTER ARITHMETIC, and where the −10dp went. §7 measures a 44dp back control
+  pulled 10dp left, which lands its 24dp glyph on the 16dp screen gutter
+  (16 − 10 + (44 − 24) / 2 = 16): the shift exists so the GLYPH sits on the gutter
+  and not the edge of its touch target. This file reached the same pixel from the
+  other side — Widget.Departament.Button.Icon.Toolbar is a 48dp target, the Android
+  touch floor that 44 is under, so a 4dp lead-in put the glyph at 4 + 12 = 16.
+
+  EXCEPT IT DID NOT, and no padding was ever going to make it. MaterialButton's
+  iconGravity is textStart, so the library centres the glyph in the box and a padding only
+  shifts it by half the difference between its two sides; and the box was wrap_content, so
+  it measured a line box this control has no text for — 68 × 64, not 48. What places the
+  glyph now is an EXACT 48dp box with a symmetric padding (the style's) and a per-slot
+  split of the 20dp of inset, which moves the glyph and its press disc together. The full
+  arithmetic is in @style/Widget.Departament.Button.Icon.Toolbar.
+
+  And the lead-in is GONE, on owner report 0.4.9: «эту кнопку нужно сделать чуть
+  левее». The 48dp target is flush with the screen edge — the whole target on screen,
+  nothing clipped, and the arrow reads as belonging to the edge of the page rather
+  than floating inside it. view_toolbar.xml carries the identical change, so the back
+  affordance still does not move between the two headers.
+
+  BOTH SIDES ARE ON 16 NOW, which is §7's лекало and the third time the owner has asked
+  for this arrow: «кнопка назад опять съехала, надо ее левее». Its 20dp of inset is split
+  6/14 (@dimen/toolbar_back_plate_inset_lead), and an inset split moves the GLYPH and its
+  press disc together WITHOUT moving the box — so the ink reaches the gutter, the arrow
+  starts on the same line as the 24sp title below it, and the box is still 0…48 against
+  the screen edge with every dp of it touchable. The header used to be 4dp asymmetric on
+  the argument that those two could not both be had; the argument and its answer are on
+  @id/toolbar_back in view_toolbar.xml.
+
+  56 IS A MINIMUM ON THE BAR AND THE TITLE HAS NO HEIGHT AT ALL. At font scale
+  200% a 24sp headline needs ~50dp of line box; every text box here is
+  wrap_content and grows with it (00-rules.md 14.5).
+
+  THE HAIRLINE ships at alpha 0 and is faded in by ToolbarBinder.attachTo once the
+  content behind it has scrolled. It never appears at rest, and nothing else about
+  this header changes on scroll — no colour, no elevation, no shadow.
+-->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/toolbar"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:background="?android:attr/colorBackground"
+    android:elevation="0dp"
+    android:orientation="vertical">
+
+    <!-- The back row. §7 «padding:4px 16px 0» — the 4 above the control. There is no
+         leading padding any more: the back target starts at the screen edge and it is
+         the GLYPH, at 12, that carries the alignment (see the arithmetic above).
+
+         AND NO TRAILING PADDING EITHER, which is the whole of «вот нашел что плюсик
+         сверху он левее, надо правее опять сделать». It carried space_4, and that 4 did
+         two things nobody had counted. It held the action's ink at 22dp from the screen
+         edge while view_toolbar.xml — same binder, same slot, no such padding — held its
+         at 18: the header's own two variants disagreed by 4dp about where an action
+         goes. And being PADDING on a ViewGroup that clips to it by default, it was also
+         a clip line 4dp inside the screen, so the action's box (which is pulled PAST
+         the edge to reach the gutter) had its press plate cut on it — the same shear
+         the owner photographed on the row's «⋮».
+
+         The distance an action stands off the edge belongs to the binder, per glyph,
+         because the two glyphs need different ones. A bar-wide padding cannot express
+         that and can only get in the binder's way.
+
+         AND THE 4 THAT IS LEFT DOES NOT CLIP. clipToPadding defaults to true, so every
+         padding on a ViewGroup is also a clip line — that is what was shearing the row's
+         press disc one component up (see view_row.xml). Nothing is drawn above this bar's
+         4dp today, and turning the clip off is what keeps that a fact rather than an
+         arithmetic result. -->
+    <LinearLayout
+        android:id="@+id/toolbar_bar"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:baselineAligned="false"
+        android:clipToPadding="false"
+        android:gravity="center_vertical"
+        android:orientation="horizontal"
+        android:paddingTop="@dimen/space_4">
+
+        <!-- ICON GAP CLOSED (as in view_toolbar): @drawable/ic_chevron_left is a real
+             left-pointing glyph. It used to be ic_chevron_right under
+             android:scaleX="-1", and that mirror never survived to the screen —
+             @anim/press_icon, which this style carries, has a DEFAULT item animating
+             scaleX to 1.0 and it fires on attach, so all 17 sub-pages shipped a back
+             arrow pointing right. Do not put a scaleX mirror back; the new drawable is
+             android:autoMirrored, which is what RTL wants regardless.
+
+             THE BOX IS AN EXACT 48 AND THE PADDING IS THE STYLE'S — read the twin note in
+             view_toolbar.xml. wrap_content measured a line box this control has no text
+             for, so it stood 68 wide and 64 tall and dragged the whole bar to 68; the
+             press plate inside it was a 48×44 stadium rather than the 28dp disc every
+             comment here promises.
+
+             AND THE 6/14 INSET SPLIT IS WHAT PUTS ITS INK ON 16 while the box stays flush
+             with the screen edge — the whole of «кнопка назад опять съехала, надо ее
+             левее», with the 48dp target intact. @dimen/toolbar_back_plate_inset_lead. -->
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/toolbar_back"
+            style="@style/Widget.Departament.Button.Icon.Toolbar"
+            android:layout_width="@dimen/view_height_dp48"
+            android:layout_height="@dimen/view_height_dp48"
+            android:contentDescription="@string/cd_back"
+            android:insetLeft="@dimen/toolbar_back_plate_inset_lead"
+            android:insetRight="@dimen/toolbar_back_plate_inset_trail"
+            app:icon="@drawable/ic_chevron_left" />
+
+        <!-- ToolbarBinder shows this when a screen passes no activity, i.e. has no
+             back affordance. A sub-page always has one, so it ships gone. -->
+        <Space
+            android:id="@+id/toolbar_leading_gap"
+            android:layout_width="@dimen/space_12"
+            android:layout_height="0dp"
+            android:visibility="gone" />
+
+        <Space
+            android:layout_width="0dp"
+            android:layout_height="0dp"
+            android:layout_weight="1" />
+
+        <!-- AT MOST ONE, and on §7's lekalo most screens have none: an action is a
+             row in a card, where it can carry a name. The slot stays because
+             ToolbarBinder resolves it and because «Добавить правило» style toolbar
+             actions already bound here must keep working.
+
+             THE INSET SPLIT MOVES THE GLYPH, THE PADDING KEEPS THE PLATE UNDER IT — read
+             the identical note in view_toolbar.xml and @dimen/toolbar_plate_inset_lead.
+             The 18/12 padding pair that used to be here is what put the disc 3dp off the
+             «+» sitting on it, which is the second half of «фон не по центру, неровный
+             фон в общем, неправильный». -->
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/toolbar_action"
+            style="@style/Widget.Departament.Button.Icon.Toolbar"
+            android:layout_width="@dimen/view_height_dp48"
+            android:layout_height="@dimen/view_height_dp48"
+            android:insetLeft="@dimen/toolbar_plate_inset_lead"
+            android:insetRight="@dimen/toolbar_plate_inset_trail"
+            android:visibility="gone"
+            app:icon="@drawable/ic_more_vert_24dp"
+            tools:ignore="ContentDescription"
+            tools:visibility="visible" />
+    </LinearLayout>
+
+    <!-- §7 «крупный заголовок 24sp/700», 8 under the back control. Headline is the
+         ramp's 24/700 role; the face is @font/golos_text_bold, which has Cyrillic —
+         the wordmark face does not, and that is D-11. -->
+    <TextView
+        android:id="@+id/toolbar_title"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="@dimen/space_8"
+        android:paddingStart="@dimen/screen_gutter"
+        android:paddingEnd="@dimen/screen_gutter"
+        android:textAppearance="@style/TextAppearance.App.Headline"
+        tools:text="Локальный прокси" />
+
+    <!-- §7 «необязательное пояснение 13sp», 6 under the title. One sentence that
+         says what the screen is for; a note that restates the title is deleted, not
+         written. Ships gone — a screen shows it by giving it text. -->
+    <TextView
+        android:id="@+id/toolbar_note"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="@dimen/space_6"
+        android:paddingStart="@dimen/screen_gutter"
+        android:paddingEnd="@dimen/screen_gutter"
+        android:textAppearance="@style/TextAppearance.App.Subtitle"
+        android:visibility="gone"
+        tools:text="Отсканируйте QR-код, показанный на телевизоре."
+        tools:visibility="visible" />
+
+    <!-- FLUSH UNDER THE TITLE, with no gap of its own. §6 puts a section header's own
+         22dp of padding directly under the page title and the prototype measures zero
+         between them; a padding here plus a margin here used to add 17dp to every
+         sub-screen before its first word. The hairline still ships at alpha 0. -->
+    <View
+        android:id="@+id/toolbar_hairline"
+        android:layout_width="match_parent"
+        android:layout_height="@dimen/stroke_hairline"
+        android:alpha="0"
+        android:background="?attr/colorOutlineVariant" />
+</LinearLayout>

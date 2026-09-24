@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <!-- @drawable-night/bg_home_gradient's endColor. See values/colors_page_edge.xml. -->
+    <color name="page_edge">#0A0B0D</color>
+
+</resources>

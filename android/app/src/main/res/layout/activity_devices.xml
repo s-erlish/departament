@@ -1,0 +1,141 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  ============================================================================
+  «Устройства» (DeviceManagementActivity) — handoff README §7, «Устройства».
+  ============================================================================
+
+      кнопка назад → «Устройства» 24sp/700 → пояснение 13sp
+      → одна карточка со строками устройств
+
+  What §7 changes here is the SHAPE OF THE LIST. Every device used to be its own
+  MaterialCardView with an 8dp gap under it — a card grid where the handoff draws
+  one card holding rows, and where the design rules' «no nested cards» already pointed.
+  The card is the RecyclerView's own background (@drawable/bg_card_inert), not a
+  wrapper around it, because the screen hides @id/rv_devices whenever it shows the
+  empty or error state and a wrapper would leave an outlined box floating above it.
+
+  The screen's one sentence of explanation moved from a body TextView into the
+  header's own note slot (@id/toolbar_note in view_sub_header), which is where §7
+  puts it. DeviceManagementActivity writes it and hides it while the empty state is
+  up, because «Устройства, подключённые к вашей подписке» contradicts «Устройств
+  пока нет».
+
+  §7's TWO BEHAVIOURS NOW LAND, and they live in DeviceAdapter rather than here:
+  the device you are holding is marked «Это устройство» in the accent and offers no
+  «Удалить»; a removed row dims, says «Отключено от подписки» instead of its meta
+  line, and leaves the list 700ms later. The confirm dialog
+  (@string/devices_delete_message) still guards the tap.
+-->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="?android:attr/colorBackground"
+    android:fitsSystemWindows="true"
+    android:orientation="vertical"
+    tools:context=".ui.DeviceManagementActivity">
+
+    <include
+        android:id="@+id/toolbar"
+        layout="@layout/view_sub_header" />
+
+    <com.google.android.material.progressindicator.LinearProgressIndicator
+        android:id="@+id/progress_bar"
+        style="@style/Widget.Departament.Progress.Linear"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:indeterminate="true"
+        android:visibility="gone"
+        tools:visibility="visible" />
+
+    <FrameLayout
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1">
+
+        <!-- The list scrolls as part of the page, so the card ENDS where the devices
+             end instead of running off the bottom of the screen with an open corner. -->
+        <androidx.core.widget.NestedScrollView
+            android:id="@+id/main_content"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:clipToPadding="false"
+            android:paddingBottom="@dimen/space_32"
+            android:scrollbars="none">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical">
+
+                <androidx.recyclerview.widget.RecyclerView
+                    android:id="@+id/rv_devices"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="@dimen/screen_gutter"
+                    android:layout_marginTop="@dimen/space_16"
+                    android:layout_marginEnd="@dimen/screen_gutter"
+                    android:background="@drawable/bg_card_inert"
+                    android:clipToOutline="true"
+                    android:nestedScrollingEnabled="false"
+                    android:scrollbars="none"
+                    tools:listitem="@layout/item_device" />
+
+                <!-- §7's footnote, under the card and not inside it: it explains what
+                     «Удалить» costs, which is the reason it is read BEFORE the tap and
+                     the reason it is not a row. Hidden with the list. -->
+                <TextView
+                    android:id="@+id/tv_devices_footnote"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="@dimen/space_12"
+                    android:paddingStart="@dimen/screen_gutter"
+                    android:paddingEnd="@dimen/screen_gutter"
+                    android:text="@string/devices_footnote"
+                    android:textAppearance="@style/TextAppearance.App.Subtitle" />
+            </LinearLayout>
+        </androidx.core.widget.NestedScrollView>
+
+        <LinearLayout
+            android:id="@+id/layout_devices_empty"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center_vertical"
+            android:gravity="center"
+            android:orientation="vertical"
+            android:paddingStart="@dimen/space_32"
+            android:paddingEnd="@dimen/space_32"
+            android:visibility="gone"
+            tools:visibility="visible">
+
+            <ImageView
+                style="@style/Widget.Departament.Tile"
+                android:layout_width="@dimen/empty_icon"
+                android:layout_height="@dimen/empty_icon"
+                android:backgroundTint="?attr/colorSurfaceContainerHighest"
+                android:importantForAccessibility="no"
+                android:padding="@dimen/space_16"
+                android:tint="?attr/colorOnSurfaceVariant"
+                app:srcCompat="@drawable/ic_acc_devices" />
+
+            <TextView
+                android:id="@+id/tv_devices_empty_title"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/space_16"
+                android:gravity="center"
+                android:text="@string/devices_empty"
+                android:textAppearance="@style/TextAppearance.App.Title" />
+
+            <TextView
+                android:id="@+id/tv_devices_empty_hint"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/space_8"
+                android:gravity="center"
+                android:text="@string/devices_empty_hint"
+                android:textAppearance="@style/TextAppearance.App.Subtitle" />
+        </LinearLayout>
+    </FrameLayout>
+</LinearLayout>

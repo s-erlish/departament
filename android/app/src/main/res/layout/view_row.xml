@@ -1,0 +1,393 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  ============================================================================
+  THE UNIVERSAL ROW. One file, five archetypes.
+  32-master-plan-android.md 8.1 / 5.3, 22-components.md 8.1-8.7.
+  ============================================================================
+
+  This is the single most repeated object in the product: 137 hand-inlined copies
+  collapse into this file. Nothing here is optional decoration — every id below is
+  a slot a caller either shows or leaves hidden, and the archetype is decided by
+  WHICH ONE TRAILING SLOT is shown, never by a second layout file.
+
+  GEOMETRY — handoff README §6 «Строка», measured off the prototype rather than
+  guessed (docs/design2026/port-shots-2/43-routing.geo.json):
+      [ 16 gutter ][ 40 tile r12, 22 glyph ][ 16 ][ text column ][ 12 ][ trailing ][ 16 ]
+  Text origin 72 = 16 + 40 + 16 on a TILED row; 16 on a PLAIN row (5.3), which is
+  what hiding @id/row_tile gives you for free — its end margin goes with it.
+  Vertical padding is 10 (from @style/Widget.Departament.Row): 10 + 40 + 10 is the
+  prototype's 61dp row.
+  minHeight 56, height wrap_content: a two-line subtitle GROWS the row, and at font
+  scale 200% every text box grows with it. There is not one fixed height in this file.
+
+  THE TYPE IS §6's, NOT THE CARD'S. Заголовок 14sp/400 (Body) and подпись 12.5sp
+  (Caption) — a row title is a LABEL the eye sweeps past, not a heading, and the
+  16sp/700 this file used to carry made every settings list shout. RowBinder applies
+  both roles on every bind, so the appearances below are the resting state a
+  tools-preview shows and never the last word.
+
+  THE TWO ROW SPECIES ARE DERIVED, NOT CHOSEN (5.3): a group is tiled if and only if
+  its rows carry a leading glyph that DIFFERS between rows. If every row would carry
+  the same glyph, the group is plain and @id/row_tile stays gone. N identical tiles
+  down the left edge is the generated-settings tell, not a design.
+
+  EVERYTHING OPTIONAL SHIPS GONE. A caller shows exactly what its archetype needs,
+  so a forgotten line is a missing element and never a wrong one:
+
+    Row.Navigation   row_title [+ row_subtitle] [+ row_value] + row_chevron
+    Row.Value        row_title + row_value + row_chevron (or row_trailing_glyph to
+                     cycle the value in place, which promises no screen and no dialog)
+    Row.Toggle       row_title [+ row_subtitle] + row_switch
+    Row.Action       row_title [+ row_subtitle] + row_icon_action OR row_action
+                     AND the row itself stops being a target (see below)
+    Row.Destructive  row_title in TextAppearance.App.Title.Destructive, no trailing
+    Row.Fact         row_title + row_value, not clickable
+    Row.Selectable   row_title [+ row_value] + row_marker, view.isActivated = true
+
+  THE ONE SANCTIONED PAIRING (8.1): a row may carry a VALUE plus one trailing
+  affordance — value + chevron (22-components 8.3) or value + state marker (the
+  server row: ping plus check). The value is text, not a control. Two CONTROLS in
+  the trailing slot never happens: never a chevron and a switch, never two glyphs.
+
+  THE BINDER IS THE FRONT DOOR. ui/component/RowBinder.bind(root, title, …, trailing)
+  resolves every slot below by name, shows exactly one trailing affordance, resets the
+  others, and refuses at the call site to give a row two targets. Bind through it
+  rather than reaching for these ids one at a time.
+
+  WHAT CANNOT BE A LAYOUT ATTRIBUTE, AND WHY. A Material style binds at inflation, so
+  three archetype deltas are applied to the inflated row instead. Each is an exact
+  reproduction of a ratified style, not an invented value, and RowBinder already does
+  all three for you:
+    Row.Action       row.isClickable = false; row.isFocusable = false
+                     row.setBackgroundResource(0)      <- @style/…Row.Action verbatim
+    Row.Destructive  title.setTextAppearance(R.style.TextAppearance_App_Title_Destructive)
+    accent tile      rowTile.setBackgroundResource(R.drawable.bg_tile_accent) + the
+                     matching glyph tint  (D-5: one accent tile per screen, at most)
+  Disabled is alpha 0.38 on the row plus isEnabled = false (R6). Pressed, focused and
+  selected are already drawn by @drawable/bg_row and need no code at all.
+
+  ACCESSIBILITY. The WHOLE ROW is the touch target — that is why the switch below is
+  explicitly not clickable and not focusable (five shipped switch rows have two
+  targets that can disagree). The tile is decorative and is marked as such: the title
+  is the row's name. A selected row must announce it (isSelected on the a11y node),
+  not only draw it.
+-->
+<!-- clipToPadding=false IS THE PRESS PLATE'S FIX, and it is the whole of «выделил зажав на
+     три точки … обрезается».
+
+     The row's paddingEnd is the 16dp gutter, and RowBinder.alignInkToGutter parks the
+     trailing slot INSIDE that padding with a negative end margin so the glyph's ink can
+     reach the line. A ViewGroup clips its children to its padding box by default, so that
+     padding was also a CLIP LINE 16dp inside the card: the «⋮» button sat flush with the
+     card's edge, its 28dp press disc ran from 4 to 32dp inside it, and everything past 16
+     was cut off flat. Twelve of the disc's twenty-eight dp, on the side the finger is on —
+     which is why a round plate came back looking shorn no matter what the inset was set to.
+     Rendered and measured: plate painted 296…312 in a 328dp card, i.e. stopping exactly on
+     the 16dp padding line rather than on its own 324.
+
+     Nothing here moves as a result — the row draws its background full-bleed and lays every
+     child out inside the padding as before. What changes is that a child DELIBERATELY placed
+     in the padding is no longer amputated by it. RowBinder.pullInk's «nothing clips» is true
+     now; it was not before. -->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/row"
+    style="@style/Widget.Departament.Row"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:baselineAligned="false"
+    android:clipToPadding="false">
+
+    <!-- TILED groups only. Gone = a plain row at the 16dp origin (5.3). The glyph is
+         the caller's; the 40/12/22 geometry and the neutral fill are the style's. -->
+    <ImageView
+        android:id="@+id/row_tile"
+        style="@style/Widget.Departament.Tile"
+        android:backgroundTint="?attr/colorSurfaceContainerHighest"
+        android:layout_width="@dimen/tile_size"
+        android:layout_height="@dimen/tile_size"
+        android:layout_marginEnd="@dimen/space_16"
+        android:importantForAccessibility="no"
+        android:visibility="gone"
+        tools:src="@drawable/ic_settings_24dp"
+        tools:visibility="visible" />
+
+    <!-- The text column. weight 1, so a long title yields to the trailing slot and a
+         long value never pushes the title out of the row. -->
+    <LinearLayout
+        android:id="@+id/row_text"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_weight="1"
+        android:orientation="vertical">
+
+        <TextView
+            android:id="@+id/row_title"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:ellipsize="end"
+            android:maxLines="2"
+            android:textAppearance="@style/TextAppearance.App.Body"
+            tools:text="Маршрутизация" />
+
+        <!-- A subtitle that restates its title is deleted, not written (8.1). -->
+        <TextView
+            android:id="@+id/row_subtitle"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/space_4"
+            android:ellipsize="end"
+            android:maxLines="2"
+            android:textAppearance="@style/TextAppearance.App.Caption"
+            android:visibility="gone"
+            tools:text="Правила для доменов и приложений"
+            tools:visibility="visible" />
+    </LinearLayout>
+
+    <!-- THE TRAILING SLOT. Show exactly one control. row_value is text and may
+         accompany row_chevron or row_marker; it is not a control.
+
+         THE GAP IS NOT UNIFORM, and the difference is the handoff's, not a rounding
+         error. §6: «Правый отступ 12dp только когда справа есть значение или
+         переключатель» — the prototype writes it as
+         `gap: (isToggle || pop || value) ? 12 : 0`. So a VALUE, a SWITCH or a BUTTON
+         takes 12 from the text column, because each of those is a second thing to read
+         and it needs the air. A bare GLYPH — chevron, caret, state marker — takes 4:
+         it is punctuation on the row, not a second column, and 12 in front of it opens
+         a gutter down the right edge of a card that has no value anywhere in it.
+
+         WHAT THE SLOT ENDS ON IS THE 16dp GUTTER, AND FOR A GLYPH THAT MEANS ITS INK.
+         Everything else on the row is measured to that line — the text column, the
+         card's content edge, the screen's — so a trailing element that stops 6dp short
+         of it is adrift even when its box is perfectly placed: «также кнопки не
+         доделал… надо их сделать нормально правее». An object with a boundary of its
+         own (row_check_box's bordered box, row_switch's track, row_action's button)
+         aligns by that boundary and takes no correction; a bare glyph has no boundary,
+         so its last painted pixel IS its edge and it carries a negative end margin
+         worth exactly its own empty air. Five glyphs, five numbers, all measured off
+         the drawables in values/tokens_row_action.xml. -->
+
+    <!-- 12dp: a value is text to be read, so it gets the full gap. -->
+
+
+    <TextView
+        android:id="@+id/row_value"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="@dimen/space_12"
+        android:ellipsize="end"
+        android:gravity="end"
+        android:maxLines="1"
+        android:textAppearance="@style/TextAppearance.App.Subtitle"
+        android:visibility="gone"
+        tools:text="Cloudflare"
+        tools:visibility="visible" />
+
+    <!-- State marker: this item is the current selection. Not an action (8.1). The slot
+         is ALWAYS reserved and selection moves its alpha, so choosing an item never
+         reflows the list (22-components 18.1).
+
+         THE END MARGIN IS NEGATIVE, and every glyph below carries one too. The box
+         already ends on the row's 16dp padding; what the eye lines a column up by is
+         the last painted PIXEL, and ic_action_done leaves 2.25dp of its viewport empty
+         on that side, so without the pull the tick stops 18.25dp from the edge while
+         the chevron in the next card stops at 22 and the text column ends at 16. The
+         number is this glyph's own air and nothing else — the arithmetic for all five
+         is on values/tokens_row_action.xml. It is written HERE, next to the `src` it
+         was measured from, because this slot's drawable is declared in this file:
+         nothing at runtime can put a different glyph in it and inherit a pull that
+         does not fit. -->
+    <ImageView
+        android:id="@+id/row_marker"
+        android:layout_width="@dimen/glyph_18"
+        android:layout_height="@dimen/glyph_18"
+        android:layout_marginStart="@dimen/space_4"
+        android:layout_marginEnd="@dimen/row_glyph_nudge_check"
+        android:importantForAccessibility="no"
+        android:src="@drawable/ic_action_done"
+        android:tint="?attr/colorPrimary"
+        android:visibility="gone"
+        tools:visibility="visible" />
+
+    <!-- Tapping pushes a screen. Swap the src for the expand or cycle glyph when the
+         promise changes (8.1); the size and the tone stay.
+
+         THE BIGGEST PULL OF THE FIVE, 6dp: ic_chevron_right is one stroke drawn in a
+         viewport that also has to hold the arrow's other three sides, so a quarter of
+         its width on the trailing side is empty. This is the glyph the product has
+         most of and the one that made the misalignment invisible for two rounds —
+         with nothing beside it to be compared with, a chevron 6dp inside the gutter
+         just looks like the gutter.
+
+         RowBinder.Trailing.Expand ROTATES this view 90°, which swings the ink's own
+         edges: the caret then reaches 3.45dp inside the box instead of 6, i.e. 2.55dp
+         past the gutter. It is left alone on purpose. The resting angle is what a
+         column of rows is read by, the rotation is a draw-time transform, and chasing
+         it would mean writing a layout parameter on every frame of a 220ms
+         animation — a reflow to fix a tenth of a millimetre. -->
+    <ImageView
+        android:id="@+id/row_chevron"
+        android:layout_width="@dimen/glyph_18"
+        android:layout_height="@dimen/glyph_18"
+        android:layout_marginStart="@dimen/space_4"
+        android:layout_marginEnd="@dimen/row_glyph_nudge_chevron"
+        android:importantForAccessibility="no"
+        android:src="@drawable/ic_chevron_right"
+        android:tint="?attr/colorOnSurfaceVariant"
+        android:visibility="gone"
+        tools:visibility="visible" />
+
+    <!-- Tapping changes the value in place: no screen, no dialog. The caller sets the
+         glyph (the cycle affordance wants ic_unfold_more, which res/drawable does not
+         carry yet), so there is no src here to be wrong.
+
+         AND THEREFORE NO END MARGIN HERE EITHER. The two slots above pull themselves
+         because this file declares what is in them; this one is filled by
+         RowBinder.Trailing.Glyph, so its pull is applied on every bind by
+         RowBinder.alignInkToGutter, which knows the glyph. A glyph that function has
+         never seen gets NO pull — the slot then draws exactly where it drew before
+         any of this existed, which is the one safe answer to an icon nobody has
+         measured. -->
+    <ImageView
+        android:id="@+id/row_trailing_glyph"
+        android:layout_width="@dimen/glyph_18"
+        android:layout_height="@dimen/glyph_18"
+        android:layout_marginStart="@dimen/space_4"
+        android:importantForAccessibility="no"
+        android:tint="?attr/colorOnSurfaceVariant"
+        android:visibility="gone"
+        tools:src="@drawable/ic_arrow_drop_down" />
+
+    <!-- MEMBERSHIP OF A SET, not a boolean applied now (§7's «список приложений с
+         чекбоксами»). 22dp box, 2dp border, radius 7, a 16dp tick that exists only
+         when the box is filled — @drawable/bg_checkbox and @color/checkbox_tick do
+         both halves off one state, so the row cannot draw a filled box with no tick.
+         Not focusable and not clickable for the same reason the switch is not: the
+         WHOLE row is the target. -->
+    <ImageView
+        android:id="@+id/row_check_box"
+        android:layout_width="@dimen/checkbox_size"
+        android:layout_height="@dimen/checkbox_size"
+        android:layout_marginStart="@dimen/space_12"
+        android:background="@drawable/bg_checkbox"
+        android:importantForAccessibility="no"
+        android:padding="@dimen/space_2"
+        android:scaleType="fitCenter"
+        android:src="@drawable/ic_action_done"
+        android:tint="@color/checkbox_tick"
+        android:visibility="gone"
+        tools:visibility="visible" />
+
+    <!-- The row owns the toggle; the switch is decoration that reports state.
+
+         AND clickable="false" HAS A SECOND EFFECT, which cost the owner a screenshot
+         of the IPv6 row: ViewGroup.dispatchSetPressed skips a child that can be
+         pressed on its own and forwards the state to every child that cannot, so the
+         flag that makes the row the single hit target is precisely what feeds the
+         row's press into this switch. M3's thumb answered with a 28dp disc. Do NOT
+         "fix" that by making the switch clickable — that trades one defect for two
+         targets. It is refused at @drawable/switch_thumb, which is Material's thumb
+         with the pressed entry left out and every other state reproduced. -->
+    <com.google.android.material.materialswitch.MaterialSwitch
+        android:id="@+id/row_switch"
+        style="@style/Widget.Departament.Switch"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="@dimen/space_12"
+        android:clickable="false"
+        android:focusable="false"
+        android:importantForAccessibility="no"
+        android:visibility="gone"
+        tools:visibility="visible" />
+
+    <!-- Row.Action's in-place action. When this is shown the ROW is not a target:
+         two targets doing different things is the layout_subscription_meta_bar
+         mistake. android:contentDescription is MANDATORY and states the ACTION.
+
+         IT IS THE ONE TRAILING SLOT THAT IS SIZED HERE, and the size is the fix.
+         @style/Widget.Departament.Button.Icon is a 48dp touch minimum holding a 22dp
+         icon, so 13dp of the box is air before the glyph starts and its ink lands 10
+         to 16dp further in than a chevron's — «они улетели куда-то влево». One round
+         answered that by pulling the box, which works until the target is the gutter:
+         «⋮» would need -22.17 and the last 6.17 of it hangs outside the row, where
+         the box is clipped and the press plate is shorn. So the box is laid out at
+         @dimen/row_action_size instead — 36, the size the подписка card's action
+         discs draw at — and the 48dp target is restored by RowBinder with the same
+         TouchDelegate those discs use. Drawn size and touched size were never obliged
+         to be the same number; 00-rules.md 14.2 is about the second one.
+
+         An explicit width and height also retire the style's 48dp minWidth/minHeight
+         for this instance (an EXACTLY spec ignores them), which is what stops the
+         touch minimum from setting the ROW's height: «Версия» и «Идентификатор»
+         stood 8dp taller than the tiled rows under them for no reason a reader could
+         see.
+
+         THE PADDING'S ONLY JOB IS TO BE SYMMETRIC, and the note that used to stand
+         here had the mechanism wrong twice over. A MaterialButton's iconGravity is
+         `textStart` (2) — Widget.Material3.Button sets it, the library's own default
+         `start` never reaches this chain — and textStart CENTRES the glyph rather than
+         parking it at paddingLeft:
+
+             iconLeft   = (W − textWidth − paddingEnd − iconSize − iconPadding − paddingStart) / 2
+             drawn left = paddingLeft + iconLeft = (W − iconSize) / 2 + (paddingLeft − paddingRight) / 2
+
+         Measured on the inflated row: box 36, resolved padding 11/11, icon bounds
+         Rect(−4, 0, 18, 22), so the glyph draws at 11 − 4 = 7 and is dead centre. The
+         VALUE of @dimen/row_action_glyph_air never mattered; only that the two sides
+         are equal. They are, so the glyph is centred and the plate below is concentric
+         with it — the one invariant this slot has to keep.
+
+         (Eleven and not seven because MaterialButtonHelper.loadFromAttributes ends with
+         setPaddingRelative(paddingStart + insetLeft, …): every inset is ADDED to the
+         padding as well as taken off the background. Symmetric insets keep symmetric
+         padding, which is why the four below are one number and not two.)
+
+         AND THE PLATE IS INSET SO IT IS SMALLER THAN THE BOX. Once «⋮»'s ink is on the
+         gutter its 36dp box is FLUSH with the row's end edge, and a plate that filled
+         the box would end on the card's own clip line. @dimen/row_action_plate_inset
+         leaves a 28dp disc, concentric with the glyph, 4dp clear of the card on the
+         worst glyph and 10.25 on «копировать». Four insets and not two — a
+         horizontal-only inset makes the drawable 36×28 and GradientDrawable then clamps
+         the pill to half the shorter side, i.e. a stadium where the design says disc.
+
+         THAT DISC WAS STILL BEING CUT, and not by the card: by this row's own
+         paddingEnd, which is a clip line until clipToPadding is turned off. See the
+         note above the root.
+
+         ITS END MARGIN IS STILL NOT ZERO AT RUNTIME: 36 leaves 7dp of air beside the
+         glyph and each glyph leaves its own, so RowBinder.alignInkToGutter pulls per
+         glyph on every bind. The correction is not written here because the icon is
+         the caller's. -->
+    <com.google.android.material.button.MaterialButton
+        android:id="@+id/row_icon_action"
+        style="@style/Widget.Departament.Button.Icon"
+        android:layout_width="@dimen/row_action_size"
+        android:layout_height="@dimen/row_action_size"
+        android:layout_marginStart="@dimen/space_12"
+        android:insetBottom="@dimen/row_action_plate_inset"
+        android:insetLeft="@dimen/row_action_plate_inset"
+        android:insetRight="@dimen/row_action_plate_inset"
+        android:insetTop="@dimen/row_action_plate_inset"
+        android:paddingStart="@dimen/row_action_glyph_air"
+        android:paddingTop="@dimen/row_action_glyph_air"
+        android:paddingEnd="@dimen/row_action_glyph_air"
+        android:paddingBottom="@dimen/row_action_glyph_air"
+        android:visibility="gone"
+        app:icon="@drawable/ic_copy"
+        tools:ignore="ContentDescription"
+        tools:visibility="visible" />
+
+    <!-- The other half of Row.Action: a Tertiary button, and this row is the ONLY place
+         in the product a Tertiary is allowed to live inside a row («Привязать Telegram»
+         -> «Привязать»). The row is inert whenever this is showing. -->
+    <com.google.android.material.button.MaterialButton
+        android:id="@+id/row_action"
+        style="@style/Widget.Departament.Button.Tertiary"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="@dimen/space_12"
+        android:visibility="gone"
+        tools:text="Привязать"
+        tools:visibility="visible" />
+</LinearLayout>

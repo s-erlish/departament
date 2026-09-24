@@ -1,0 +1,106 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  ============================================================================
+  ONE OPERATION — handoff README §7, «История платежей».
+  ============================================================================
+
+      плитка 40dp → 16dp → «Продление · 30 дн.» 14sp
+                          «03.08.2026 · Оплачено» 12.5sp
+                        → справа сумма 14sp/700
+
+  It was a MaterialCardView with a 12dp gap under it — one card per payment, i.e.
+  the card grid §7 replaced with ONE card holding rows, and the same shape
+  item_device.xml already moved to. The card is @id/rv_payments' own background in
+  activity_payment_history.xml; this file is a row.
+
+  THE STATUS IS PART OF THE SENTENCE, NOT A CHIP. The prototype writes «03.08.2026 ·
+  Оплачено» as one muted line and dims the AMOUNT of anything that has not settled;
+  the trailing status chip that used to sit under the sum was a second column that
+  the design does not draw and that pushed every row to three lines. Nothing about
+  the status is lost — PaymentsAdapter still names all four states, still colours a
+  FAILED one destructively (a red word is the only warning this screen has), and
+  still dims the sum while it is «В обработке».
+
+  THE HAIRLINE IS PART OF THE ROW, top edge, hidden by the adapter at position 0 —
+  a card of rows needs a rule between them and the card cannot draw one.
+-->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical">
+
+    <com.google.android.material.divider.MaterialDivider
+        android:id="@+id/payment_divider"
+        style="@style/Widget.Departament.Divider.Full"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content" />
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:baselineAligned="false"
+        android:gravity="center_vertical"
+        android:minHeight="@dimen/row_min_height"
+        android:orientation="horizontal"
+        android:paddingStart="@dimen/screen_gutter"
+        android:paddingTop="@dimen/space_12"
+        android:paddingEnd="@dimen/space_12"
+        android:paddingBottom="@dimen/space_12">
+
+        <!-- Neutral, and tinted through attributes: ThemeOverlay.Mono cannot reach a
+             colour resource, so a tile filled from @color/icon_tile_neutral stayed
+             blue-grey there. Blue is also the wrong answer on a read-only ledger —
+             none of these rows is an action. -->
+        <ImageView
+            style="@style/Widget.Departament.Tile"
+            android:layout_marginEnd="@dimen/space_16"
+            android:backgroundTint="?attr/colorSurfaceContainerHighest"
+            android:importantForAccessibility="no"
+            android:tint="?attr/colorOnSurfaceVariant"
+            app:srcCompat="@drawable/ic_acc_history" />
+
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginEnd="@dimen/space_12"
+            android:layout_weight="1"
+            android:orientation="vertical">
+
+            <TextView
+                android:id="@+id/tv_payment_desc"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:ellipsize="end"
+                android:maxLines="1"
+                android:textAppearance="@style/TextAppearance.App.Body"
+                android:textColor="?attr/colorOnSurface"
+                tools:text="Продление · 30 дн." />
+
+            <!-- «03.08.2026 · Оплачено». Two lines allowed and no more (§11 grabl 9):
+                 a long backend status must wrap rather than ellipsize away. -->
+            <TextView
+                android:id="@+id/tv_payment_date"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/space_4"
+                android:ellipsize="end"
+                android:maxLines="2"
+                android:textAppearance="@style/TextAppearance.App.Caption"
+                tools:text="03.08.2026 · Оплачено" />
+        </LinearLayout>
+
+        <!-- tnum: a column of sums has to line up on its digits, and this is the one
+             place on the screen where two rows are read against each other. -->
+        <TextView
+            android:id="@+id/tv_payment_amount"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:fontFeatureSettings="&quot;tnum&quot; on"
+            android:gravity="end"
+            android:maxLines="1"
+            android:textAppearance="@style/TextAppearance.App.Numeric.Money"
+            tools:text="150 ₽" />
+    </LinearLayout>
+</LinearLayout>

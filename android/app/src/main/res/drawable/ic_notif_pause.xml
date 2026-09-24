@@ -1,0 +1,16 @@
+<!--
+  Значок действия «Пауза». Две дорожки той же коробки 6..18 и того же скругления, что квадрат
+  ic_notif_stop, — они стоят в одной строке действий и обязаны весить одинаково.
+-->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="24dp"
+    android:height="24dp"
+    android:viewportWidth="24"
+    android:viewportHeight="24">
+    <path
+        android:fillColor="#FFFFFFFF"
+        android:pathData="M7.75,6 L8.75,6 C9.44,6 10,6.56 10,7.25 L10,16.75 C10,17.44 9.44,18 8.75,18 L7.75,18 C7.06,18 6.5,17.44 6.5,16.75 L6.5,7.25 C6.5,6.56 7.06,6 7.75,6 Z" />
+    <path
+        android:fillColor="#FFFFFFFF"
+        android:pathData="M15.25,6 L16.25,6 C16.94,6 17.5,6.56 17.5,7.25 L17.5,16.75 C17.5,17.44 16.94,18 16.25,18 L15.25,18 C14.56,18 14,17.44 14,16.75 L14,7.25 C14,6.56 14.56,6 15.25,6 Z" />
+</vector>

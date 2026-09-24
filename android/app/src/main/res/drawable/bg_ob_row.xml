@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- §2.7: строка раскрытого блока «Другие способы». 52dp, radius 14dp, тот же
+     второй канал отклика, что и у всех строк продукта. -->
+<selector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:enterFadeDuration="@integer/motion_press_in"
+    android:exitFadeDuration="@integer/motion_press_out">
+    <item android:state_pressed="true">
+        <shape android:shape="rectangle">
+            <solid android:color="?attr/colorPressBg" />
+            <corners android:radius="@dimen/radius_card_small" />
+        </shape>
+    </item>
+    <item android:state_focused="true">
+        <shape android:shape="rectangle">
+            <solid android:color="@android:color/transparent" />
+            <stroke
+                android:width="@dimen/stroke_focus"
+                android:color="?attr/colorPrimary" />
+            <corners android:radius="@dimen/radius_card_small" />
+        </shape>
+    </item>
+    <item>
+        <shape android:shape="rectangle">
+            <solid android:color="@android:color/transparent" />
+            <corners android:radius="@dimen/radius_card_small" />
+        </shape>
+    </item>
+</selector>

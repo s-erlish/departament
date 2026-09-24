@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  The DEFAULT icon tile, and the one most rows should use. D-5 closes the coloured
+  tile set at exactly three — accent, destructive, neutral — because purple / orange
+  / yellow / green encode a category system this product does not have. 56 of 65
+  shipped Android tiles are blue and only 4 are neutral; that is not a category
+  system, it is noise. Reaching for a fourth colour means the screen is inventing a
+  taxonomy. Replaced bg_icon_neutral, which was held open until its last reference
+  migrated and has now been removed along with the rest of the coloured ladder.
+
+  THE FILL IS AN ATTRIBUTE, NOT @color/icon_tile_neutral. ThemeOverlay.Mono is
+  applied at runtime and can only re-point ATTRIBUTES, so as a colour resource this
+  fill survived into the greyscale theme and every «grey» tile stayed faintly blue
+  (#20242B). Three call sites had already patched around it with an
+  android:backgroundTint — item_device.xml, view_row.xml and RowBinder.bindTile —
+  which left the other nineteen tiles wrong and the cause in place. Fixing it here
+  fixes all of them: colorSurfaceContainerHighest IS icon_tile_neutral in the two
+  themes that already worked (#E3EAF4 light / #20242B dark), so nothing moves there.
+-->
+<shape xmlns:android="http://schemas.android.com/apk/res/android"
+    android:shape="rectangle">
+    <solid android:color="?attr/colorSurfaceContainerHighest" />
+    <corners android:radius="@dimen/radius_tile" />
+</shape>

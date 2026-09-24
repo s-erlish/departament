@@ -1,0 +1,228 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- THE OWNER'S WORDING, 2026-08-17: «вместо вход в департамент напиши вход в
+         аккаунт». One string, two readers — the gate (layout_auth_gate.xml) and the
+         Аккаунт tab's signed-out block (activity_account.xml) — which is why it is
+         changed here and not at either call site.
+
+         IT NO LONGER CARRIES THE LATIN TOKEN, and that is deliberate rather than an
+         oversight: LoginActivity.brandedTitle looks for «departament» to set it in
+         the brand face (14-auth.md 5.1, D-14.1) and now simply finds nothing, which
+         is the case it has always handled. The span is kept, not deleted — a title
+         that regains the word gets the brand moment back with no code change. -->
+    <string name="auth_gate_title">Вход в аккаунт</string>
+    <string name="auth_gate_body">Здесь будут подписка, устройства и платежи.</string>
+    <string name="auth_btn_telegram">Войти через Telegram</string>
+    <!-- KEPT, AND NO LONGER ON A CONTROL. The owner's ruling takes e-mail, OTP, 2FA
+         and Google out of the INTERFACE — «вместо них одна кнопка «Войти через
+         сайт»» — so both places that offered this word now say @string/onb_login_site
+         instead. The string stays because nothing in this project is deleted for
+         being unused, and because the form it named is still in the build. -->
+    <string name="auth_awaiting_title">Ждём подтверждения в Telegram</string>
+    <string name="auth_awaiting_body">Подтвердите вход в открывшемся приложении</string>
+    <string name="auth_open_telegram">Открыть Telegram</string>
+
+    <!-- E · the same flow, run by an account that is already signed in. -->
+    <string name="auth_link_tg_title">Привязать Telegram</string>
+    <string name="auth_link_tg_body">Подтвердите привязку в Telegram. Аккаунт останется тем же.</string>
+    <string name="auth_link_awaiting_body">Подтвердите привязку в открывшемся приложении</string>
+
+    <!-- The toolbar names the page, and the page is what the door promised: the door on
+         the start screen and on the gate says «Войти по почте», so this says «Вход по
+         почте». It read «Вход через сайт» while registration still happened in a
+         browser; nothing on this surface goes to a browser any more, so the word went
+         with it. In the registration mode the bar says @string/auth_register_title —
+         the segment above chooses the errand, and the bar states which one is on
+         screen. The fields keep their own labels: «Электронная почта» names a FIELD. -->
+    <string name="auth_site_title">Вход по почте</string>
+    <string name="auth_register_title">Регистрация</string>
+    <!-- Kept: the surface's previous heading. See @string/auth_btn_email. -->
+    <string name="auth_email_label">Электронная почта</string>
+    <string name="auth_email_placeholder">name@example.com</string>
+    <string name="auth_password_label">Пароль</string>
+    <string name="auth_btn_signin">Войти</string>
+
+    <!-- «ВОССТАНОВИТЬ ПАРОЛЬ» ТОЖЕ ВЕРНУЛОСЬ В ПРИЛОЖЕНИЕ. Эта строка открывала
+         departament.site/forgot-password в браузере — ровно то, из-за чего внутрь
+         занесли регистрацию, — а подпись честно называла чужой адрес, потому что
+         вызова у клиента не было. Вызов есть, браузера за строкой больше нет, и
+         подпись говорит, что произойдёт, а не куда уводит.
+
+         Строка, а не кнопка: она по-прежнему КУДА-ТО ведёт, только теперь на шаг
+         этой же формы (00-rules.md 7.6, лестница inline > строка > шторка > диалог).
+
+         «Создать аккаунт» здесь строкой БЫТЬ ПЕРЕСТАЛА, и её две строки ушли вместе с
+         ней, а не остались лежать: она открывала departament.site/register, и
+         «регистрации внутри приложения не увидел, там регистрация через сайт идёт».
+         Регистрация — сегмент вверху этой формы, а слова «Создать аккаунт» стали
+         кнопкой, которая её завершает: см. @string/auth_btn_register. -->
+    <string name="auth_row_reset">Восстановить пароль</string>
+    <string name="auth_row_reset_sub">Отправим ссылку на почту</string>
+
+    <!-- ===================== восстановление пароля ===================== -->
+    <!-- ФОРМА. Одно поле, одна кнопка, и адрес в поле остаётся тот же, что человек уже
+         набрал на входе: это тот же @id/et_email, шаг его не очищает. Заголовок панели —
+         глагол (@string/auth_row_reset), как «Привязать почту» и «Привязать Telegram»:
+         одно поручение, одна грамматика. Кнопка — «Отправить ссылку»
+         (@string/auth_link_email_submit), потому что отправляется ровно то же самое.
+
+         ПОДСКАЗКА ГОВОРИТ, ГДЕ ЗАДАЁТСЯ ПАРОЛЬ, и это не оговорка: ссылка из письма
+         открывается на сайте, эндпоинта password-reset/consume приложение не дёргает и
+         дёргать не может — токена из письма оно не видит. Обещать форму нового пароля
+         внутри приложения значило бы соврать про следующий шаг. -->
+    <string name="auth_reset_hint">Отправим ссылку на этот адрес. По ней вы зададите новый пароль и вернётесь сюда, чтобы войти.</string>
+
+    <!-- ПИСЬМО ОТПРАВЛЕНО. Условно, и это требование панели, а не осторожность: на
+         существующий адрес и на несуществующий она отвечает ОДИНАКОВО, чтобы через этот
+         эндпоинт нельзя было выяснять, у кого есть аккаунт. Сказать «письмо отправлено
+         на %1$s» значило бы выдать ответ, который панель специально не даёт.
+
+         И ЖДАТЬ ЗДЕСЬ НЕЧЕГО. Два других письма приложение отправляет и потом следит,
+         когда по ссылке пройдут — опрашивает вход или профиль, и кольцо на экране это
+         слежение и есть. Смена пароля не двигает ни то ни другое, поэтому здесь стоит
+         конверт, а не кольцо: экран сообщает, а не ждёт.
+
+         ТРЕТЬЯ ФРАЗА НАЗЫВАЕТ ТО, ЧТО ДЕЛАЕТ КНОПКА ПОД НЕЙ. Здесь стояло «вернитесь ко
+         входу», а «Назад» ведёт на форму восстановления: слова обещали одно, кнопка
+         делала другое. Ведёт она туда не по ошибке, а потому, что опечатку в адресе
+         иначе не поймать (ответ панели одинаков для любого), и «Отправить снова» ушло бы
+         на тот же неверный адрес. Раз кнопка существует ради опечатки, про опечатку и
+         сказано: без этой фразы единственный способ её исправить остаётся невидимым.
+
+         ЗДЕСЬ ANDROID РАСХОДИТСЯ С ПК, и это следствие поведения, а не вкуса. В
+         инвентаре копирайта (42-copy-register.md, блок «отправлено») строка общая и
+         кончается «вернитесь ко входу», потому что на ПК кнопка под ней действительно
+         ведёт ко входу. Здесь — нет; текст следует за кнопкой, а не за таблицей. -->
+    <string name="auth_reset_sent_title">Письмо отправлено</string>
+    <string name="auth_reset_sent_body">Если аккаунт с %1$s существует, мы отправили ссылку для сброса пароля. Откройте её и задайте новый пароль. Если в адресе опечатка, вернитесь назад и исправьте его.</string>
+
+    <!-- ===================== вход ⇄ регистрация ===================== -->
+    <!-- The segmented control at the top of the form: two errands, one set of fields,
+         and the segment says which one the button below will do. -->
+    <string name="auth_seg_signin">Вход</string>
+    <string name="auth_seg_register">Регистрация</string>
+    <string name="auth_btn_register">Создать аккаунт</string>
+    <!-- The password rule is stated BEFORE it is broken, on the reserved line under the
+         field, and turns into the error only if the rule is actually broken. The panel
+         refuses a shorter password with 400, so the form holds the same number.
+
+         THE TWO SENTENCES DIFFER IN WORDS, not only in colour (00-rules.md 6.3): a line
+         that goes red without changing what it says would be signalling with the hue
+         alone, and the reader who cannot see the hue would get no signal at all. -->
+    <string name="auth_password_hint">Не менее 8 символов</string>
+    <string name="auth_password_short">Пароль слишком короткий, нужно не менее 8 символов</string>
+    <string name="auth_password_repeat_label">Повторите пароль</string>
+    <string name="auth_password_mismatch">Пароли не совпадают</string>
+
+    <!-- ===================== подтверждение почты ===================== -->
+    <!-- В ПИСЬМЕ ССЫЛКА, А НЕ КОД — проверено владельцем. Поэтому здесь нечего вводить:
+         экран объясняет, что открыть, и сам ловит момент, когда ссылку открыли (вход
+         начинает отвечать 200). Отсюда и «остальное сделаем сами» — это обещание, за
+         которым стоит опрос, а не вежливая фраза. %1$s — адрес, на который ушло письмо. -->
+    <string name="auth_verify_title">Подтвердите почту</string>
+    <string name="auth_verify_body">Мы отправили ссылку на %1$s. Откройте её, чтобы подтвердить вход. Остальное сделаем сами.</string>
+    <string name="auth_verify_resend">Отправить снова</string>
+    <string name="auth_verify_back">Вернуться ко входу</string>
+
+    <!-- ===================== привязка почты ===================== -->
+    <!-- «Способы входа» → «Почта» для того, кто вошёл через Telegram. Аккаунт есть, адреса у него
+         нет, и до сих пор строка не делала ничего: экран входа закрывался сам, увидев сессию.
+
+         ЭТО НЕ ВХОД И НЕ РЕГИСТРАЦИЯ, поэтому на форме нет ни сегмента, ни пароля, ни строки
+         «Восстановить пароль»: одно поле, одна кнопка. Заголовок панели — глагол, по выбору
+         владельца, и тем самым согласован с «Привязать Telegram»: одно поручение, одна грамматика.
+
+         Подсказка под полем говорит, что произойдёт, и снимает главный страх: аккаунт не
+         раздвоится. Она же — единственное место, где сказано, что придёт письмо со ссылкой, ещё до
+         того как письмо ушло.
+
+         И НЕ ОБЕЩАЕТ БОЛЬШЕГО, ЧЕМ ДЕЛАЕТ. «Почта станет вторым способом входа» было бы неправдой:
+         ссылка привязывает адрес, пароля у аккаунта после этого всё ещё нет, и войти по почте
+         получится только задав его на сайте. Сказано ровно то, что произойдёт. -->
+    <string name="auth_link_email_title">Привязать почту</string>
+    <string name="auth_link_email_hint">Отправим ссылку на этот адрес. Аккаунт останется тем же, почта добавится к нему.</string>
+    <string name="auth_link_email_submit">Отправить ссылку</string>
+    <!-- Та же грамматика ожидания, что у регистрации (@string/auth_verify_title), другими словами:
+         там человек доказывает адрес, чтобы войти, здесь — привязывает его к аккаунту, в котором
+         уже сидит. %1$s — адрес, на который ушло письмо. -->
+    <string name="auth_link_email_sent_title">Проверьте почту</string>
+    <string name="auth_link_email_sent_body">Мы отправили ссылку на %1$s. Откройте её, и почта привяжется к аккаунту.</string>
+    <!-- Не «Вернуться ко входу»: входить некуда, за этим шагом стоит та же форма с адресом.
+         У «Письма отправлено» при восстановлении пароля — тот же случай и то же слово: под
+         экраном лежит форма восстановления, и вернуться на неё нужно как раз тому, кто
+         ошибся в адресе. Ответ панели одинаков для любого адреса, так что иначе опечатку
+         не исправить: «Отправить снова» отправит на тот же адрес. -->
+    <string name="auth_link_email_back">Назад</string>
+
+    <!-- ===================== смена почты ===================== -->
+    <!-- Та же строка «Способы входа» → «Почта», но когда адрес уже есть. Была мёртвым read-out,
+         теперь ведёт сюда. Форма та же, что у привязки, плюс одно поле: панель защищается от
+         угона аккаунта и требует ТЕКУЩИЙ пароль у всех, у кого он есть. У кого нет (аккаунт из
+         Telegram) — не требует, и поля тогда нет: живая сессия уже доказала, кто это.
+
+         Отвязки почты в панели НЕТ, поэтому её здесь не обещаем и кнопки такой не рисуем. -->
+    <string name="auth_change_email_title">Сменить почту</string>
+    <string name="auth_change_email_hint">Отправим ссылку на новый адрес. Пока вы не откроете её, почта в аккаунте останется прежней.</string>
+    <string name="auth_email_new_label">Новая почта</string>
+    <string name="auth_current_password_label">Текущий пароль</string>
+    <!-- Ответ панели с кодом INVALID_PASSWORD. Строка — запасная: обычно на экран идёт
+         формулировка панели, а эта звучит, если сообщения в теле не оказалось. -->
+    <string name="auth_password_wrong">Неверный пароль</string>
+    <string name="auth_change_email_sent_body">Мы отправили ссылку на %1$s. Откройте её, и почта в аккаунте сменится.</string>
+
+    <!-- ===================== пароль после привязки ===================== -->
+    <!-- ПОЧЕМУ ЭТОТ ШАГ ВООБЩЕ ЕСТЬ. Привязка кладёт в аккаунт адрес и НЕ задаёт пароль: по почте
+         после неё всё ещё не войти. Шаг закрывает этот разрыв сразу, пока человек здесь и помнит,
+         зачем начинал.
+
+         ШЕСТЬ СИМВОЛОВ, А НЕ ВОСЕМЬ. У `set-password` на панели своя схема, и её порог ниже, чем у
+         регистрации. Списать сюда восьмёрку значило бы отказать в пароле, который сервер принял бы.
+
+         ПРОПУСТИТЬ МОЖНО. Адрес уже привязан, поручение уже выполнено, и результат вызывающему уже
+         отдан — поэтому «Пропустить» и системная «назад» просто закрывают экран.
+
+         И ПРОПУЩЕННОЕ НЕ ТЕРЯЕТСЯ. Строка «Почта» в «Способах входа» после этого говорит, что для
+         входа нужен пароль, и ведёт сюда же — тот, кто отложил шаг, видит незакрытый хвост, а не
+         гадает, почему по привязанной почте не пускает. Одна формулировка на три входа: сразу
+         после привязки, сразу после смены адреса и с той самой строки. -->
+    <string name="auth_set_password_title">Придумайте пароль</string>
+    <string name="auth_set_password_hint">Почта привязана. Задайте пароль, чтобы входить по ней.</string>
+    <string name="auth_set_password_rule">Не менее 6 символов</string>
+    <string name="auth_set_password_short">Пароль слишком короткий, нужно не менее 6 символов</string>
+    <string name="auth_set_password_submit">Сохранить пароль</string>
+    <string name="auth_set_password_skip">Пропустить</string>
+
+    <!-- ===================== 2FA ===================== -->
+    <string name="auth_2fa_label">Код из приложения-аутентификатора</string>
+    <string name="auth_2fa_a11y">Код из приложения, 6 цифр</string>
+    <string name="auth_btn_2fa">Подтвердить</string>
+    <string name="auth_cancel">Отмена</string>
+    <string name="auth_2fa_wrong">Неверный код. Проверьте приложение-аутентификатор.</string>
+
+    <!-- ===================== errors (14-auth.md 13.1) ===================== -->
+    <string name="auth_email_invalid">Введите корректный email, например name@example.com</string>
+    <!-- Field line, not a screen error: «Готово» on an empty password used to do nothing at all. -->
+    <string name="auth_password_required">Введите пароль</string>
+    <string name="auth_err_credentials">Неверная почта или пароль. Проверьте и повторите.</string>
+    <string name="auth_err_gone">Ссылка устарела. Начните вход заново.</string>
+    <string name="auth_err_rate_limited">Слишком много попыток. Повторите через минуту.</string>
+    <string name="auth_err_unavailable">Сервис временно недоступен. Повторите через пару минут.</string>
+    <string name="auth_err_network">Нет подключения к интернету. Проверьте сеть и повторите.</string>
+    <string name="auth_err_timeout">Сервер не отвечает. Повторите позже.</string>
+    <string name="auth_err_tg_timeout">Мы не дождались подтверждения. Начните заново.</string>
+    <string name="auth_err_not_configured">Вход сейчас недоступен. Повторите попытку позже.</string>
+    <string name="auth_err_generic">Что-то пошло не так. Повторите попытку.</string>
+    <!-- Семидневный токен кончился сам: подписки и серверы при этом НЕ удаляются. -->
+    <string name="auth_err_session_expired">Сессия истекла. Войдите снова: подписки и серверы остались на устройстве.</string>
+    <string name="auth_err_telegram_missing">Telegram не установлен. Войдите по почте.</string>
+    <!-- The same failure during «Привязать Telegram», where «войдите по почте» would be nonsense:
+         that account is already signed in, and Telegram is the only thing this errand needs. -->
+    <string name="auth_err_link_telegram_missing">Telegram не установлен. Установите приложение и повторите привязку.</string>
+    <string name="auth_err_browser_missing">Не нашли браузер, чтобы открыть сайт. Зайдите на departament.site с другого устройства.</string>
+
+    <!-- R8: a loading control keeps its width, drops its label and announces
+         itself as «<подпись>, загрузка». 22-components.md 20.1 wants a shared
+         @string/state_loading; values/strings.xml belongs to another wave, so the
+         auth module carries its own wording until that key lands. -->
+    <string name="auth_loading_cd">%1$s, загрузка</string>
+</resources>

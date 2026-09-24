@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  The 28dp flag plate on a server row. Handoff §4 / code_reference «Строка сервера»:
+  «флаг 28dp, border-radius 12dp, background surf3».
+
+  surf3 is #20242B, which this product already names colorSurfaceContainerHighest — the
+  same plane the avatar monogram and the connect disc sit on (TOKENS.md: no duplicate
+  token was minted for it). It was colorSurfaceVariant, a tinted role that reads as its
+  HUE rather than as a step on the neutral ramp: #E9EEF7 in the light theme, 1.09:1
+  against the card, i.e. barely a plate at all, and under ThemeOverlay.Mono the tint it
+  depended on is gone by contract. The highest neutral step is a plate in all four theme
+  combinations for the same reason every other tile in the product uses it.
+-->
+<shape xmlns:android="http://schemas.android.com/apk/res/android"
+    android:shape="rectangle">
+    <solid android:color="?attr/colorSurfaceContainerHighest" />
+    <corners android:radius="@dimen/radius_tile" />
+</shape>

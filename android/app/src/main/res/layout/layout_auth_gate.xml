@@ -1,0 +1,371 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  ============================================================================
+  SURFACE A — THE GATE.  14-auth.md §5.
+  ============================================================================
+
+  ONE BLOCK, NOT TWO ANCHORS.  Owner test 2026-07-27, item C3: «когда нажимаешь
+  войти, надо чтобы кнопки были выше». The first build of this screen pinned the
+  intro to the top and the actions to the bottom, and on a 6.7-inch phone that
+  left a headline stranded above 300dp of nothing with two buttons parked on the
+  bezel. It reads as a screen that failed to load, not as a composition.
+
+  So the heading, the sub-line and the actions are now ONE group — 32dp apart,
+  read as a unit — floated by a pair of weighted spacers, 3 above and 4 below.
+  The 3:4 split puts the group a touch above the optical centre, which is where
+  the eye lands and where the thumb already is; nothing sits on the bottom edge
+  and nothing is stranded at the top.
+
+  The spacers are still the composition and not left-over room: fillViewport +
+  weight means a short viewport (landscape, split screen, font scale 200%)
+  collapses both to nothing and the whole column scrolls. Nothing is ever
+  clipped and nothing overlaps.
+
+  THE FLOORS ARE THE COLUMN'S PADDING, NOT minHeight ON THE SPACERS. A weighted
+  child is re-measured with an EXACTLY spec, and Space.onMeasure returns the spec
+  size verbatim under EXACTLY — its minHeight is discarded. Written that way the
+  floors silently were not there, and at font scale 200% the heading sat flush
+  against the toolbar with the last button flush against the gesture bar. The
+  24/32 live on the column instead, where LinearLayout subtracts them before it
+  distributes the weights, so they hold in both directions.
+
+  NO FILLED SURFACE AT ALL — «залитых белых плашек в этом дизайне нет».
+
+  Every action here is the START SCREEN'S CONTOUR PILL: 52dp
+  (@dimen/btn_height_tall via Button.Secondary.Tall), radius_button, a 1.5dp
+  @dimen/ob_stroke on ?attr/colorOutline, and @color/ob_pill_container — which is
+  nothing at rest and one step of background under the finger. It was a filled
+  accent slab, and on the owner's monochrome theme that reads as a white plate
+  stamped on a black page.
+
+  THE TELEGRAM GLYPH CARRIES TELEGRAM'S OWN #2AABEE now, exactly as it does in
+  layout_home_empty.xml. The old note here banned that on the grounds that a second
+  brand hue must not spend the product's accent — but on an unfilled pill it spends
+  nothing: the label stays ?attr/colorOnSurface and the container stays empty, so
+  the brand colour marks the METHOD and never becomes the screen's accent. The two
+  sign-in surfaces the user meets — first run and this one — now say it identically.
+
+  ZERO CARDS. 03-direction.md 10.1: the sign-in form is not an object floating on
+  a surface, it is the screen.
+
+  THE WAIT IS A LEDGER ROW (5.3). 40dp leading slot, 12dp gap, text origin 68dp —
+  identical to every list row in the app, so the most unusual moment in the
+  product is built from its most ordinary part. That is why the awaiting state is
+  not a centred hero spinner with a paragraph under it.
+
+  THE ACTION SLOT NEVER CHANGES HEIGHT. The awaiting stack is 64dp taller than
+  the idle one, and while it was GONE that difference moved the whole column the
+  instant the crossfade started — a layout jump under a 200ms fade, which is the
+  cheapest-looking thing a transition can do. It is INVISIBLE instead, so the
+  FrameLayout is always measured against the taller of the two and the heading,
+  the CTA and the row that replaces it all sit on exactly the same baseline. An
+  invisible view is out of the accessibility tree and its progress indicator
+  stops animating, so nothing is paid for the stability.
+
+  THE ERROR LINE SITS ABOVE THE ACTION SLOT: it belongs to the intro's half of
+  the group, so a two-line failure grows upwards into the lead spacer instead of
+  shoving the buttons down under the thumb. Start-aligned at the gutter, like
+  every other line here; the old centred grey-red line at the bottom of a scroll
+  is deleted.
+-->
+<androidx.core.widget.NestedScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/gate_scroll"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:clipToPadding="false"
+    android:fillViewport="true"
+    android:paddingStart="@dimen/screen_gutter"
+    android:paddingEnd="@dimen/screen_gutter"
+    android:scrollbars="none">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:paddingTop="@dimen/space_24"
+        android:paddingBottom="@dimen/space_32">
+
+        <!-- The lead spacer. Weight 3 against the trail's 4, so the group settles
+             just above the optical centre instead of on the top edge. It carries
+             no minHeight: an EXACTLY spec ignores one, and the floor above it is
+             the column's own padding. -->
+        <Space
+            android:id="@+id/gate_lead"
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="3" />
+
+        <LinearLayout
+            android:id="@+id/gate_intro"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical">
+
+            <!-- «Вход в аккаунт» (the owner's wording, 2026-08-17). A Latin token in
+                 the title is re-set in the brand face at bind time (D-14.1) — this
+                 heading no longer has one, and that is why there is still no logo, no
+                 shield tile and no wordmark lockup above it: the screen names the
+                 errand, not the product. -->
+            <TextView
+                android:id="@+id/gate_title"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:accessibilityHeading="true"
+                android:maxLines="2"
+                android:text="@string/auth_gate_title"
+                android:textAppearance="@style/TextAppearance.App.Headline"
+                android:textColor="?attr/colorOnSurface" />
+
+            <!-- §7's «необязательное пояснение 13sp» — TextAppearance.App.Subtitle is
+                 that role. It was Body 14: one step too loud under a 24sp heading, and a
+                 different size from the same sentence's twin on every sub-page. -->
+            <TextView
+                android:id="@+id/gate_body"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/space_8"
+                android:maxLines="3"
+                android:maxWidth="@dimen/ob_sub_max_width"
+                android:text="@string/auth_gate_body"
+                android:textAppearance="@style/TextAppearance.App.Subtitle"
+                android:textColor="?attr/colorOnSurfaceVariant" />
+        </LinearLayout>
+
+        <!-- 32dp, the same step that separates a section from its content
+             everywhere else, is what ties the heading to what it is asking for.
+             It is a margin and not a spacer: this gap never stretches. -->
+        <LinearLayout
+            android:id="@+id/gate_actions"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/space_32"
+            android:orientation="vertical">
+
+            <!-- Screen-level error: Body 14/400 in the error TEXT red (6.15:1),
+                 not the 4.88:1 fill red. Field errors are Caption 12 (D-14.3). -->
+            <TextView
+                android:id="@+id/gate_error"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="@dimen/space_12"
+                android:accessibilityLiveRegion="polite"
+                android:textAppearance="@style/TextAppearance.App.Body"
+                android:textColor="?attr/colorDestructiveText"
+                android:visibility="gone"
+                tools:text="@string/auth_err_network"
+                tools:visibility="visible" />
+
+            <!-- The crossfade host: exactly one stack is READABLE at a time, but
+                 both are always MEASURED, so the slot is the taller one's height
+                 in every state and nothing below the heading ever moves. -->
+            <FrameLayout
+                android:id="@+id/gate_action_slot"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content">
+
+                <LinearLayout
+                    android:id="@+id/gate_stack_idle"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical">
+
+                    <!-- The button and its loading arc share a frame so R8 can hide
+                         the label without the control changing width: the button is
+                         match_parent, so the width is pinned by the layout itself. -->
+                    <FrameLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content">
+
+                        <com.google.android.material.button.MaterialButton
+                            android:id="@+id/btn_gate_telegram"
+                            style="@style/Widget.Departament.Button.Secondary.Tall"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:text="@string/auth_btn_telegram"
+                            android:textAppearance="@style/TextAppearance.App.Button"
+                            app:backgroundTint="@color/ob_pill_container"
+                            app:cornerRadius="@dimen/radius_button"
+                            app:icon="@drawable/ic_telegram_24dp"
+                            app:iconTint="@color/telegram_brand"
+                            app:strokeColor="?attr/colorOutline"
+                            app:strokeWidth="@dimen/ob_stroke" />
+
+                        <com.google.android.material.progressindicator.CircularProgressIndicator
+                            android:id="@+id/pb_gate_telegram"
+                            style="@style/Widget.Departament.Progress.Circular.Inline"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_gravity="center"
+                            android:visibility="gone"
+                            tools:visibility="visible" />
+                    </FrameLayout>
+
+                    <!-- «ВОЙТИ ЧЕРЕЗ САЙТ», and it is the same contour pill rather than a
+                         quiet text button. It read «Войти по почте», which the owner has
+                         ruled out of the interface: e-mail, OTP, 2FA and Google collapse
+                         into this one control, exactly as they do behind «Другие способы»
+                         on the start screen.
+
+                         THE @+id STAYS `btn_gate_email`. LoginActivity binds it by that
+                         name, and renaming an id to match a label is how a sign-in stops
+                         working with nothing to show for it. Nothing behind the button
+                         changed either — it opens the very form it always did, which is
+                         what «код авторизации остаётся в проекте» means in practice. -->
+                    <com.google.android.material.button.MaterialButton
+                        android:id="@+id/btn_gate_email"
+                        style="@style/Widget.Departament.Button.Secondary.Tall"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="@dimen/space_14"
+                        android:text="@string/onb_login_site"
+                        android:textAppearance="@style/TextAppearance.App.Button"
+                        app:backgroundTint="@color/ob_pill_container"
+                        app:cornerRadius="@dimen/radius_button"
+                        app:icon="@drawable/ic_ob_mail"
+                        app:iconTint="?attr/colorOnSurfaceVariant"
+                        app:strokeColor="?attr/colorOutline"
+                        app:strokeWidth="@dimen/ob_stroke" />
+                </LinearLayout>
+
+                <LinearLayout
+                    android:id="@+id/gate_stack_awaiting"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:visibility="invisible"
+                    tools:visibility="visible">
+
+                    <!-- The universal 56dp row: 40 slot, 12 gap, text at 68 from the
+                         screen edge (16 gutter on the scroll + 40 + 12). Read as one
+                         node by TalkBack and announced politely when it appears. -->
+                    <LinearLayout
+                        android:id="@+id/gate_awaiting_row"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:accessibilityLiveRegion="polite"
+                        android:baselineAligned="false"
+                        android:gravity="center_vertical"
+                        android:minHeight="@dimen/row_min_height"
+                        android:orientation="horizontal">
+
+                        <FrameLayout
+                            android:id="@+id/gate_ring"
+                            android:layout_width="@dimen/tile_size"
+                            android:layout_height="@dimen/tile_size">
+
+                            <!-- THE ARC SIZES ITSELF AND IS CENTRED IN THE TILE; it is not
+                                 stretched to the tile's own bounds. `indicatorSize` is the
+                                 arc's centreline diameter, so pinning both it and the view
+                                 to 40dp left no room for the 2dp stroke or the component's
+                                 inset and the ring drew over — and was clipped by — the
+                                 tile's edge. wrap_content lets Material reserve
+                                 indicatorSize + 2 × inset, which is what keeps a round
+                                 thing round. See @dimen/tile_progress_ring. -->
+                            <com.google.android.material.progressindicator.CircularProgressIndicator
+                                android:id="@+id/gate_ring_arc"
+                                style="@style/Widget.Departament.Progress.Circular.Inline"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:layout_gravity="center"
+                                app:indicatorSize="@dimen/tile_progress_ring"
+                                app:trackColor="?attr/colorOutlineVariant" />
+
+                            <!-- The success beat's terminal frame: the arc fades out,
+                                 the check fades and scales in, 120ms hold, done. -->
+                            <ImageView
+                                android:id="@+id/gate_ring_check"
+                                android:layout_width="@dimen/glyph_20"
+                                android:layout_height="@dimen/glyph_20"
+                                android:layout_gravity="center"
+                                android:alpha="0"
+                                android:importantForAccessibility="no"
+                                android:src="@drawable/ic_fab_check"
+                                app:tint="?attr/colorPrimary" />
+                        </FrameLayout>
+
+                        <LinearLayout
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_marginStart="@dimen/space_12"
+                            android:layout_weight="1"
+                            android:orientation="vertical">
+
+                            <TextView
+                                android:id="@+id/gate_awaiting_title"
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:maxLines="2"
+                                android:text="@string/auth_awaiting_title"
+                                android:textAppearance="@style/TextAppearance.App.Title"
+                                android:textColor="?attr/colorOnSurface" />
+
+                            <TextView
+                                android:id="@+id/gate_awaiting_body"
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:layout_marginTop="@dimen/space_4"
+                                android:maxLines="2"
+                                android:text="@string/auth_awaiting_body"
+                                android:textAppearance="@style/TextAppearance.App.Subtitle"
+                                android:textColor="?attr/colorOnSurfaceVariant" />
+                        </LinearLayout>
+                    </LinearLayout>
+
+                    <!-- Two actions is the cap (R14.6) and this stack is exactly at it.
+                         There is no «Начать заново»: restarting is what the CTA does, and
+                         the timeout state puts that CTA back on screen by itself. Cancel is
+                         system Back.
+
+                         Both are the same contour pill as the idle stack's, because they
+                         are the same two errands — «открыть Telegram ещё раз» and «войти
+                         через сайт вместо этого» — and the screen has ONE button shape.
+                         They were Tertiary text buttons, i.e. a third weight on a surface
+                         that only has two things to say. -->
+                    <com.google.android.material.button.MaterialButton
+                        android:id="@+id/btn_gate_open_telegram"
+                        style="@style/Widget.Departament.Button.Secondary.Tall"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="@dimen/space_14"
+                        android:text="@string/auth_open_telegram"
+                        android:textAppearance="@style/TextAppearance.App.Button"
+                        app:backgroundTint="@color/ob_pill_container"
+                        app:cornerRadius="@dimen/radius_button"
+                        app:icon="@drawable/ic_telegram_24dp"
+                        app:iconTint="@color/telegram_brand"
+                        app:strokeColor="?attr/colorOutline"
+                        app:strokeWidth="@dimen/ob_stroke" />
+
+                    <!-- The awaiting stack's own «Войти по почте»; see @id/btn_gate_email
+                         above for why the id keeps the older word. -->
+                    <com.google.android.material.button.MaterialButton
+                        android:id="@+id/btn_gate_email_alt"
+                        style="@style/Widget.Departament.Button.Secondary.Tall"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="@dimen/space_14"
+                        android:text="@string/onb_login_site"
+                        android:textAppearance="@style/TextAppearance.App.Button"
+                        app:backgroundTint="@color/ob_pill_container"
+                        app:cornerRadius="@dimen/radius_button"
+                        app:icon="@drawable/ic_ob_mail"
+                        app:iconTint="?attr/colorOnSurfaceVariant"
+                        app:strokeColor="?attr/colorOutline"
+                        app:strokeWidth="@dimen/ob_stroke" />
+                </LinearLayout>
+            </FrameLayout>
+        </LinearLayout>
+
+        <!-- The trail spacer. Weight 4 against the lead's 3: it keeps the group
+             off the bottom edge and off the gesture bar, and it is the one that
+             gives way first when the viewport gets short. Same as the lead — the
+             floor below it is the column's padding, not a minHeight. -->
+        <Space
+            android:id="@+id/gate_spacer"
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="4" />
+    </LinearLayout>
+</androidx.core.widget.NestedScrollView>

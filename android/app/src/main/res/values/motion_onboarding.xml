@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Длительности начального экрана и прогрузки, которых нет в values/motion.xml.
+
+  Из уже заведённого берутся: @integer/motion_expand 340 (раскрытие блока),
+  @integer/motion_caret 300 (поворот стрелки), @integer/motion_appear 460
+  (появление элемента), @integer/motion_spin 1100 (оборот дуги),
+  @integer/motion_emphasis 600 (сонар), @integer/motion_popup 260 (подъём тоста).
+-->
+<resources>
+
+    <!-- §2 «Появление экрана»: щит 620 мс из 0.7x. -->
+    <integer name="motion_ob_bloom">620</integer>
+
+    <!-- §2 «Переключение состояний буфера»: высота 340 мс, прозрачность 240 мс. -->
+    <integer name="motion_ob_fade">240</integer>
+
+    <!-- §3 полоса прогресса едет 900 мс ease-out-quart. -->
+    <integer name="motion_flow_bar">900</integer>
+
+    <!-- §3 уход «Проявление»: прозрачность в 0 за 520 мс. -->
+    <integer name="motion_flow_exit">520</integer>
+
+</resources>

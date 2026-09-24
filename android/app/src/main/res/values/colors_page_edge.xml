@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <!--
+        THE COLOUR THE PAGE ACTUALLY IS AT ITS BOTTOM EDGE.
+
+        @drawable/bg_bottom_nav_scrim fades the scrolling content out under the nav buttons, and a
+        fade only disappears if it ends on the pixel the page already shows there. It used to end on
+        ?android:attr/colorBackground, which is right in the dark themes BY COINCIDENCE — night's
+        bg_home_gradient ends #0A0B0D and md_theme_background IS #0A0B0D — and wrong in the light
+        one, where the gradient ends #D3E0F7 against a background of #F4F7FC. Those differ enough to
+        read as a band, which is the owner's report: «на белой теме также есть какая-то прозрачная
+        полоска синяя в самом низу, независимо от положения на экране».
+
+        It was left that way deliberately, with the note "not worth minting a page-edge token for a
+        theme this product does not ship in". That reasoning expired the moment «Как в системе»
+        became the default and the light theme became a surface people actually see.
+
+        THIS IS bg_home_gradient's endColor, WRITTEN A SECOND TIME, and the two must stay equal.
+        They are safe to keep in step because they are chosen by the SAME qualifier: the gradient
+        exists as drawable/ and drawable-night/, this colour as values/ and values-night/. A theme
+        OVERLAY (ThemeOverlay.Mono) cannot reach either of them, so mono gets whatever the gradient
+        gives it and the scrim matches that too — the pair cannot drift apart per-theme, only if
+        somebody edits one file and not the other.
+    -->
+    <color name="page_edge">#D3E0F7</color>
+
+</resources>

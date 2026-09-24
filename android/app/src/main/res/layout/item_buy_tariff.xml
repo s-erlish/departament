@@ -1,0 +1,187 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  ============================================================================
+  ONE TARIFF — handoff README §7, «Купить подписку».
+  ============================================================================
+
+  Свёрнутый:  название 16sp/700 · бейдж «Текущий» у активного · описание 13sp
+              · справа цена и «в месяц» · каретка
+  Раскрытый:  контур и название загораются акцентом, каретка поворачивается на
+              180°, внутри — список сроков. Открыт всегда один.
+
+  WHAT THE CARD SAYS BEFORE IT IS OPENED is the whole change. It used to show the
+  tariff's name, a «Устройства: 3 · Трафик: ∞» line and an invisible check mark,
+  which meant the one thing a person is choosing between — the price — was only
+  legible after tapping. Now the monthly rate sits on the right of every collapsed
+  card, so the two tariffs can be compared without opening either.
+
+  THE PRICE IS DERIVED FROM THE SERVER'S OWN OPTIONS and nothing is hardcoded: §7
+  says «список сроков у каждого тарифа свой — приходит с сервера, не зашивать»,
+  so BuyTariffActivity computes the cheapest per-month rate across the price
+  options the catalog actually returned. A tariff with one option shows that
+  option's rate; a tariff with none shows nothing rather than a zero.
+
+  THE CARET REPLACED THE CHECK MARK, and the id moved with the meaning:
+  @id/iv_check promised «selected», which is not what this control does — a tariff
+  card OPENS, and the affordance for that is the caret §6 gives every row whose tap
+  reveals a list rather than pushing a screen. It is @id/iv_tariff_caret now, and
+  BuyTariffActivity is the only file that ever resolved the old name.
+
+  NO NESTED CARDS: the duration rows inside are rows, not cards.
+-->
+<com.google.android.material.card.MaterialCardView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/card_tariff"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:layout_marginBottom="@dimen/space_12"
+    android:checkable="false"
+    app:cardBackgroundColor="?attr/colorSurface"
+    app:cardCornerRadius="@dimen/radius_card"
+    app:cardElevation="0dp"
+    app:strokeColor="?attr/colorOutlineVariant"
+    app:strokeWidth="@dimen/stroke_hairline">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical">
+
+        <!-- The header is the target: tapping it opens this tariff and closes the other.
+             @drawable/bg_row + @anim/press_row rather than a ripple — §1 bans the kind. -->
+        <LinearLayout
+            android:id="@+id/header_tariff"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:background="@drawable/bg_row"
+            android:baselineAligned="false"
+            android:clickable="true"
+            android:focusable="true"
+            android:gravity="center_vertical"
+            android:minHeight="@dimen/row_min_height"
+            android:orientation="horizontal"
+            android:padding="@dimen/space_16"
+            android:stateListAnimator="@anim/press_row">
+
+            <LinearLayout
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginEnd="@dimen/space_12"
+                android:layout_weight="1"
+                android:orientation="vertical">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:baselineAligned="false"
+                    android:gravity="center_vertical"
+                    android:orientation="horizontal">
+
+                    <TextView
+                        android:id="@+id/tv_tariff_name"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:ellipsize="end"
+                        android:maxLines="1"
+                        android:textAppearance="@style/TextAppearance.App.Title"
+                        tools:text="Pro" />
+
+                    <!-- «Текущий»: a fact about the tariff you already pay for, so it is a chip
+                         and not a button. It is set from the subscriptions the account reports,
+                         never from the catalog — the catalog does not know what you own. -->
+                    <TextView
+                        android:id="@+id/tv_tariff_badge"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="@dimen/space_8"
+                        android:background="@drawable/bg_acc_badge"
+                        android:paddingStart="@dimen/space_8"
+                        android:paddingTop="@dimen/space_2"
+                        android:paddingEnd="@dimen/space_8"
+                        android:paddingBottom="@dimen/space_2"
+                        android:text="@string/buy_current"
+                        android:textAppearance="@style/TextAppearance.App.Chip"
+                        android:textColor="?attr/colorOnPrimaryContainer"
+                        android:visibility="gone"
+                        tools:visibility="visible" />
+                </LinearLayout>
+
+                <TextView
+                    android:id="@+id/tv_tariff_info"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="@dimen/space_2"
+                    android:maxLines="2"
+                    android:textAppearance="@style/TextAppearance.App.Subtitle"
+                    tools:text="10 устройств · трафик без ограничений" />
+            </LinearLayout>
+
+            <!-- Цена и «в месяц», выключены из потока текста: они читаются как одна величина. -->
+            <LinearLayout
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:gravity="end"
+                android:orientation="vertical">
+
+                <TextView
+                    android:id="@+id/tv_tariff_from"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:maxLines="1"
+                    android:textAppearance="@style/TextAppearance.App.Title"
+                    tools:text="250 ₽" />
+
+                <TextView
+                    android:id="@+id/tv_tariff_period"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:maxLines="1"
+                    android:text="@string/buy_per_month"
+                    android:textAppearance="@style/TextAppearance.App.Caption" />
+            </LinearLayout>
+
+            <!-- 4dp and not 12: §6 gives the wider gap to a value or a switch, never to a
+                 bare glyph. The price above is the value, and it already took its 12. -->
+            <ImageView
+                android:id="@+id/iv_tariff_caret"
+                android:layout_width="@dimen/glyph_20"
+                android:layout_height="@dimen/glyph_20"
+                android:layout_marginStart="@dimen/space_4"
+                android:importantForAccessibility="no"
+                app:srcCompat="@drawable/ic_arrow_drop_down"
+                app:tint="?attr/colorOnSurfaceVariant" />
+        </LinearLayout>
+
+        <!-- Сроки. Раскрываются только у выбранного тарифа.
+
+             IT HAS NO PADDING ON ANY SIDE, AND THE BOTTOM ONE IS THE FIX. The term
+             rows are full-bleed: each one paints its own frame (@drawable/bg_buy_option
+             / _selected) edge to edge, so on the left and the right that frame lands on
+             the card's own stroke and the group reads as one bar. The bottom carried
+             space_8, which put an 8dp strip of bare card between the last row's frame
+             and the card's — «если раскрыть, то там где 90 дней там и рамка полная
+             видишь там пустое пространство есть, не ровно выделяется целый бар этих
+             кнопок выбора».
+
+             It was not the animation. BuyTariffActivity.reveal animates the HEIGHT and
+             then settlePanel puts it back to WRAP_CONTENT on every leg, including the
+             reduced-motion one, so the panel always comes to rest on its measured
+             content and never a frame short. The strip was in the layout the whole
+             time, at rest as much as in flight.
+
+             Nor is it breathing room the card needs. The prototype's own panel ends on
+             its last row too — what follows the terms there is the «Оплатить …» block,
+             which this screen moved to the checkout card at the foot of the page (§7),
+             and the padding is what stayed behind when the button left. With it gone
+             the last row's fill and frame run to the card's edge and the card clips
+             them to its 20dp corners, exactly as it already does at the sides. -->
+        <LinearLayout
+            android:id="@+id/ll_price_options"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:visibility="gone"
+            tools:visibility="visible" />
+    </LinearLayout>
+</com.google.android.material.card.MaterialCardView>

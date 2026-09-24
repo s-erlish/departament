@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Renamed from the old «Ввести вручную»: with «Создать вручную» next to it, "вручную"
+         alone no longer says which of the two it is. This one takes a pasted link or config. -->
+    <string name="menu_actions_add_link">Ввести ссылку</string>
+    <string name="menu_actions_add_create">Создать вручную</string>
+    <string name="menu_actions_add_file">Импортировать из файла</string>
+
+    <!-- Protocol picker shown by «Создать вручную» -->
+    <string name="menu_actions_type_title">Тип сервера</string>
+    <string name="menu_actions_type_group">Группа серверов</string>
+    <string name="menu_actions_type_chain">Цепочка прокси</string>
+
+    <!-- ==================== Results, guards, recovery ==================== -->
+
+    <string name="menu_actions_cancel">Отмена</string>
+
+    <string name="menu_actions_file_failed">Не удалось прочитать файл. Выберите другой файл и повторите.</string>
+</resources>

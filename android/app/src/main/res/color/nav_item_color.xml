@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Bottom-navigation / rail item glyph + label tint. The active destination reads on
+  THREE axes — this colour, weight 700 from @style/BottomNavLabel.Active, and the
+  64x34 primaryContainer indicator — so it survives the mono theme (00-rules.md 7.7).
+
+  Supersedes @color/bottom_nav_item_color, which stays alive until its last
+  reference migrates (additive-only rule).
+-->
+<selector xmlns:android="http://schemas.android.com/apk/res/android">
+    <item android:color="?attr/colorPrimary" android:state_checked="true" />
+    <item android:color="?attr/colorOnSurfaceVariant" />
+</selector>

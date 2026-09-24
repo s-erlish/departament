@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Empty-state tile: 64 square, radius_card 20, colorSurfaceContainerHighest, holding
+  a 32dp glyph in colorOnSurfaceVariant. NEUTRAL, never accent — an empty state is
+  not the screen's primary action surface and does not spend the accent budget on
+  decoration (22-components.md 15).
+-->
+<shape xmlns:android="http://schemas.android.com/apk/res/android"
+    android:shape="rectangle">
+    <solid android:color="?attr/colorSurfaceContainerHighest" />
+    <corners android:radius="@dimen/radius_card" />
+</shape>

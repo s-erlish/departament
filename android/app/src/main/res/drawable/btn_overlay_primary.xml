@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  THE PRIMARY BUTTON'S FOREGROUND — every state of it, in one selector.
+
+  Why a foreground at all: MaterialButton builds its own background
+  (MaterialButtonHelper.createBackground) after the View constructor has read
+  android:background, so a style CANNOT hand a MaterialButton a gradient the normal
+  way. app:backgroundTint takes a ColorStateList, and a ColorStateList is flat by
+  definition. The fill therefore stays the tint and the depth is laid over it.
+
+  The fade durations are the "animated" half of the owner's instruction: the bevel
+  does not swap, it cross-fades, in over motion_press_in 90ms and out over
+  motion_press_out 160ms - the same clock @anim/press_scale runs the 0.97 press on,
+  so the shape shrinking and the light moving are one gesture.
+
+  ORDER IS THE LOGIC. A ColorStateList/StateListDrawable takes the first item whose
+  states are a subset of the view's, so:
+    disabled  first  - an inert control is flat, never glossy (R6);
+    loading   next   - it outranks pressed, so a button that is already working
+                       cannot be pushed back into a press look;
+    pressed   then   - the inverted bevel;
+    rest      last.
+-->
+<selector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:enterFadeDuration="@integer/motion_press_in"
+    android:exitFadeDuration="@integer/motion_press_out">
+
+    <item android:drawable="@android:color/transparent" android:state_enabled="false" />
+    <!-- LOADING holds the RESTING bevel, and holds it ahead of the pressed row so a
+         control that is already working can never be pushed into a press look. R8:
+         opacity stays 1.0 while it works — a faded button reads as broken, not as
+         busy. What changes is the label, which the content ColorStateList takes to
+         alpha 0 on this same state so it is still measured and the button cannot
+         resize; the arc over it is the design system's own
+         @style/Widget.Departament.Progress.Circular.Inline.*, centred by the screen,
+         not a second spinner invented here. -->
+    <item android:drawable="@drawable/btn_gloss_rest" android:state_activated="true" />
+    <item android:drawable="@drawable/btn_gloss_press" android:state_pressed="true" />
+    <item android:drawable="@drawable/btn_gloss_rest" />
+
+</selector>

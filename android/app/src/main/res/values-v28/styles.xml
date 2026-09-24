@@ -1,0 +1,88 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  ============================================================================
+  THE TYPE RAMP'S API-28 HALF, AND NOTHING ELSE.
+  ============================================================================
+
+  `android:textFontWeight` and `android:lineHeight` are API 28. minSdk here is 24, so
+  declaring them in values/ made lint right and the file misleading: on 24-27 they are
+  parsed and dropped, and the ramp was left resolving through its OTHER half.
+
+  That other half is real and is what carries 24-27, which is why this split costs
+  nothing below 28:
+    · WEIGHT — every ramp role binds an explicit static MASTER (@font/golos_text_bold /
+      _medium / _regular), never the family plus a numeric weight, so the declared
+      weight is the drawn weight on API 24 exactly as on 34. This file only makes the
+      match exact for the platform's own font matcher from 28 up.
+    · LEADING — every size-bearing role also declares AppCompat's `lineHeight`, which
+      is honoured on every supported API.
+
+  Each entry below is the API-qualified PARENT of the role of the same name in
+  values/styles.xml. Parents resolve per configuration, so the role has one definition,
+  in one file, and only its two platform-gated items live here. Adding a role means
+  adding its parent here too — values/styles.xml names it, so a missing one is a build
+  error rather than a silent regression.
+-->
+<resources>
+
+    <style name="TextAppearance.App.Display.Api28" parent="TextAppearance.Material3.HeadlineMedium">
+        <item name="android:textFontWeight">700</item>
+        <item name="android:lineHeight">40sp</item>
+    </style>
+
+    <style name="TextAppearance.App.Headline.Api28" parent="TextAppearance.Material3.HeadlineSmall">
+        <item name="android:textFontWeight">700</item>
+        <item name="android:lineHeight">28sp</item>
+    </style>
+
+    <style name="TextAppearance.App.Title.Api28" parent="TextAppearance.Material3.TitleMedium">
+        <item name="android:textFontWeight">700</item>
+        <item name="android:lineHeight">20sp</item>
+    </style>
+
+    <style name="TextAppearance.App.Title.Medium.Api28" parent="TextAppearance.App.Title">
+        <item name="android:textFontWeight">500</item>
+    </style>
+
+    <style name="TextAppearance.App.Body.Api28" parent="TextAppearance.Material3.BodyMedium">
+        <item name="android:textFontWeight">400</item>
+        <item name="android:lineHeight">20sp</item>
+    </style>
+
+    <style name="TextAppearance.App.Subtitle.Api28" parent="TextAppearance.Material3.BodyMedium">
+        <item name="android:textFontWeight">400</item>
+        <item name="android:lineHeight">18sp</item>
+    </style>
+
+    <style name="TextAppearance.App.Caption.Api28" parent="TextAppearance.Material3.BodySmall">
+        <item name="android:textFontWeight">400</item>
+        <item name="android:lineHeight">16sp</item>
+    </style>
+
+    <style name="TextAppearance.App.Chip.Api28" parent="TextAppearance.Material3.LabelSmall">
+        <item name="android:textFontWeight">500</item>
+        <item name="android:lineHeight">14sp</item>
+    </style>
+
+    <style name="TextAppearance.App.Numeric.Api28" parent="TextAppearance.Material3.BodyMedium">
+        <item name="android:textFontWeight">500</item>
+    </style>
+
+    <style name="ToolbarBrandTitle.Api28" parent="TextAppearance.Material3.TitleLarge">
+        <item name="android:textFontWeight">700</item>
+        <item name="android:lineHeight">24sp</item>
+    </style>
+
+    <style name="BottomNavLabel.Api28" parent="TextAppearance.App.Chip.Ui">
+        <item name="android:textFontWeight">500</item>
+    </style>
+
+    <style name="BottomNavLabel.Active.Api28" parent="BottomNavLabel">
+        <item name="android:textFontWeight">700</item>
+    </style>
+
+    <style name="ThemeOverlay.Departament.Dialog.Api28" parent="ThemeOverlay.Material3.MaterialAlertDialog">
+        <item name="android:dialogCornerRadius">@dimen/radius_card</item>
+    </style>
+
+</resources>

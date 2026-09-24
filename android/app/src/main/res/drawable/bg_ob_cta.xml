@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- §2.4: кнопка «Добавить подписку» внутри карточки найденной подписки — 48dp,
+     radius 24dp, обводка акцентом 1.5dp, заливки нет. Это единственное акцентное
+     пятно экрана, и оно контурное, поэтому бюджет заливок остаётся нулевым. -->
+<selector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:enterFadeDuration="@integer/motion_press_in"
+    android:exitFadeDuration="@integer/motion_press_out">
+    <item android:state_pressed="true">
+        <shape android:shape="rectangle">
+            <solid android:color="?attr/colorPressBg" />
+            <stroke
+                android:width="@dimen/ob_stroke"
+                android:color="?attr/colorPrimary" />
+            <corners android:radius="@dimen/radius_button" />
+        </shape>
+    </item>
+    <item>
+        <shape android:shape="rectangle">
+            <solid android:color="@android:color/transparent" />
+            <stroke
+                android:width="@dimen/ob_stroke"
+                android:color="?attr/colorPrimary" />
+            <corners android:radius="@dimen/radius_button" />
+        </shape>
+    </item>
+</selector>

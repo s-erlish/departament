@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Экран «Настройки подписок» (ProviderSettingsActivity).
+
+         Владелец называет эту сущность подпиской, а не провайдером: слово
+         заменено во всех строках экрана. Ключи (ps_*) оставлены прежними, чтобы
+         не трогать разметку чужой волны.
+
+         Заголовок экрана был последним местом, где слово «провайдер» ещё
+         показывалось пользователю: «в настройках подписок… там внутри надо сверху
+         текст поменять вместо провайдеров на подписок» (0.4.9). Строка внутри
+         вкладки Настроек, которая сюда ведёт (settings_provider), называлась
+         «Настройки подписок» уже давно — то есть кнопка и открывающийся экран
+         называли одну вещь двумя словами. Теперь одним.
+         Переименован только видимый текст: ни ps_title, ни ProviderSettingsActivity,
+         ни один ps_*-ключ не тронуты. -->
+    <string name="ps_title">Настройки подписок</string>
+
+    <!-- Разделы -->
+    <string name="ps_section_update">Обновление</string>
+    <string name="ps_section_startup">При запуске</string>
+    <string name="ps_section_network">Сеть</string>
+
+    <!-- Обновление -->
+    <string name="ps_auto_update">Автообновление</string>
+    <string name="ps_notify_updates">Уведомлять об обновлениях</string>
+
+    <!-- При запуске -->
+    <string name="ps_update_on_launch">Обновлять подписки при запуске</string>
+    <string name="ps_ping_on_launch">Пинг серверов при запуске</string>
+    <string name="ps_ping_on_update">Пинг при обновлении</string>
+
+    <!-- Сеть -->
+    <string name="ps_send_hwid">Отправлять HWID</string>
+
+    <!-- ps_user_agent остаётся заголовком строки, но строка больше ничего не
+         открывает: «убери возможность настройки user agent, чтобы жил было
+         некликабельно» (0.4.9). Она показывает User-Agent, который приложение
+         действительно отправляет, и на этом всё — Row.Fact.
+         ps_user_agent_hint и ps_user_agent_error читателя НЕ ПОТЕРЯЛИ: редактор
+         ProviderSettingsActivity.editUserAgent() намеренно оставлен в коде (ключ
+         PREF_SUB_USER_AGENT живой, его honours каждый запрос подписки), просто его
+         больше никто не вызывает. Подробности — в комментарии к самому методу. -->
+    <string name="ps_user_agent">User-Agent</string>
+    <string name="ps_user_agent_hint">User-Agent для запросов подписки</string>
+    <string name="ps_user_agent_error">В заголовке нельзя передать кириллицу и другие не-ASCII символы. Оставьте латиницу, цифры и знаки.</string>
+</resources>

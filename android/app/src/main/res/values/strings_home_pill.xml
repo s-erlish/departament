@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  ГЛАВНАЯ — the status pill under the connect object (handoff README §4).
+
+  ONE STRING, and it exists because the prototype's word for the negotiating state is not
+  the one this build already had. §4 names the three states «Не подключено» /
+  «Подключаемся…» / «Подключено»; the first is @string/home_not_connected and the third
+  @string/home_status_connected, both already in the resources and both reused verbatim.
+  The middle one is not: @string/home_status_connecting reads «Подключение…» — a noun, the
+  name of a process — and it is read by the identity line under the ledger, by the connect
+  object's contentDescription and by the shell's own status calls. Rewording it there to
+  suit a pill would change four other sentences.
+
+  «Подключаемся…» is the prototype's wording, taken to the character, on the owner's
+  instruction of 2026-08-04 («Формулировку бери из прототипа дословно»).
+
+  A file of its own rather than a line appended to strings_home.xml: four screen waves are
+  writing at once and strings_home.xml is read by all of them.
+-->
+<resources>
+    <string name="home_pill_connecting">Подключаемся…</string>
+</resources>

@@ -1,0 +1,1724 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  ============================================================================
+  THE TYPE RAMP AND THE COMPONENT VOCABULARY.
+  00-rules.md 3.4 / 5 / 7 / 11, 10-design-system.md 2.9-2.11 / 4.5 / 4.6,
+  22-components.md R1-R15.
+  ============================================================================
+
+  Two things live in this file and nothing else does.
+
+  1. THE RAMP. Eleven roles, no twelfth. A layout that sets android:textSize,
+     android:fontFamily or android:textColor is a defect — the face, the size, the
+     weight, the tracking, the LINE HEIGHT and the default colour are properties of
+     the ROLE, and the role is the only thing a layout names. 15sp does not exist.
+     18sp does not exist. Do not add a step.
+
+  2. TWO FACES, SPLIT BY SCRIPT (D-1, D-2). Golos Text draws every Russian string.
+     Space Grotesk draws digits, units, currency, Latin technical tokens, chip
+     labels and the wordmark, and nothing else. The split is not taste: the vendored
+     Space Grotesk binary maps 735 codepoints with ZERO in U+0400-U+04FF, so a
+     Russian string set in it has always been silently redrawn by whatever fallback
+     the OS felt like. Which face a role gets is invisible to the compiler and
+     glaring on a screen, so the face is stated on every single role below.
+
+  HOW THE WEIGHT IS BOUND, AND WHY IT IS NOT @font/golos_text ON EVERY ROLE.
+  Golos ships three real static masters (400 / 500 / 700). Each ramp role points at
+  the MASTER it needs, not at the family, because android:textFontWeight is API 28
+  and minSdk here is 24: below 26 a family resolves only normal and bold, so a
+  family-plus-textFontWeight ramp would silently render Title.Medium at 400 and — on
+  the roles that matter most — Title at 400 too. Binding the master makes the
+  declared weight the drawn weight on every supported API, with no synthetic bold
+  anywhere and no reliance on a fallback path.
+  @font/golos_text (the family) still ships and is what any runtime weight change
+  must use. Space Grotesk is a single VARIABLE file, so its roles necessarily go
+  through @font/space_grotesk, whose entries pin 'wght' via fontVariationSettings.
+
+  LINE HEIGHT IS DECLARED, NEVER INHERITED (D-12): AppCompat's `lineHeight` here,
+  which every supported API honours, and `android:lineHeight` from 28 up. Before
+  this, neither platform declared leading at all and the same screen had different
+  rhythm on Android and on Windows.
+
+  THE API-28 HALF LIVES IN values-v28/styles.xml, NOT HERE. `android:textFontWeight`
+  and `android:lineHeight` are API 28 against minSdk 24, so declaring them in this
+  file made lint right (NewApi ×22) and the file misleading: on 24-27 they were
+  parsed and dropped. Each role's parent is now an API-qualified style of the same
+  name + `.Api28`, empty at the foot of this file and carrying the two items in
+  values-v28. One definition per role, in one file; only the two gated items vary by
+  configuration, and nothing about the drawn result changes at 28 because the master
+  font and AppCompat's lineHeight above already carry 24-27.
+
+  ADDITIVE ONLY. Every style name that existed before still exists — SettingsSectionLabel,
+  BottomNavLabel, BottomNavIndicator, ToolbarBrandTitle, ThemeOverlay.Departament.Dialog
+  and its two children are referenced across 73 layouts and are updated in place, never
+  renamed. The canonical component prefix is Widget.Departament.* (22-components.md 0.1
+  naming law); the Widget.App.* spellings from 10-design-system.md 4.6 ship at the foot
+  of this file as thin aliases so neither spelling can break a build, exactly as
+  dimens.xml already does for radius_control / radius_button.
+-->
+<resources>
+
+    <!-- ========================================================================= -->
+    <!-- 1. THE TYPE RAMP                                                          -->
+    <!-- ========================================================================= -->
+
+    <!--
+        DISPLAY — face: SPACE GROTESK (brand). 34sp / 700 / -0.02 / lh 40.
+        One hero FIGURE per screen: balance, connected timer, days left. A Russian
+        WORD never uses Display — a word-sized hero is Headline in the UI face. That
+        restriction is what makes it safe to put the Cyrillic-free face here.
+        tnum + lnum on, because a Display is always a number and a hero figure that
+        reflows every tick is the jitter this ramp exists to stop.
+    -->
+    <style name="TextAppearance.App.Display" parent="TextAppearance.App.Display.Api28">
+        <item name="android:fontFamily">@font/space_grotesk</item>
+        <item name="fontFamily">@font/space_grotesk</item>
+        <item name="android:textSize">34sp</item>
+        <item name="lineHeight">40sp</item>
+        <item name="android:letterSpacing">-0.02</item>
+        <item name="android:fontFeatureSettings">"tnum" on, "lnum" on</item>
+        <item name="android:textColor">?attr/colorOnSurface</item>
+        <item name="android:textAllCaps">false</item>
+    </style>
+
+    <!--
+        HEADLINE — face: GOLOS TEXT (ui). 24sp / 700 / -0.01 / lh 28.
+        Screen title on a scroll-title screen, welcome, empty-state title. Russian,
+        therefore Golos: this role carried @font/space_grotesk before, which is the
+        no-op D-1 describes. This is the handoff §8's «24/700 заголовок экрана» and
+        §7's «крупный заголовок 24sp/700» on every sub-screen.
+    -->
+    <style name="TextAppearance.App.Headline" parent="TextAppearance.App.Headline.Api28">
+        <item name="android:fontFamily">@font/golos_text_bold</item>
+        <item name="fontFamily">@font/golos_text_bold</item>
+        <item name="android:textSize">24sp</item>
+        <item name="lineHeight">28sp</item>
+        <item name="android:letterSpacing">-0.01</item>
+        <item name="android:textColor">?attr/colorOnSurface</item>
+        <item name="android:textAllCaps">false</item>
+    </style>
+
+    <!--
+        HEADLINE SMALL — face: GOLOS TEXT (ui). 20sp / 700 / -0.01 / lh 24.
+        Handoff §8's «20/700 заголовок прогрузки»: the step title on the loading
+        screens, which sits between a screen title and a section header because the
+        loading screen has no other text competing with it. One step down from
+        Headline, not a new face and not a new weight.
+    -->
+    <style name="TextAppearance.App.Headline.Small" parent="TextAppearance.App.Headline">
+        <item name="android:textSize">20sp</item>
+        <item name="lineHeight">24sp</item>
+    </style>
+
+    <!--
+        TITLE — face: GOLOS TEXT (ui). 16sp / 700 / 0 / lh 20.
+        Row titles, card titles, toolbar titles, dialog titles, and the Primary and
+        Destructive button labels. The most-used role in the product.
+    -->
+    <style name="TextAppearance.App.Title" parent="TextAppearance.App.Title.Api28">
+        <item name="android:fontFamily">@font/golos_text_bold</item>
+        <item name="fontFamily">@font/golos_text_bold</item>
+        <item name="android:textSize">16sp</item>
+        <item name="lineHeight">20sp</item>
+        <item name="android:letterSpacing">0.0</item>
+        <item name="android:textColor">?attr/colorOnSurface</item>
+        <item name="android:textAllCaps">false</item>
+    </style>
+
+    <!--
+        TITLE MEDIUM — face: GOLOS TEXT (ui). 16sp / 500 / 0 / lh 20.
+        A softer title inside a dense card; the Secondary and Tertiary button labels;
+        an unselected segment. Same size as Title, one weight down — that is the
+        whole difference and it is enough.
+    -->
+    <style name="TextAppearance.App.Title.Medium" parent="TextAppearance.App.Title.Medium.Api28">
+        <item name="android:fontFamily">@font/golos_text_medium</item>
+        <item name="fontFamily">@font/golos_text_medium</item>
+    </style>
+
+    <!-- Destructive row title. #FF6069 on dark (6.15:1), not #F04452 (4.88:1) —
+         the fill red and the text red are different tokens for a measured reason. -->
+    <style name="TextAppearance.App.Title.Destructive" parent="TextAppearance.App.Title">
+        <item name="android:textColor">?attr/colorDestructiveText</item>
+    </style>
+
+    <!--
+        TARIFF — face: GOLOS TEXT (ui). 18sp / 700 / 0 / lh 22.
+        Handoff §8's «18/700 тариф», and it has exactly one consumer: the name of a
+        plan on «Купить подписку» («Base», «Pro»). It exists because that card has to
+        outrank the section header above it (16/700) while staying under the screen
+        title (24/700), and there was no step between them.
+        Do not reach for it anywhere else — a second consumer means the ramp has a
+        hole somewhere and the fix is there, not here.
+    -->
+    <style name="TextAppearance.App.Title.Tariff" parent="TextAppearance.App.Title">
+        <item name="android:textSize">18sp</item>
+        <item name="lineHeight">22sp</item>
+    </style>
+
+    <!--
+        BUTTON — face: GOLOS TEXT (ui). 15sp / 700 / 0 / lh 20.
+        Handoff §8's «15/700 кнопка». Every labelled button's label, and nothing
+        else: a button label is set on a fill and sits alone, so it reads a size
+        larger than it measures, and 16 made every CTA shout. 15 is a size and not a
+        ramp step to interpolate — there is no 15 anywhere else in the product.
+
+        NOT applied to the button styles below yet, and that is deliberate. Switching
+        every CTA from 16/700 to 15/700 changes the line length of a dozen Russian
+        labels on screens this wave does not own; the screen waves apply it as they
+        visit each one. Until then Widget.Departament.Button keeps
+        TextAppearance.App.Title.
+    -->
+    <style name="TextAppearance.App.Button" parent="TextAppearance.App.Title">
+        <item name="android:textSize">15sp</item>
+        <item name="lineHeight">20sp</item>
+    </style>
+
+    <!--
+        BODY — face: GOLOS TEXT (ui). 14sp / 400 / +0.01 / lh 20 (1.43).
+        Primary reading copy, dialog body, snackbar text. Cap a paragraph at roughly
+        60 characters; that is a layout job, not a style one.
+    -->
+    <style name="TextAppearance.App.Body" parent="TextAppearance.App.Body.Api28">
+        <item name="android:fontFamily">@font/golos_text_regular</item>
+        <item name="fontFamily">@font/golos_text_regular</item>
+        <item name="android:textSize">14sp</item>
+        <item name="lineHeight">20sp</item>
+        <item name="android:letterSpacing">0.01</item>
+        <item name="android:textColor">?attr/colorOnSurface</item>
+        <item name="android:textAllCaps">false</item>
+    </style>
+
+    <!--
+        SUBTITLE — face: GOLOS TEXT (ui). 13sp / 400 / +0.01 / lh 18.
+        Handoff §8's «13/400 значение»: a row's trailing value, the supporting line,
+        a field label. onSurfaceVariant #9BA1AD = 6.99:1 on surface.
+    -->
+    <style name="TextAppearance.App.Subtitle" parent="TextAppearance.App.Subtitle.Api28">
+        <item name="android:fontFamily">@font/golos_text_regular</item>
+        <item name="fontFamily">@font/golos_text_regular</item>
+        <item name="android:textSize">13sp</item>
+        <item name="lineHeight">18sp</item>
+        <item name="android:letterSpacing">0.01</item>
+        <item name="android:textColor">?attr/colorOnSurfaceVariant</item>
+        <item name="android:textAllCaps">false</item>
+    </style>
+
+    <!--
+        ONE OPTION inside a select popup (§6). The Subtitle role's 13sp/400 metrics
+        in colorOnSurface rather than colorOnSurfaceVariant, and the difference is
+        the whole reason it is a role of its own: an option is a VALUE being offered,
+        and the muted tone belongs to captions about values. The prototype sets the
+        popup's own colour to the full-strength ink token and lets every option
+        inherit it.
+    -->
+    <!--
+        MONO — face: the platform monospace. 11sp / 400 / lh 18.7 (1.7).
+        Handoff §7's «моноширинный блок лога» and nothing else. It is the one place
+        in the product where the SHAPE of the text carries meaning: a log lines up in
+        columns only if every glyph is the same width, and 11 is the size at which a
+        real 100-character line fits the slab without wrapping into porridge.
+        colorOnSurfaceVariant, because the slab is a reference the user scans and not
+        prose they read.
+    -->
+    <style name="TextAppearance.App.Mono" parent="TextAppearance.App.Caption">
+        <item name="android:fontFamily">monospace</item>
+        <item name="fontFamily">monospace</item>
+        <item name="android:textSize">11sp</item>
+        <item name="lineHeight">19sp</item>
+        <item name="android:letterSpacing">0.0</item>
+    </style>
+
+    <style name="TextAppearance.App.SelectOption" parent="TextAppearance.App.Subtitle">
+        <item name="android:textColor">?attr/colorOnSurface</item>
+    </style>
+
+    <!--
+        CAPTION — face: GOLOS TEXT (ui). 12.5sp / 400 / +0.02 / lh 17.
+        Handoff §8's «12.5/400 подпись»: the second line of a settings row, metadata,
+        timestamps, helper text.
+
+        12.5 and not 12, and the half point is not a rounding error — §6 states it
+        twice («подпись 12.5sp») and it is the difference between a subtitle that
+        reads as a smaller sibling of the row title and one that reads as fine print.
+        sp accepts a fraction; nothing downstream rounds it.
+
+        The tracking floor for a heading is +0.02em; anything above it at heading
+        size is the eyebrow tell and is banned.
+    -->
+    <style name="TextAppearance.App.Caption" parent="TextAppearance.App.Caption.Api28">
+        <item name="android:fontFamily">@font/golos_text_regular</item>
+        <item name="fontFamily">@font/golos_text_regular</item>
+        <item name="android:textSize">12.5sp</item>
+        <item name="lineHeight">17sp</item>
+        <item name="android:letterSpacing">0.02</item>
+        <item name="android:textColor">?attr/colorOnSurfaceVariant</item>
+        <item name="android:textAllCaps">false</item>
+    </style>
+
+    <!-- Field error line. Cause plus fix, never a code (00-rules.md 9.4). -->
+    <style name="TextAppearance.App.Caption.Error" parent="TextAppearance.App.Caption">
+        <item name="android:textColor">?attr/colorDestructiveText</item>
+    </style>
+
+    <!--
+        CHIP — face: SPACE GROTESK (brand). 11sp / 500 / +0.04 / lh 14.
+        CHIP AND BADGE LABELS ONLY, and only where the label is a Latin token, a
+        figure or a unit. A Russian status word («Оплачено», «Активна») is a Russian
+        string like any other: it takes TextAppearance.App.Chip.Ui below. This is the
+        single easiest place in the product to reintroduce the D-2 defect.
+    -->
+    <style name="TextAppearance.App.Chip" parent="TextAppearance.App.Chip.Api28">
+        <item name="android:fontFamily">@font/space_grotesk</item>
+        <item name="fontFamily">@font/space_grotesk</item>
+        <item name="android:textSize">11sp</item>
+        <item name="lineHeight">14sp</item>
+        <item name="android:letterSpacing">0.04</item>
+        <item name="android:textAllCaps">false</item>
+    </style>
+
+    <!--
+        CHIP, RUSSIAN — face: GOLOS TEXT (ui). Same 11sp / 500 / lh 14 metrics as the
+        Chip role, one script down. Not a twelfth step: identical size, identical
+        weight, identical leading — only the face differs, because the face is a
+        function of the script and Space Grotesk cannot draw Cyrillic at all.
+        Tracking eases to +0.02 because Golos at 11sp does not need +0.04 to breathe.
+    -->
+    <style name="TextAppearance.App.Chip.Ui" parent="TextAppearance.App.Chip">
+        <item name="android:fontFamily">@font/golos_text_medium</item>
+        <item name="fontFamily">@font/golos_text_medium</item>
+        <item name="android:letterSpacing">0.02</item>
+    </style>
+
+    <!--
+        NUMERIC — face: SPACE GROTESK (brand). Weight 500 DECLARED (D-4: this style
+        carried no weight at all before, while the ramp specified 500). Size and line
+        height INHERIT: apply Numeric on top of a size-bearing role, never alone.
+
+        Every live-updating number is this role: traffic, speed, ping, balance, price,
+        uptime, device count. tnum + lnum stop the digit jitter; "zero" on gives the
+        slashed zero for TECHNICAL figures (D-3).
+
+        THE ONE EXCEPTION: a figure inside a running Russian sentence
+        («Осталось 3 дня») stays in the UI face like the rest of the sentence. A
+        sentence never ripples between two faces. If the figure deserves the brand
+        face it is not a sentence, it is a value, and it gets its own slot.
+    -->
+    <style name="TextAppearance.App.Numeric" parent="TextAppearance.App.Numeric.Api28">
+        <item name="android:fontFamily">@font/space_grotesk</item>
+        <item name="fontFamily">@font/space_grotesk</item>
+        <item name="android:fontFeatureSettings">"tnum" on, "lnum" on, "zero" on</item>
+        <item name="android:letterSpacing">0.0</item>
+        <item name="android:textColor">?attr/colorOnSurface</item>
+        <item name="android:textAllCaps">false</item>
+    </style>
+
+    <!--
+        MONEY — the Numeric role WITHOUT the slashed zero (D-3): a slashed zero in a
+        price reads as a symbol. Format is «1 290 ₽» — U+2009 thin space as the
+        thousands separator, U+00A0 before U+20BD. Never RUB, never руб.
+    -->
+    <style name="TextAppearance.App.Numeric.Money" parent="TextAppearance.App.Numeric">
+        <item name="android:fontFeatureSettings">"tnum" on, "lnum" on</item>
+    </style>
+
+    <!-- Numeric at the Display size, for the one hero figure per screen. -->
+    <style name="TextAppearance.App.Numeric.Display" parent="TextAppearance.App.Display">
+        <item name="android:fontFeatureSettings">"tnum" on, "lnum" on, "zero" on</item>
+    </style>
+
+    <!--
+        RING — face: SPACE GROTESK (brand). 28sp / 700 / -0.02 / lh 32.
+        Handoff §8's «28/700 цифра кольца»: the figure inside the connect ring, and
+        that alone. It is smaller than Display 34 because it lives INSIDE a 176dp
+        disc with a stroke around it rather than alone on a page, and tabular figures
+        matter more here than anywhere else in the product — this number changes once
+        a second while the user is looking straight at it.
+
+        THE TRACKING IS -0.02, which is §5's figure for this role in as many words:
+        «Цифра 28sp/700, letter-spacing −0.02em, tnum». It read -0.01 while the
+        account wave was working and values/ still belonged to another agent, so the
+        wave set the correct number on the view instead and left the token wrong.
+        The token is the number now, and item_subscription_card.xml no longer
+        restates it — a size token that disagrees with the one screen that uses it
+        is how a second, unnamed scale starts.
+    -->
+    <style name="TextAppearance.App.Numeric.Ring" parent="TextAppearance.App.Numeric">
+        <item name="android:textSize">28sp</item>
+        <item name="lineHeight">32sp</item>
+        <item name="android:letterSpacing">-0.02</item>
+    </style>
+
+    <!-- ========================================================================= -->
+    <!-- 1b. THE GROUPED CARD SECTION — the shape of a settings screen's content   -->
+    <!-- ========================================================================= -->
+
+    <!--
+        THE SECTION CARD, AND WHY IT IS A STYLE.
+
+        Owner decision, 2026-08-02: the CHROME of a sub-screen stays shared and modern
+        (view_toolbar — that include is what stopped twelve screens drawing their Russian
+        titles in a face with no Cyrillic, 6b9914c), and the CONTENT goes back to the
+        grouped-card composition it had at 5e8cd54: a sentence-case section header, then
+        the section's rows inside ONE bordered surface. «дизайн не старый, а новый».
+
+        The recipe is not invented here. It is byte-for-byte the one the Настройки tab
+        already uses (fragment_settings_tab.xml) — the one screen of this shape the owner
+        has never asked to have changed — and it is 5e8cd54's own card with its two
+        off-scale numbers moved onto the scale: 12dp margin -> @dimen/screen_gutter,
+        20dp radius -> @dimen/radius_card. One definition, so a fourteenth screen cannot
+        drift from the other thirteen.
+
+        NO NESTED CARDS (00-rules.md): a row inside this card is a row, never a card of
+        its own. A LIST whose items are cards is the other shape and uses
+        @layout/view_row_card instead — see that file.
+    -->
+    <style name="Widget.Departament.CardSection" parent="Widget.Material3.CardView.Outlined">
+        <item name="android:layout_width">match_parent</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:layout_marginStart">@dimen/screen_gutter</item>
+        <item name="android:layout_marginEnd">@dimen/screen_gutter</item>
+        <item name="cardBackgroundColor">?attr/colorSurface</item>
+        <item name="cardCornerRadius">@dimen/radius_card</item>
+        <item name="cardElevation">0dp</item>
+        <item name="strokeColor">?attr/colorOutlineVariant</item>
+        <item name="strokeWidth">@dimen/stroke_hairline</item>
+    </style>
+
+    <!-- The card's own body: the vertical stack its rows sit in. Separate style so the
+         two halves of the recipe cannot be written differently on two screens. -->
+    <style name="Widget.Departament.CardSection.Body" parent="">
+        <item name="android:layout_width">match_parent</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:orientation">vertical</item>
+    </style>
+
+    <!--
+        SECTION HEADER — face: GOLOS TEXT (ui). 16sp / 700 / 0 / lh 20, sentence case.
+        NOT a tiny all-caps tracked eyebrow: 00-rules.md 0.4 and the eyebrow ban.
+        Padding moves from the off-scale 18dp top to @dimen/space_24, which is the
+        section break of the spacing scale.
+    -->
+    <style name="SettingsSectionLabel" parent="TextAppearance.App.Title">
+        <item name="android:paddingStart">@dimen/screen_gutter</item>
+        <item name="android:paddingEnd">@dimen/screen_gutter</item>
+        <!-- 22 above and 8 below - handoff §6 states the section header as
+             «16sp/700, padding 22×16×8dp» and the prototype measures exactly that.
+             24 was the nearest rung on the old scale; space_22 exists now. -->
+        <item name="android:paddingTop">@dimen/space_22</item>
+        <item name="android:paddingBottom">@dimen/space_8</item>
+        <item name="android:textAllCaps">false</item>
+    </style>
+
+    <!-- The 10-design-system.md 2.9 spelling of the same role. -->
+    <style name="TextAppearance.App.SectionHeader" parent="SettingsSectionLabel" />
+
+    <!--
+        WORDMARK — face: SPACE GROTESK (brand). 20sp / 700 / -0.01 / lh 24.
+        THE WORDMARK AND NOTHING ELSE. It is Latin, so the brand face is correct here
+        and only here. Every sub-page in the shipped app renders its Russian title in
+        this style because both toolbars set it as titleTextAppearance; that is the
+        D-11 defect and @style/Widget.Departament.Toolbar below is the fix.
+    -->
+    <style name="ToolbarBrandTitle" parent="ToolbarBrandTitle.Api28">
+        <item name="android:fontFamily">@font/space_grotesk</item>
+        <item name="fontFamily">@font/space_grotesk</item>
+        <item name="android:textSize">20sp</item>
+        <item name="lineHeight">24sp</item>
+        <item name="android:letterSpacing">-0.01</item>
+        <item name="android:textColor">?attr/colorOnBackground</item>
+        <item name="android:textAllCaps">false</item>
+    </style>
+
+    <!-- ========================================================================= -->
+    <!-- 2. SHAPE — the four live radii and the lip (D-6, D-7)                     -->
+    <!--    12 fittings · 16 controls · 20 objects · 24 sheet lip · full round     -->
+    <!--    only where width == height or the shape is a track.                    -->
+    <!-- ========================================================================= -->
+
+    <style name="ShapeAppearance.Departament.Fitting" parent="">
+        <item name="cornerFamily">rounded</item>
+        <item name="cornerSize">@dimen/radius_chip</item>
+    </style>
+
+    <style name="ShapeAppearance.Departament.Button" parent="">
+        <item name="cornerFamily">rounded</item>
+        <item name="cornerSize">@dimen/radius_button</item>
+    </style>
+
+    <style name="ShapeAppearance.Departament.Object" parent="">
+        <item name="cornerFamily">rounded</item>
+        <item name="cornerSize">@dimen/radius_card</item>
+    </style>
+
+    <style name="ShapeAppearance.Departament.Pill" parent="">
+        <item name="cornerFamily">rounded</item>
+        <item name="cornerSize">@dimen/radius_pill</item>
+    </style>
+
+    <style name="ShapeAppearance.Departament.Sheet" parent="">
+        <item name="cornerFamily">rounded</item>
+        <item name="cornerSizeTopLeft">@dimen/radius_sheet</item>
+        <item name="cornerSizeTopRight">@dimen/radius_sheet</item>
+        <item name="cornerSizeBottomLeft">0dp</item>
+        <item name="cornerSizeBottomRight">0dp</item>
+    </style>
+
+    <!-- The three M3 shape buckets, so a component that forgets its overlay still
+         lands on a legal radius. Small 12 / Medium 16 / Large 20. -->
+    <style name="ShapeAppearance.Departament.Small" parent="ShapeAppearance.Departament.Fitting" />
+    <style name="ShapeAppearance.Departament.Medium" parent="ShapeAppearance.Departament.Button" />
+    <style name="ShapeAppearance.Departament.Large" parent="ShapeAppearance.Departament.Object" />
+
+    <!-- ========================================================================= -->
+    <!-- 3. BUTTONS — five variants and no more (R15)                              -->
+    <!-- ========================================================================= -->
+
+    <!--
+        THE BASE. Every Departament button inherits it.
+
+        insetTop / insetBottom 0 is the single most load-bearing line in this file:
+        Widget.Material3.Button carries 6dp insets top and bottom, which is why the
+        app's declared-52dp CTAs draw at 40dp today. Zero them and the shipped button
+        finally matches the layout that declares it.
+
+        minHeight, never a fixed height (R2). At font scale 200% a 16sp label needs
+        ~34dp of line box and the button must be allowed to grow to ~58; an
+        android:layout_height="48dp" on a button is a P1 accessibility defect.
+
+        strokeWidth 2dp is ALWAYS present and the focus ColorStateList decides whether
+        it is visible (R7). MaterialButton has no state-dependent strokeWidth but does
+        have a state-dependent strokeColor, and the stroke draws inside the bounds, so
+        a permanently-declared ring costs exactly zero layout shift.
+
+        RADIUS 24, not 16 and not pill — @dimen/radius_button, whose header records
+        why D-6's 16 was reversed: the handoff package is the owner's own design
+        and it draws every labelled button at the top of §8's 24–26 band. Still not
+        radius_pill, which clamps to half the height and would give a 48dp button a
+        24dp stadium end whatever its width.
+    -->
+    <style name="Widget.Departament.Button" parent="Widget.Material3.Button">
+        <item name="android:insetTop">0dp</item>
+        <item name="android:insetBottom">0dp</item>
+        <item name="android:minHeight">@dimen/btn_height</item>
+        <item name="android:minWidth">@dimen/btn_min_width</item>
+        <item name="android:paddingStart">@dimen/space_24</item>
+        <item name="android:paddingEnd">@dimen/space_24</item>
+        <item name="android:textAppearance">@style/TextAppearance.App.Title</item>
+        <item name="android:textAllCaps">false</item>
+        <item name="android:stateListAnimator">@anim/press_button</item>
+        <item name="shapeAppearanceOverlay">@style/ShapeAppearance.Departament.Button</item>
+        <item name="iconSize">@dimen/glyph_20</item>
+        <item name="iconPadding">@dimen/space_8</item>
+        <item name="iconGravity">textStart</item>
+        <item name="strokeWidth">@dimen/stroke_focus</item>
+        <item name="elevation">0dp</item>
+    </style>
+
+    <!--
+        PRIMARY — the one thing the screen wants you to do. AT MOST ONE PER SCREEN,
+        and never on the same screen as a full-strength connect control (00-rules.md 3.6).
+        onPrimary #00183A on accent #4C8DFF = 5.51:1.
+
+        NO BEVEL, NO GLOSS, NO GRADIENT — AND THIS IS THE LAST STYLE TO LOSE ONE.
+        The modelled fill lived here on the strength of OWNER-FEEDBACK D1 («может
+        градиент какой-то»); the owner has since WITHDRAWN it, in as many words:
+        «кнопки остались почти везде такими же с градиентом, надо просто обычные
+        кнопки вернуть как и было раньше, это касается ВСЕХ кнопок». Every other
+        variant had already dropped its overlay one complaint at a time — Secondary,
+        Destructive, Icon.Filled, Outlined — and this was the one that was still
+        painting a rim light. It is a flat accent fill now, exactly as it was at the
+        anchor (5e8cd54), and 00-rules.md's blanket gradient ban is back in force with
+        no carve-out for buttons.
+
+        @drawable/btn_overlay_primary and the btn_gloss_* pair it composes are left in
+        the tree unreferenced rather than deleted: they cost nothing, and the ratios
+        recorded in their headers are the evidence for why the flat fill is the safe
+        one. Do not re-attach them to any style.
+
+        What carries "this is the primary action" instead: the accent fill itself, the
+        16sp/700 label at 5.51:1, and @anim/press_scale's 0.97 squeeze on the 90/160ms
+        press clock. Depth is motion here, not a painted light source.
+    -->
+    <style name="Widget.Departament.Button.Primary" parent="Widget.Departament.Button">
+        <item name="backgroundTint">@color/btn_primary_container</item>
+        <item name="android:textColor">@color/btn_primary_content</item>
+        <item name="iconTint">@color/btn_primary_content</item>
+        <item name="strokeColor">@color/btn_focus_inner_on_accent</item>
+        <item name="rippleColor">@android:color/transparent</item>
+    </style>
+
+    <!-- The screen's ONE full-width CTA. 52 as a minimum, never as a height. -->
+    <style name="Widget.Departament.Button.Primary.Tall" parent="Widget.Departament.Button.Primary">
+        <item name="android:minHeight">@dimen/btn_height_tall</item>
+    </style>
+
+    <!--
+        SECONDARY — the realistic alternative, or an action with no competitor.
+        NEUTRAL tonal fill (colorSurfaceContainerHighest), deliberately not
+        colorSecondaryContainer: a second accent-tinted fill would spend the accent
+        budget twice on one screen. Label onSurface = 14.14:1. Up to two per screen.
+
+        NO BEVEL. It carried the Primary's one for a while, on the argument that a
+        fill is a fill — and the owner rejected the result: «кнопки… они блестят
+        почему-то и не доделаны, надо вернуть прежний дизайн». His gradient
+        instruction (OWNER-FEEDBACK D1) was about THE PRIMARY ACTION BUTTON. Over a
+        neutral #20242B fill on a near-black page the modelled light has almost no
+        fill to model: what reaches the eye is the white rim and the black settle
+        with very little between them, which is the "container half-drawn — a raised
+        slab peeking out behind the label" in his sign-in screenshot. A quieter
+        action reads quieter by being flat. The bevel belongs to exactly one control
+        per screen, and this is not it.
+    -->
+    <style name="Widget.Departament.Button.Secondary" parent="Widget.Departament.Button">
+        <item name="backgroundTint">@color/btn_secondary_container</item>
+        <item name="android:textColor">@color/btn_secondary_content</item>
+        <item name="iconTint">@color/btn_secondary_content</item>
+        <item name="android:textAppearance">@style/TextAppearance.App.Title.Medium</item>
+        <item name="strokeColor">@color/btn_focus_outer_accent</item>
+        <item name="rippleColor">@android:color/transparent</item>
+    </style>
+
+    <style name="Widget.Departament.Button.Secondary.Tall" parent="Widget.Departament.Button.Secondary">
+        <item name="android:minHeight">@dimen/btn_height_tall</item>
+    </style>
+
+    <!--
+        TERTIARY — the quiet action. Transparent container, accent label (5.66:1 on
+        surface). At most TWO visible at once. It is the only button that may sit
+        inside a row, and when it does, the row itself is not clickable — two targets
+        doing different things is the layout_subscription_meta_bar mistake.
+        Padding is space_12, not space_24: a text button is a label, not a slab.
+
+        NO BEVEL — there is no fill to bevel, and painting a rounded slab over a
+        transparent container would invent a button that is not there. What it gains
+        instead is a real pressed STATE: @color/btn_quiet_container puts a 10% accent
+        plate under the label while the finger is down. Until now the only feedback a
+        Tertiary had was the ripple, and a ripple is a radial animation that is
+        already fading when the finger lifts — and does not draw at all when the
+        system animator scale is 0 (reduced motion, battery saver, several OEM
+        "performance" modes). The app's quietest button was therefore its least
+        responsive one.
+    -->
+    <style name="Widget.Departament.Button.Tertiary" parent="Widget.Material3.Button.TextButton">
+        <item name="android:insetTop">0dp</item>
+        <item name="android:insetBottom">0dp</item>
+        <item name="android:minHeight">@dimen/btn_height</item>
+        <item name="android:paddingStart">@dimen/space_12</item>
+        <item name="android:paddingEnd">@dimen/space_12</item>
+        <item name="android:textAppearance">@style/TextAppearance.App.Title.Medium</item>
+        <item name="android:textAllCaps">false</item>
+        <item name="android:stateListAnimator">@anim/press_button</item>
+        <item name="shapeAppearanceOverlay">@style/ShapeAppearance.Departament.Button</item>
+        <item name="android:textColor">@color/btn_tertiary_content</item>
+        <item name="iconTint">@color/btn_tertiary_content</item>
+        <item name="iconSize">@dimen/glyph_20</item>
+        <item name="iconPadding">@dimen/space_8</item>
+        <item name="iconGravity">textStart</item>
+        <item name="strokeWidth">@dimen/stroke_focus</item>
+        <item name="strokeColor">@color/btn_focus_outer_accent</item>
+        <item name="rippleColor">@android:color/transparent</item>
+        <item name="elevation">0dp</item>
+        <item name="backgroundTint">@color/btn_quiet_container</item>
+    </style>
+
+    <!-- The destructive text action: a dialog's confirm, a row's «Удалить».
+         @color/color_destructive_text #FF6069 = 6.15:1, not the 4.88:1 fill red.
+
+         Its press plate is destructive-toned too: an accent-blue plate under a red
+         label says two different things about one tap. -->
+    <style name="Widget.Departament.Button.Tertiary.Destructive" parent="Widget.Departament.Button.Tertiary">
+        <item name="android:textColor">?attr/colorDestructiveText</item>
+        <item name="iconTint">?attr/colorDestructiveText</item>
+        <item name="backgroundTint">@color/btn_quiet_container_danger</item>
+    </style>
+
+    <!--
+        DESTRUCTIVE — the filled red action. White on #F04452 = 3.71:1, which clears
+        the >=3:1 LARGE-text floor only because the label is 16sp/700; that is why
+        this style pins TextAppearance.App.Title and a layout may never shrink it.
+        Confirm copy says what it does («Удалить подписку»), never «OK».
+
+        NO BEVEL — the owner's 2026-08-02 instruction, which scopes the modelled
+        fill to the primary action button and nothing else. What OWNER-FEEDBACK D3
+        actually requires of a destructive confirm is that it must not read as
+        DISABLED beside its cancel, and that is carried by the solid #F04452 fill and
+        the 16sp/700 white label (3.71:1, clearing the large-text floor) — not by a
+        rim light. A flat confirm next to a flat cancel is still the loud one.
+    -->
+    <style name="Widget.Departament.Button.Destructive" parent="Widget.Departament.Button">
+        <item name="backgroundTint">@color/btn_destructive_container</item>
+        <item name="android:textColor">@color/btn_destructive_content</item>
+        <item name="iconTint">@color/btn_destructive_content</item>
+        <item name="strokeColor">@color/btn_focus_inner_on_error</item>
+        <item name="rippleColor">@android:color/transparent</item>
+    </style>
+
+    <style name="Widget.Departament.Button.Destructive.Tall" parent="Widget.Departament.Button.Destructive">
+        <item name="android:minHeight">@dimen/btn_height_tall</item>
+    </style>
+
+    <!--
+        ICON — one 22dp glyph, optically centred in a 48x48 box. 48 even though the
+        glyph is 22: 34 of 35 icon affordances in the shipped app are below the 48dp
+        touch minimum and this one style fixes all of them. Two adjacent icon buttons
+        sit space_8 apart.
+
+        Pill is correct here and is NOT the shape the owner rejected: width == height,
+        so it is a circle, which R1 explicitly carves out.
+
+        android:contentDescription is MANDATORY on every instance and states the
+        ACTION, not the object: «Обновить список», «Отвязать устройство». A missing
+        one is a P1. A style cannot supply it — that is on the layout.
+
+        Its press plate (@color/btn_icon_container) is neutral, not accent: an icon
+        button is chrome, and 3.6 spends the accent budget on the screen's one
+        primary action rather than on its toolbar. The plate draws inside the pill,
+        so what appears under the finger is a disc.
+
+        ALL FOUR INSETS ARE ZEROED, and the horizontal pair is not decoration.
+        Widget.Material3.Button.IconButton is the ONE button style in the library
+        that sets android:insetLeft/insetRight (@dimen/m3_btn_inset, 4dp) — the base
+        Widget.MaterialComponents.Button zeroes them and every other variant inherits
+        that. MaterialButton applies the four insets to the drawable it builds, not to
+        the view, so on a 48x48 target the painted background is 40x48. That was
+        invisible while the container was transparent and stops being invisible the
+        moment anything is painted in it: GradientDrawable clamps a corner radius to
+        half the SHORTER side, so radius_pill on 40x48 draws a 20dp vertical stadium
+        instead of the 24dp disc this comment promises, and on .Filled the bevel —
+        which is a FOREGROUND and therefore covers the full 48x48 view — would hang a
+        lit arc 4dp outside the fill on each side. Zeroing them costs no layout: the
+        insets never touched the view's measurement, only where its background drew.
+    -->
+    <style name="Widget.Departament.Button.Icon" parent="Widget.Material3.Button.IconButton">
+        <item name="android:insetTop">0dp</item>
+        <item name="android:insetBottom">0dp</item>
+        <item name="android:insetLeft">0dp</item>
+        <item name="android:insetRight">0dp</item>
+        <item name="android:minWidth">@dimen/view_height_dp48</item>
+        <item name="android:minHeight">@dimen/view_height_dp48</item>
+        <item name="iconSize">@dimen/tile_glyph</item>
+        <item name="iconTint">@color/btn_icon_glyph</item>
+        <!-- Rung 3 of the press ladder, 0.88 (README §1, «Иконка (borderless)»).
+             A 22dp glyph in a 48dp target has almost no area for the eye to
+             measure against, so the travel has to be four times a card's. -->
+        <item name="android:stateListAnimator">@anim/press_icon</item>
+        <item name="shapeAppearanceOverlay">@style/ShapeAppearance.Departament.Pill</item>
+        <item name="strokeWidth">@dimen/stroke_focus</item>
+        <item name="strokeColor">@color/btn_focus_outer_accent</item>
+        <item name="rippleColor">@android:color/transparent</item>
+        <item name="elevation">0dp</item>
+        <item name="backgroundTint">@color/btn_icon_container</item>
+    </style>
+
+    <!-- Filled icon button: a neutral disc. R7 lists filled icon buttons in the INNER
+         focus case, so the ring goes inside in the control's own on-colour at 40%.
+
+         NO BEVEL. It had one, and an icon button is chrome — «почему у серверов
+         появились кнопки справа» and «кнопки… они блестят почему-то» are the same
+         complaint from two directions: a 48dp utility disc that models a light source
+         claims the weight of a primary action it does not have. The gradient
+         instruction is scoped to the primary action button; everywhere else the ban
+         on decorative gradients stands. -->
+    <style name="Widget.Departament.Button.Icon.Filled" parent="Widget.Departament.Button.Icon">
+        <item name="backgroundTint">@color/btn_secondary_container</item>
+        <item name="strokeColor">@color/btn_focus_inner_on_neutral</item>
+        <!-- Back to rung 2, 0.965. The ladder's 0.88 rung is for a BORDERLESS
+             glyph; once there is a fill the eye has a boundary to measure the
+             movement against, and 12% on a visible disc reads as a flinch. -->
+        <item name="android:stateListAnimator">@anim/press_button</item>
+    </style>
+
+    <style name="Widget.Departament.Button.Icon.Accent" parent="Widget.Departament.Button.Icon">
+        <item name="iconTint">@color/btn_icon_glyph_accent</item>
+    </style>
+
+    <!-- Destructive glyph on no fill: the press plate goes destructive with it, so
+         the disc under the finger says the same thing the glyph does. -->
+    <style name="Widget.Departament.Button.Icon.Danger" parent="Widget.Departament.Button.Icon">
+        <item name="iconTint">@color/btn_icon_glyph_danger</item>
+        <item name="backgroundTint">@color/btn_quiet_container_danger</item>
+    </style>
+
+    <!-- The back affordance of the seamless sub-page toolbar: 24dp nav glyph, not 22.
+
+         AND THE ONE ICON BUTTON WHOSE PLATE IS NOT ITS BOX. Everywhere else a 48dp
+         target sits inside a surface with room around it; here both controls are
+         datumed to the SCREEN's edge, and a header glyph is narrow enough that a plate
+         filling its box would be tangent to that edge. So the box stays where the
+         alignment needs it and the PAINT stops short: an inset pair summing to 20 in a
+         48dp box leaves a 28dp disc — the same plate the row's icon action draws.
+
+         THE THREE RULES THIS SLOT OBEYS, all three measured off an inflated header
+         rather than read off the library's documentation, which is how the last two
+         rounds went wrong:
+
+         1. THE BOX IS AN EXACT 48. Both slots used to be wrap_content, and a
+            MaterialButton with no text still measures a line box: 68×64 for the back
+            arrow, 80×64 for the action. The insets are taken off THAT, so the «28dp
+            disc» this comment used to promise was really a 48×44 and a 54×44 stadium.
+            An icon-only control has no text to grow, so an exact 48 costs nothing and
+            makes every number below deterministic (00-rules.md 14.5 is about boxes
+            that hold text).
+
+         2. THE GLYPH IS CENTRED BY iconGravity=textStart, not by padding. Material sets
+            textStart on Widget.Material3.Button, so the icon lands at
+                drawn left = (W − iconSize) / 2 + (paddingLeft − paddingRight) / 2
+            and MaterialButtonHelper.loadFromAttributes ADDS each inset to the matching
+            padding. Therefore:
+
+                plate centre − glyph centre = (paddingRight_xml − paddingLeft_xml) / 2
+
+            The plate is concentric with the glyph IF AND ONLY IF the XML padding is
+            symmetric, whatever the insets are. That is why the padding below is one
+            number on all four sides and why neither slot writes its own any more: the
+            18/12 pair the last round added is exactly what put the action's disc 3dp
+            off its own «+» — «фон не по центру, неровный фон».
+
+         3. THE INSETS CARRY THE ASYMMETRY INSTEAD. insetLeft + insetRight = 20 keeps the
+            box at 48 and the disc at 28; moving the split slides GLYPH AND PLATE
+            TOGETHER inside the box, which is how each slot reaches its own gutter
+            without a box that leaves the screen. The two splits are on the slots.
+
+         ALL FOUR SIDES, because the parent zeroes all four and a horizontal-only inset
+         makes the drawable 28×48 — GradientDrawable clamps a pill to half the shorter
+         side, so the disc would come back as a stadium. -->
+    <style name="Widget.Departament.Button.Icon.Toolbar" parent="Widget.Departament.Button.Icon">
+        <item name="iconSize">@dimen/image_size_dp24</item>
+        <item name="iconTint">@color/btn_secondary_content</item>
+        <item name="android:padding">@dimen/toolbar_action_pad_trail</item>
+        <item name="android:insetTop">@dimen/toolbar_plate_inset</item>
+        <item name="android:insetBottom">@dimen/toolbar_plate_inset</item>
+        <item name="android:insetLeft">@dimen/toolbar_plate_inset</item>
+        <item name="android:insetRight">@dimen/toolbar_plate_inset</item>
+    </style>
+
+    <!-- ========================================================================= -->
+    <!-- 4. SEGMENTED CONTROL — 2 to 4 exclusive options with short labels         -->
+    <!-- ========================================================================= -->
+
+    <!--
+        The track: 48 tall so a segmented control and a button on the same row align,
+        radius_control 16, colorSurfaceContainerHighest fill, space_4 padding.
+        Concentricity: a 16 track with 4 padding holds a 12 segment exactly.
+        The track stays at 16 while a labelled BUTTON moved to 24 (README §8):
+        a segment is an input, and §8 says nothing about inputs.
+        innerCornerSize keeps the middle segments at 12 instead of M3's default 0.
+    -->
+    <style name="Widget.Departament.SegmentGroup" parent="Widget.Material3.MaterialButtonToggleGroup">
+        <item name="android:background">@drawable/bg_segment_track</item>
+        <item name="android:padding">@dimen/space_4</item>
+        <item name="android:minHeight">@dimen/btn_height</item>
+        <item name="singleSelection">true</item>
+        <item name="selectionRequired">true</item>
+        <item name="innerCornerSize">@dimen/radius_chip</item>
+        <item name="shapeAppearanceOverlay">@style/ShapeAppearance.Departament.Fitting</item>
+    </style>
+
+    <!--
+        The segment. Selection reads on THREE axes — fill, colour and weight — so it
+        survives the mono theme and colour blindness. The fill crossfades over
+        motion_state 220; the weight snaps, because a weight tween does not exist and
+        is not wanted. THE FILL DOES NOT SLIDE: a sliding thumb needs a shared layer
+        and is a per-item animation the stagger rules do not cover.
+
+        MaterialButton has no per-state textAppearance, so the weight step to 700 is
+        applied by the consumer on the checked-change callback — swap the segment's
+        textAppearance to @style/TextAppearance.App.Title.Segment.Active. The colour
+        half of the selection lives in @color/segment_content and needs no code.
+    -->
+    <style name="Widget.Departament.Segment" parent="Widget.Material3.Button.TextButton">
+        <item name="android:insetTop">0dp</item>
+        <item name="android:insetBottom">0dp</item>
+        <item name="android:minHeight">40dp</item>
+        <item name="android:minWidth">64dp</item>
+        <item name="android:paddingStart">@dimen/space_12</item>
+        <item name="android:paddingEnd">@dimen/space_12</item>
+        <item name="android:textAppearance">@style/TextAppearance.App.Title.Medium</item>
+        <item name="android:textAllCaps">false</item>
+        <item name="android:textColor">@color/segment_content</item>
+        <item name="backgroundTint">@color/segment_container</item>
+        <item name="iconTint">@color/segment_content</item>
+        <item name="iconSize">@dimen/glyph_20</item>
+        <item name="shapeAppearanceOverlay">@style/ShapeAppearance.Departament.Fitting</item>
+        <item name="rippleColor">@android:color/transparent</item>
+        <item name="strokeWidth">0dp</item>
+        <item name="elevation">0dp</item>
+        <item name="android:stateListAnimator">@null</item>
+    </style>
+
+    <!-- The checked label at weight 700 — the third selection axis. -->
+    <style name="TextAppearance.App.Title.Segment.Active" parent="TextAppearance.App.Title" />
+
+    <!-- ========================================================================= -->
+    <!-- 5. TEXT FIELD                                                             -->
+    <!-- ========================================================================= -->
+
+    <!--
+        OutlinedBox, not FilledBox. FilledBox draws a bottom indicator only, and this
+        design needs a surface fill PLUS a continuous 1dp border; OutlinedBox with
+        boxBackgroundColor set gives exactly that.
+
+        hintEnabled="false" removes the floating-label notch, because THE LABEL LIVES
+        ABOVE THE FIELD and is always visible (00-rules.md 7.4). A placeholder is an
+        example of the value («например, 500»), never the label.
+
+        Radius @dimen/radius_control 16, height 56 as a MINIMUM (R10) — the same
+        number as row_min_height, so a form and a list share one rhythm and Material's own 56dp
+        OutlinedBox floor is not fought.
+
+        The boundary is @color/md_theme_outlineControl, not colorOutline: a field
+        border is a UI COMPONENT BOUNDARY, so WCAG 1.4.11's 3:1 applies, and
+        colorOutline measures 1.45:1 on the dark ground (D-9).
+
+        The helper/error line is always present in the markup even when empty so the
+        layout never jumps; errorEnabled is what reserves it.
+    -->
+    <style name="Widget.Departament.TextField" parent="Widget.Material3.TextInputLayout.OutlinedBox">
+        <item name="boxBackgroundColor">?attr/colorSurfaceContainerHighest</item>
+        <item name="boxCornerRadiusTopStart">@dimen/radius_control</item>
+        <item name="boxCornerRadiusTopEnd">@dimen/radius_control</item>
+        <item name="boxCornerRadiusBottomStart">@dimen/radius_control</item>
+        <item name="boxCornerRadiusBottomEnd">@dimen/radius_control</item>
+        <item name="boxStrokeColor">@color/field_stroke_selector</item>
+        <item name="boxStrokeWidth">@dimen/stroke_control</item>
+        <item name="boxStrokeWidthFocused">@dimen/stroke_focus</item>
+        <item name="boxStrokeErrorColor">?attr/colorDestructiveText</item>
+        <item name="hintEnabled">false</item>
+        <item name="errorEnabled">true</item>
+        <item name="errorTextAppearance">@style/TextAppearance.App.Caption.Error</item>
+        <item name="helperTextTextAppearance">@style/TextAppearance.App.Caption</item>
+        <item name="errorIconDrawable">@null</item>
+        <item name="android:textColorHint">?attr/colorOnSurfaceVariant</item>
+        <item name="endIconTint">@color/btn_icon_glyph</item>
+        <item name="startIconTint">@color/btn_icon_glyph</item>
+        <item name="materialThemeOverlay">@style/ThemeOverlay.Departament.TextField</item>
+    </style>
+
+    <!--
+        Search: the same field, filtering in place and never navigating. Radius 16
+        retires bg_search_pill's 14. The trailing clear affordance appears only when
+        the field is non-empty, which is what endIconMode="clear_text" does for free.
+        The leading 20dp glyph is set by the layout: there is no ic_search_20 in
+        res/drawable yet, and pointing this at ic_outline_filter_alt_24 would put a
+        filter funnel on a search box. Reported as a gap for the icon owner.
+    -->
+    <style name="Widget.Departament.TextField.Search" parent="Widget.Departament.TextField">
+        <item name="endIconMode">clear_text</item>
+        <item name="startIconTint">@color/btn_icon_glyph</item>
+    </style>
+
+    <!--
+        The inner EditText. 16sp is deliberate and is NOT a new ramp step: it is the
+        Title size, and a field below 16sp makes iOS-style zoom-on-focus behaviour and
+        thumb-typing errors on Android. The face is Golos, because what a user types
+        into this product is Russian; a digits-only field (amount, port, HWID) applies
+        TextAppearance.App.Numeric on top.
+    -->
+    <style name="Widget.Departament.TextField.EditText" parent="Widget.Material3.TextInputEditText.OutlinedBox">
+        <item name="android:minHeight">@dimen/field_min_height</item>
+        <item name="android:paddingStart">@dimen/space_16</item>
+        <item name="android:paddingEnd">@dimen/space_16</item>
+        <item name="android:textSize">16sp</item>
+        <item name="android:fontFamily">@font/golos_text_regular</item>
+        <item name="fontFamily">@font/golos_text_regular</item>
+        <item name="android:textColor">@color/field_content</item>
+        <item name="android:textColorHint">?attr/colorOnSurfaceVariant</item>
+        <item name="android:textCursorDrawable">@null</item>
+    </style>
+
+    <!--
+        Read-only: no border, no fill, the value still legible. It is a VALUE being
+        displayed, not a control being offered, so drawing a control boundary around
+        it would promise an interaction that is not there.
+    -->
+    <style name="Widget.Departament.TextField.ReadOnly" parent="Widget.Departament.TextField">
+        <item name="boxBackgroundColor">@android:color/transparent</item>
+        <item name="boxStrokeWidth">0dp</item>
+        <item name="boxStrokeWidthFocused">0dp</item>
+    </style>
+
+    <style name="ThemeOverlay.Departament.TextField" parent="">
+        <item name="editTextStyle">@style/Widget.Departament.TextField.EditText</item>
+        <item name="colorControlActivated">?attr/colorPrimary</item>
+    </style>
+
+    <!-- ========================================================================= -->
+    <!-- 6. SWITCH                                                                 -->
+    <!-- ========================================================================= -->
+
+    <!--
+        MaterialSwitch stays: the alternative is the iOS tell that android.md names by
+        name. Off thumb is onSurfaceVariant (6.00:1 on the off track) rather than M3's
+        default colorOutline, which measures 1.45:1 on this ramp and is effectively
+        invisible. On thumb carries the accent check, because colour is never the only
+        signal.
+
+        THE ROW OWNS THE TOGGLE. Every switch inside a Row.Toggle sets
+        android:clickable="false" and android:focusable="false" so the row is the one
+        hit target — five live switch rows in the shipped app have two independent
+        targets that can disagree. A style cannot set that for the instance; the row
+        layout must.
+
+        There is no indeterminate state. A switch waiting on the network is replaced
+        by the row's inline 20dp spinner and is not interactive.
+
+        AND THE PRESS IS THE ROW'S, WHICH IS WHY THE THUMB IS OURS. That clickable
+        ="false" two paragraphs up has a consequence nobody wrote down:
+        ViewGroup.dispatchSetPressed skips a child that can be pressed on its own and
+        forwards the state to every child that cannot, so the flag that makes the row
+        the single hit target is exactly what feeds the row's press INTO the switch.
+        M3's mtrl_switch_thumb answers it with a 28dp disc — the owner held the IPv6
+        row down and photographed the result, «в переключателе кружочек увеличился,
+        хотя такого быть не должно». @drawable/switch_thumb is that thumb with the
+        pressed entry left out and every other state, size and transition reproduced;
+        the whole account is in its header. The row keeps its own response
+        (@anim/press_row plus @drawable/bg_row); the switch stops adding a second one.
+
+        Applied here rather than on @id/row_switch alone because this style is the
+        theme's materialSwitchStyle, and the defect belonged to every switch that
+        sits in a clickable row — more than twenty of them, across the settings tab,
+        the provider screens, the local proxy and the universal row.
+    -->
+    <style name="Widget.Departament.Switch" parent="Widget.Material3.CompoundButton.MaterialSwitch">
+        <item name="thumbTint">@color/switch_thumb_selector</item>
+        <item name="trackTint">@color/switch_track_selector</item>
+        <item name="trackDecorationTint">@color/switch_track_decoration</item>
+        <item name="thumbIconTint">@color/switch_thumb_icon</item>
+        <item name="android:thumb">@drawable/switch_thumb</item>
+        <item name="android:background">@null</item>
+    </style>
+
+    <!-- ========================================================================= -->
+    <!-- 7. ROWS — five archetypes, one geometry                                   -->
+    <!-- ========================================================================= -->
+
+    <!--
+        [ 16 gutter ][ 40 tile r12, 22 glyph ][ 12 ][ text column ][ 12 ][ trailing ][ 16 ]
+        Text origin 68 = 16 + 40 + 12, and the in-group hairline starts at the same 68.
+        Three origins exist today (64, 68, 72); this is the one.
+
+        Min height 56, grows with a two-line subtitle, never clips.
+        Trailing slot holds EXACTLY ONE of: chevron 20, switch, value text, icon
+        button, chip. Never two.
+
+        THE PRESS IS BOTH CHANNELS NOW, and this reverses R5. R5 said rows do not
+        scale, because scaling one was found to tear the hairlines above and below
+        it. The handoff README §1 puts a row on rung 1 of the press ladder anyway
+        (0.975), and answers R5's objection by scaling EVERY row on a card by the
+        same factor at the same instant, so a divider travels with the rows it sits
+        between instead of being left behind by one of them.
+
+          scale       @anim/press_row 0.975
+          background  @drawable/bg_row, stepping DOWN to ?attr/colorPressBg
+
+        Both, always. The scale without the step reads as a row that shrank for no
+        reason; the step without the scale is the shipped behaviour §1 replaces.
+        A row with TEXT in it should be attached from Kotlin with
+        `row.pressFeedback(R.anim.press_row)` instead, which adds the hardware layer
+        that keeps the label from twitching on the rebound (§11 grabl 1).
+    -->
+    <style name="Widget.Departament.Row" parent="">
+        <item name="android:layout_width">match_parent</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:minHeight">@dimen/row_min_height</item>
+        <item name="android:paddingStart">@dimen/screen_gutter</item>
+        <item name="android:paddingEnd">@dimen/screen_gutter</item>
+        <!-- 10 and not 12 - handoff §6, measured off the prototype: 10 + 40 (плитка) + 10 is
+             its 61dp row, and 12 made every row in every card 3dp taller than the design. The
+             MINIMUM is still row_min_height 56, so a row with no tile does not shrink. -->
+        <item name="android:paddingTop">@dimen/space_10</item>
+        <item name="android:paddingBottom">@dimen/space_10</item>
+        <item name="android:gravity">center_vertical</item>
+        <item name="android:orientation">horizontal</item>
+        <item name="android:background">@drawable/bg_row</item>
+        <item name="android:stateListAnimator">@anim/press_row</item>
+        <item name="android:clickable">true</item>
+        <item name="android:focusable">true</item>
+    </style>
+
+    <!-- Goes somewhere. Trailing: a 20dp chevron, optionally after a value. -->
+    <style name="Widget.Departament.Row.Navigation" parent="Widget.Departament.Row" />
+
+    <!-- Shows its current value and opens a select or a field. Every settings row
+         shows its value: that is what makes a list readable without opening anything. -->
+    <style name="Widget.Departament.Row.Value" parent="Widget.Departament.Row" />
+
+    <!--
+        Performs an action IN PLACE through a trailing Tertiary button or icon button.
+        The row itself is NOT clickable and shows no press feedback — two targets that
+        do different things is a defect, not a convenience.
+    -->
+    <style name="Widget.Departament.Row.Action" parent="Widget.Departament.Row">
+        <item name="android:background">@null</item>
+        <item name="android:stateListAnimator">@null</item>
+        <item name="android:clickable">false</item>
+        <item name="android:focusable">false</item>
+    </style>
+
+    <!-- The row owns the switch; the switch is decoration. -->
+    <style name="Widget.Departament.Row.Toggle" parent="Widget.Departament.Row" />
+
+    <!--
+        Title in @color/color_destructive_text via TextAppearance.App.Title.Destructive.
+        The TILE STAYS NEUTRAL: a red tile plus red text is the same signal twice and
+        turns the row into an alarm. Default behaviour is act plus an undo snackbar,
+        not a confirm dialog (00-rules.md 7.5).
+    -->
+    <style name="Widget.Departament.Row.Destructive" parent="Widget.Departament.Row" />
+
+    <!-- The 40dp leading tile and its 22dp glyph. Three tile colours exist and no
+         fourth (D-5); most rows are neutral.
+
+         BOTH COLOURS ARE ATTRIBUTES. They used to be @color/icon_tile_neutral and
+         @color/icon_glyph_neutral, and ThemeOverlay.Mono is a RUNTIME overlay that
+         can re-point attributes but not colour resources — so all 22 tiles that
+         take this style stayed blue-grey on the greyscale screen. Same pixels in
+         the two themes that already worked: icon_tile_neutral is #E3EAF4 / #20242B
+         and so is colorSurfaceContainerHighest; icon_glyph_neutral is #54607A /
+         #9BA1AD and so is colorOnSurfaceVariant. The .Accent and .Destructive
+         children override the background with their own attribute-driven drawables
+         and their own tint, so neither inherits this fill. -->
+    <style name="Widget.Departament.Tile" parent="">
+        <item name="android:layout_width">@dimen/tile_size</item>
+        <item name="android:layout_height">@dimen/tile_size</item>
+        <item name="android:background">@drawable/bg_tile_neutral</item>
+        <item name="android:padding">9dp</item>
+        <item name="android:scaleType">fitCenter</item>
+        <item name="android:tint">?attr/colorOnSurfaceVariant</item>
+    </style>
+
+    <style name="Widget.Departament.Tile.Accent" parent="Widget.Departament.Tile">
+        <item name="android:background">@drawable/bg_tile_accent</item>
+        <item name="android:tint">?attr/colorPrimary</item>
+    </style>
+
+    <style name="Widget.Departament.Tile.Destructive" parent="Widget.Departament.Tile">
+        <item name="android:background">@drawable/bg_tile_destructive</item>
+        <item name="android:tint">?attr/colorError</item>
+    </style>
+
+    <!-- ========================================================================= -->
+    <!-- 8. CARD                                                                   -->
+    <!-- ========================================================================= -->
+
+    <!--
+        A card is allowed only when all three hold: it is a distinct object acted on
+        as a unit, it needs a boundary that spacing cannot give, and IT IS NOT INSIDE
+        ANOTHER CARD. A settings screen is rows, not cards. A payment history is a
+        divided list, not a card grid.
+
+        Elevation 0, always. Depth in this product is the surface ramp, never a shadow
+        and never a glow.
+    -->
+    <style name="Widget.Departament.Card" parent="Widget.Material3.CardView.Outlined">
+        <item name="cardBackgroundColor">?attr/colorSurface</item>
+        <item name="cardCornerRadius">@dimen/radius_card</item>
+        <item name="strokeColor">?attr/colorOutlineVariant</item>
+        <item name="strokeWidth">@dimen/stroke_hairline</item>
+        <item name="cardElevation">0dp</item>
+        <item name="contentPadding">@dimen/space_16</item>
+        <item name="rippleColor">@null</item>
+        <item name="cardPreventCornerOverlap">false</item>
+        <item name="cardUseCompatPadding">false</item>
+    </style>
+
+    <!-- A card used as a ROW GROUP: no padding of its own, clipped so the rows'
+         pressed backgrounds respect the 20dp corners. -->
+    <style name="Widget.Departament.Card.Group" parent="Widget.Departament.Card.Group.Api31">
+        <item name="contentPadding">0dp</item>
+    </style>
+
+    <!-- A card the user presses as one object. Rung 1 of the press ladder, 0.975
+         (README §1, «Строка списка / карточка») — the same rung a row is on now,
+         because §1 puts them there together and the old split between "objects
+         scale, rows do not" is what it replaces. -->
+    <style name="Widget.Departament.Card.Pressable" parent="Widget.Departament.Card">
+        <item name="android:stateListAnimator">@anim/press_row</item>
+        <item name="android:clickable">true</item>
+        <item name="android:focusable">true</item>
+        <item name="rippleColor">@android:color/transparent</item>
+        <item name="checkedIconVisible">false</item>
+    </style>
+
+    <!--
+        Selection: 12% accent fill + accent border of the SAME WIDTH + title weight
+        700 + a check glyph in an always-reserved slot. Four axes, zero layout change.
+        The border width never changes and the radius never changes — the shipped
+        price option moves 14 -> 20 and 1 -> 1.5 on selection, so it visibly jumps.
+        Drive it with view.isActivated = true, and announce it
+        (AccessibilityNodeInfo.isSelected) so it is not a purely visual state.
+    -->
+    <style name="Widget.Departament.Card.Selectable" parent="Widget.Departament.Card.Pressable">
+        <item name="cardBackgroundColor">@color/card_bg_selectable</item>
+        <item name="strokeColor">@color/row_stroke_selectable</item>
+        <item name="strokeWidth">@dimen/stroke_hairline</item>
+    </style>
+
+    <!-- ========================================================================= -->
+    <!-- 9. CHIP — a LABEL, never a control                                        -->
+    <!-- ========================================================================= -->
+
+    <!--
+        A chip is never clickable. A clickable pill is a Tertiary button or a Segment.
+        24 min height, 8 horizontal padding, radius_chip 12, no stroke.
+        ensureMinTouchTargetSize is false precisely BECAUSE it is not a target;
+        expanding a label to 48dp would push every row apart for nothing.
+
+        Colour is never the only signal: every status chip carries the word. A bare
+        coloured dot beside a label that already states the state is decoration.
+        There is no fourth status hue (R12) — «Отменён» is neutral, because a
+        cancelled payment is not a warning.
+    -->
+    <style name="Widget.Departament.Chip" parent="Widget.Material3.Chip.Assist">
+        <item name="android:clickable">false</item>
+        <item name="android:checkable">false</item>
+        <item name="chipMinHeight">24dp</item>
+        <item name="chipStartPadding">@dimen/space_8</item>
+        <item name="chipEndPadding">@dimen/space_8</item>
+        <item name="textStartPadding">0dp</item>
+        <item name="textEndPadding">0dp</item>
+        <item name="chipStrokeWidth">0dp</item>
+        <item name="chipIconSize">@dimen/glyph_16</item>
+        <item name="iconStartPadding">0dp</item>
+        <item name="iconEndPadding">@dimen/space_4</item>
+        <item name="shapeAppearanceOverlay">@style/ShapeAppearance.Departament.Fitting</item>
+        <item name="ensureMinTouchTargetSize">false</item>
+        <item name="chipBackgroundColor">?attr/colorSurfaceContainerHighest</item>
+        <item name="android:textAppearance">@style/TextAppearance.App.Chip.Ui</item>
+        <item name="android:textColor">?attr/colorOnSurfaceVariant</item>
+        <item name="closeIconVisible">false</item>
+        <item name="chipSurfaceColor">@android:color/transparent</item>
+        <item name="rippleColor">@null</item>
+    </style>
+
+    <!-- Latin / figure chips: protocol, transport, port, «VLESS», «Reality». Brand face. -->
+    <style name="Widget.Departament.Chip.Technical" parent="Widget.Departament.Chip">
+        <item name="android:textAppearance">@style/TextAppearance.App.Chip</item>
+    </style>
+
+    <!-- THE TARIFF BADGE, AND NOTHING ELSE. One per subscription card.
+         onPrimaryContainer #CFE0FF on #17325C = 9.57:1. -->
+    <style name="Widget.Departament.Chip.Accent" parent="Widget.Departament.Chip">
+        <item name="chipBackgroundColor">?attr/colorPrimaryContainer</item>
+        <item name="android:textColor">?attr/colorOnPrimaryContainer</item>
+        <item name="chipIconTint">?attr/colorOnPrimaryContainer</item>
+    </style>
+
+    <!-- «Оплачено», «Активна», «Подключено». -->
+    <style name="Widget.Departament.Chip.Status.Ok" parent="Widget.Departament.Chip">
+        <item name="chipBackgroundColor">?attr/colorTertiaryContainer</item>
+        <item name="android:textColor">@color/color_success_text</item>
+        <item name="chipIconTint">@color/color_success_text</item>
+    </style>
+
+    <!-- «В обработке», «Истекает». -->
+    <style name="Widget.Departament.Chip.Status.Warn" parent="Widget.Departament.Chip">
+        <item name="chipBackgroundColor">@color/warning_container</item>
+        <item name="android:textColor">@color/color_warning_text</item>
+        <item name="chipIconTint">@color/color_warning_text</item>
+    </style>
+
+    <!-- «Ошибка», «Истекла». -->
+    <style name="Widget.Departament.Chip.Status.Error" parent="Widget.Departament.Chip">
+        <item name="chipBackgroundColor">?attr/colorErrorContainer</item>
+        <item name="android:textColor">?attr/colorDestructiveText</item>
+        <item name="chipIconTint">?attr/colorDestructiveText</item>
+    </style>
+
+    <!-- ========================================================================= -->
+    <!-- 10. DIVIDER                                                               -->
+    <!-- ========================================================================= -->
+
+    <!--
+        1dp colorOutlineVariant, inset 68 to the text origin, BETWEEN rows only —
+        never above the first or below the last. 1.16:1 on the dark ground and that is
+        correct: this is structural decoration, not a control boundary, so WCAG 1.4.11
+        does not apply. The control boundary is @color/md_theme_outlineControl (D-9).
+    -->
+    <style name="Widget.Departament.Divider" parent="Widget.Material3.MaterialDivider">
+        <item name="dividerThickness">@dimen/stroke_hairline</item>
+        <item name="dividerColor">?attr/colorOutlineVariant</item>
+        <item name="dividerInsetStart">@dimen/divider_inset_start</item>
+        <item name="dividerInsetEnd">0dp</item>
+    </style>
+
+    <!-- A full-bleed rule between two sections, with no row text to align to. -->
+    <style name="Widget.Departament.Divider.Full" parent="Widget.Departament.Divider">
+        <item name="dividerInsetStart">0dp</item>
+    </style>
+
+    <!-- ========================================================================= -->
+    <!-- 11. TAB BAR — 4 destinations: Главная · Серверы · Настройки · Аккаунт     -->
+    <!-- ========================================================================= -->
+
+    <!--
+        NO RIPPLE GLOW (owner request 0.4.8): itemRippleColor is null and stays null.
+        The active destination reads on THREE axes — accent colour, weight 700 and the
+        64x34 primaryContainer indicator — so it survives the mono theme. A disabled
+        destination does not exist: a destination that is unavailable is not shown.
+    -->
+    <style name="Widget.Departament.NavigationBar" parent="Widget.Material3.BottomNavigationView">
+        <item name="android:background">?android:attr/colorBackground</item>
+        <item name="android:elevation">0dp</item>
+        <item name="elevation">0dp</item>
+        <item name="itemActiveIndicatorStyle">@style/BottomNavIndicator</item>
+        <item name="itemRippleColor">@null</item>
+        <item name="itemTextAppearanceInactive">@style/BottomNavLabel</item>
+        <item name="itemTextAppearanceActive">@style/BottomNavLabel.Active</item>
+        <item name="itemTextColor">@color/nav_item_color</item>
+        <item name="itemIconTint">@color/nav_item_color</item>
+        <item name="labelVisibilityMode">labeled</item>
+        <item name="itemIconSize">@dimen/image_size_dp24</item>
+    </style>
+
+    <!-- At sw600dp the bar becomes a rail with the same destinations, same order,
+         same labels (00-rules.md 11.4). -->
+    <style name="Widget.Departament.NavigationRail" parent="Widget.Material3.NavigationRailView">
+        <item name="android:background">?android:attr/colorBackground</item>
+        <item name="android:elevation">0dp</item>
+        <item name="elevation">0dp</item>
+        <item name="itemActiveIndicatorStyle">@style/BottomNavIndicator</item>
+        <item name="itemRippleColor">@null</item>
+        <item name="itemTextAppearanceInactive">@style/BottomNavLabel</item>
+        <item name="itemTextAppearanceActive">@style/BottomNavLabel.Active</item>
+        <item name="itemTextColor">@color/nav_item_color</item>
+        <item name="itemIconTint">@color/nav_item_color</item>
+        <item name="labelVisibilityMode">labeled</item>
+        <item name="itemIconSize">@dimen/image_size_dp24</item>
+    </style>
+
+    <!--
+        The M3 navigation active indicator, 64x34. Fully round, and that is legal
+        under R1's carve-out: this is the platform's own track shape, not a wide
+        capsule with a label in it. Referenced by both navigations; it was dead code
+        before and comes alive here.
+    -->
+    <style name="BottomNavIndicator" parent="Widget.Material3.BottomNavigationView.ActiveIndicator">
+        <item name="android:width">64dp</item>
+        <item name="android:height">34dp</item>
+        <item name="android:color">?attr/colorPrimaryContainer</item>
+        <item name="marginHorizontal">@dimen/space_8</item>
+        <item name="shapeAppearance">@style/ShapeAppearance.Departament.Pill</item>
+    </style>
+
+    <!--
+        NAV LABEL — face: GOLOS TEXT (ui), weight 500, and this is deliberate.
+        The Chip ROLE is 11sp/500 in Space Grotesk, but «Главная» / «Серверы» /
+        «Настройки» / «Аккаунт» are Russian, and Space Grotesk has no Cyrillic at all.
+        So the nav label borrows the Chip's METRICS and keeps the UI FACE. It is not a
+        twelfth ramp step: same weight, same leading, different script.
+
+        SIZE 12sp, one step over the Chip role's 11 and a deliberate departure from
+        handoff README §4, taken with the glyph: the owner read the ported bar as too
+        small on the device, so the icon went 23 -> 26dp (activity_main.xml) and the
+        label follows it so the stacked mark grows as one thing. The Chip role itself
+        is untouched — every chip in the product is still 11sp — because this is the
+        NAV label's size and nothing else's. Leading stays at the Chip's 14sp, which
+        is still clear of 12sp, so the -1dp that pulls the label flush under the glyph
+        goes on meaning what it meant.
+    -->
+    <style name="BottomNavLabel" parent="BottomNavLabel.Api28">
+        <item name="android:textSize">12sp</item>
+    </style>
+
+    <!-- The active destination: weight 700, the second of the three axes. -->
+    <style name="BottomNavLabel.Active" parent="BottomNavLabel.Active.Api28">
+        <item name="android:fontFamily">@font/golos_text_bold</item>
+        <item name="fontFamily">@font/golos_text_bold</item>
+    </style>
+
+    <!-- ========================================================================= -->
+    <!-- 12. TOOLBAR                                                               -->
+    <!-- ========================================================================= -->
+
+    <!--
+        THE SEAMLESS SUB-PAGE TOOLBAR (owner request 0.4.6). Page background, no
+        elevation, no divider, no shadow: the header is not a bar, it is the top of
+        the page. Height is toolbar_height 56, which replaces ?attr/actionBarSize.
+
+        Title is TextAppearance.App.Title — 16sp/700 GOLOS. Every sub-page in the
+        shipped app renders its Russian title in the 20sp brand wordmark instead,
+        because both toolbars set titleTextAppearance="@style/ToolbarBrandTitle";
+        that is one defect wearing two hats (wrong size AND a face with no Cyrillic)
+        and this line fixes both.
+    -->
+    <style name="Widget.Departament.Toolbar" parent="Widget.Material3.Toolbar">
+        <item name="android:background">?android:attr/colorBackground</item>
+        <item name="android:elevation">0dp</item>
+        <item name="elevation">0dp</item>
+        <item name="android:minHeight">@dimen/toolbar_height</item>
+        <item name="titleTextAppearance">@style/TextAppearance.App.Title</item>
+        <item name="titleTextColor">?attr/colorOnSurface</item>
+        <item name="subtitleTextAppearance">@style/TextAppearance.App.Subtitle</item>
+        <item name="titleCentered">false</item>
+        <item name="contentInsetStart">@dimen/screen_gutter</item>
+        <item name="contentInsetStartWithNavigation">@dimen/screen_gutter</item>
+        <item name="navigationIconTint">?attr/colorOnSurface</item>
+    </style>
+
+    <!-- The ONE place the wordmark survives: the brand on the first tab. Not on
+         sub-pages, not on activity_base. -->
+    <style name="Widget.Departament.Toolbar.Brand" parent="Widget.Departament.Toolbar">
+        <item name="titleTextAppearance">@style/ToolbarBrandTitle</item>
+        <item name="titleTextColor">?attr/colorOnBackground</item>
+    </style>
+
+    <!-- ========================================================================= -->
+    <!-- 13. SHEET AND DIALOG                                                      -->
+    <!-- ========================================================================= -->
+
+    <!--
+        Order of preference is law: inline > expandable row > sheet > dialog.
+        The sheet is the per-item action surface: 24dp top lip, colorSurface fill,
+        36x4 handle, 60% scrim, rows at full width with hairlines inset 68.
+    -->
+    <style name="ThemeOverlay.Departament.BottomSheet" parent="ThemeOverlay.Material3.BottomSheetDialog">
+        <item name="bottomSheetStyle">@style/Widget.Departament.Sheet</item>
+        <item name="android:navigationBarColor">@android:color/transparent</item>
+    </style>
+
+    <style name="Widget.Departament.Sheet" parent="Widget.Material3.BottomSheet.Modal">
+        <item name="backgroundTint">?attr/colorSurface</item>
+        <item name="shapeAppearance">@style/ShapeAppearance.Departament.Sheet</item>
+        <item name="android:elevation">0dp</item>
+        <item name="behavior_fitToContents">true</item>
+    </style>
+
+    <!--
+        App-wide AlertDialog theming. Wired via alertDialogTheme /
+        android:alertDialogTheme / materialAlertDialogTheme, so EVERY
+        androidx.appcompat AlertDialog is restyled without touching any Kotlin, and
+        every colour comes from a theme attr so dark, light and the runtime mono
+        overlay all follow.
+
+        A dialog is the LAST resort — for an interrupting, irreversible, costly
+        decision only. Everything else is act plus an undo snackbar (00-rules.md 7.5).
+        The confirm says what it does («Удалить подписку», «Выйти»), never «OK» and
+        never «Да»/«Нет».
+    -->
+    <style name="ThemeOverlay.Departament.Dialog" parent="ThemeOverlay.Departament.Dialog.Api28">
+        <item name="android:windowBackground">@drawable/bg_dialog</item>
+        <item name="dialogCornerRadius">@dimen/radius_card</item>
+
+        <item name="colorControlNormal">?attr/colorOnSurfaceVariant</item>
+        <item name="colorControlActivated">?attr/colorPrimary</item>
+        <!-- Transparent, like AppThemeBase: a dialog is not exempt from the
+             product-wide ripple ban (handoff README, «Главное правило»). -->
+        <item name="colorControlHighlight">@android:color/transparent</item>
+
+        <item name="android:textColorPrimary">?attr/colorOnSurface</item>
+        <item name="android:textColorSecondary">?attr/colorOnSurfaceVariant</item>
+        <item name="android:textColorAlertDialogListItem">?attr/colorOnSurface</item>
+
+        <item name="materialAlertDialogTitleTextStyle">@style/Departament.Dialog.Title</item>
+        <item name="materialAlertDialogBodyTextStyle">@style/Departament.Dialog.Body</item>
+        <item name="buttonBarPositiveButtonStyle">@style/Departament.Dialog.Button</item>
+        <item name="buttonBarNegativeButtonStyle">@style/Departament.Dialog.Button</item>
+        <item name="buttonBarNeutralButtonStyle">@style/Departament.Dialog.Button</item>
+    </style>
+
+    <style name="Departament.Dialog.Title" parent="MaterialAlertDialog.Material3.Title.Text">
+        <item name="android:textAppearance">@style/TextAppearance.App.Title</item>
+        <item name="android:textColor">?attr/colorOnSurface</item>
+    </style>
+
+    <style name="Departament.Dialog.Body" parent="MaterialAlertDialog.Material3.Body.Text">
+        <item name="android:textAppearance">@style/TextAppearance.App.Body</item>
+        <item name="android:textColor">?attr/colorOnSurface</item>
+    </style>
+
+    <!-- Dialog actions are the SAME component as everywhere else: a Tertiary button.
+         Cancel on the left, the confirm on the right. -->
+    <style name="Departament.Dialog.Button" parent="Widget.Departament.Button.Tertiary">
+        <item name="android:minWidth">@dimen/btn_min_width</item>
+    </style>
+
+    <!-- The destructive confirm. It must read as the ACTION of the dialog, never as
+         a disabled control sitting next to a solid cancel — that was the owner's D3
+         finding on the desktop and the same shape of mistake is one missing state
+         away here. So the whole control goes destructive: label, glyph and the plate
+         that appears under the finger. -->
+    <style name="Departament.Dialog.Button.Destructive" parent="Departament.Dialog.Button">
+        <item name="android:textColor">?attr/colorDestructiveText</item>
+        <item name="iconTint">?attr/colorDestructiveText</item>
+        <item name="backgroundTint">@color/btn_quiet_container_danger</item>
+    </style>
+
+    <!-- ========================================================================= -->
+    <!-- 14. SNACKBAR                                                              -->
+    <!-- ========================================================================= -->
+
+    <!--
+        Snackbar only; Toast is not used by new code. Undo is the destructive default:
+        «Устройство отвязано» + «Отменить», 5 seconds. Surface is
+        colorSurfaceContainerHigh at radius_card 20 — an OBJECT radius, because a
+        snackbar is an object, not a control — 16 from the edges, above the bottom
+        navigation and the system inset, one at a time.
+    -->
+    <style name="Widget.Departament.Snackbar" parent="Widget.Material3.Snackbar">
+        <item name="backgroundTint">?attr/colorSurfaceContainerHigh</item>
+        <item name="android:layout_margin">@dimen/space_16</item>
+        <item name="shapeAppearance">@style/ShapeAppearance.Departament.Object</item>
+        <item name="elevation">0dp</item>
+        <item name="animationMode">fade</item>
+    </style>
+
+    <style name="Widget.Departament.Snackbar.TextView" parent="Widget.Material3.Snackbar.TextView">
+        <item name="android:textAppearance">@style/TextAppearance.App.Body</item>
+        <item name="android:textColor">?attr/colorOnSurface</item>
+        <item name="android:maxLines">2</item>
+    </style>
+
+    <!-- One word: «Повторить», «Отменить». The action's hit shape is radius 16. -->
+    <style name="Widget.Departament.Snackbar.Button" parent="Widget.Material3.Button.TextButton.Snackbar">
+        <item name="android:textAppearance">@style/TextAppearance.App.Title.Medium</item>
+        <item name="android:textColor">@color/btn_tertiary_content</item>
+        <item name="android:textAllCaps">false</item>
+        <item name="shapeAppearanceOverlay">@style/ShapeAppearance.Departament.Button</item>
+        <item name="rippleColor">@android:color/transparent</item>
+    </style>
+
+    <!-- ========================================================================= -->
+    <!-- 15. EMPTY STATE — one grammar, three exist in the app today               -->
+    <!-- ========================================================================= -->
+
+    <!--
+        [ 64 tile r20, 32dp glyph ] · 16 · Headline title · 8 · Subtitle line · 24 · one button
+
+        The tile is NEUTRAL. An empty state is not the screen's primary action surface
+        and does not spend the accent budget on decoration. The action is Primary only
+        when it is the screen's primary action, otherwise Secondary.
+        Copy formula: what is not here / what it gives you / one action.
+        The ERROR state is the same silhouette with the mapped cause and a Tertiary
+        «Повторить» — never a hard-wired «Что-то пошло не так» in XML.
+    -->
+    <style name="Widget.Departament.EmptyState.Tile" parent="">
+        <item name="android:layout_width">@dimen/empty_icon</item>
+        <item name="android:layout_height">@dimen/empty_icon</item>
+        <item name="android:background">@drawable/bg_empty_tile</item>
+        <item name="android:padding">@dimen/space_16</item>
+        <item name="android:scaleType">fitCenter</item>
+        <item name="android:tint">?attr/colorOnSurfaceVariant</item>
+    </style>
+
+    <style name="Widget.Departament.EmptyState.Title" parent="">
+        <item name="android:layout_width">wrap_content</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:textAppearance">@style/TextAppearance.App.Headline</item>
+        <item name="android:gravity">center</item>
+        <item name="android:maxLines">2</item>
+        <item name="android:layout_marginTop">@dimen/space_16</item>
+    </style>
+
+    <style name="Widget.Departament.EmptyState.Line" parent="">
+        <item name="android:layout_width">wrap_content</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:textAppearance">@style/TextAppearance.App.Subtitle</item>
+        <item name="android:gravity">center</item>
+        <item name="android:maxLines">2</item>
+        <item name="android:layout_marginTop">@dimen/space_8</item>
+    </style>
+
+    <!-- ========================================================================= -->
+    <!-- 16. SKELETON — replaces every centred spinner over a blank screen         -->
+    <!-- ========================================================================= -->
+
+    <!--
+        A skeleton is the SILHOUETTE of the real content: same block count, same
+        heights, same positions, widths derived from the content and never hand-picked
+        to fake variety. Appears after 300ms, pulses opacity 0.45 <-> 1.0 over
+        motion_pulse 1000 ease_standard infinite reverse, swaps to content with a
+        motion_state 220 crossfade and no layout change.
+        Reduced motion holds it static at 0.7 — the pulse is driven from Kotlin, so
+        that check belongs to the call site, not to this style.
+    -->
+    <style name="Widget.Departament.Skeleton.Bar" parent="">
+        <item name="android:layout_width">match_parent</item>
+        <item name="android:layout_height">@dimen/space_16</item>
+        <item name="android:background">@drawable/bg_skeleton_bar</item>
+    </style>
+
+    <style name="Widget.Departament.Skeleton.Block" parent="">
+        <item name="android:layout_width">match_parent</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:background">@drawable/bg_skeleton_block</item>
+    </style>
+
+    <!-- ========================================================================= -->
+    <!-- 17. PROGRESS                                                              -->
+    <!-- ========================================================================= -->
+
+    <!--
+        Determinate bar: @dimen/meter_height tall (§4: 3), round ends, SOLID accent fill
+        — no gradient, because
+        a gradient encodes nothing a solid fill of the same width does not. The label
+        sits BESIDE the bar, never on top of it: the shipped 11sp label over a moving
+        fill measures 2.9:1. At >=100% the fill turns colorError and the label says
+        «Лимит исчерпан».
+    -->
+    <style name="Widget.Departament.Progress.Linear" parent="Widget.Material3.LinearProgressIndicator">
+        <item name="trackThickness">@dimen/meter_height</item>
+        <item name="trackCornerRadius">3dp</item>
+        <item name="trackColor">?attr/colorSurfaceContainerHighest</item>
+        <item name="indicatorColor">?attr/colorPrimary</item>
+        <item name="android:indeterminate">false</item>
+    </style>
+
+    <!--
+        The inline spinner (R8's loading state): a 20dp arc, 2dp stroke, one
+        revolution in motion_spin 1100 LINEAR. Linear is correct and is not the
+        ease-out ban: that ban governs transitions between two states, and a
+        continuous rotation has no end state to settle into — an eased revolution
+        stutters once per turn.
+
+        R8, at the call site: the control KEEPS ITS WIDTH, the label goes to alpha 0
+        (never to wrap_content of nothing), the control stops accepting input but
+        STAYS AT OPACITY 1.0 — a faded spinner reads as "broken", not "working" — and
+        contentDescription becomes "<label>, загрузка".
+
+        HOW A BUTTON ENTERS THAT STATE, now that the states are built rather than
+        described. Two lines, and no other change:
+
+            button.isActivated = true      // loading on
+            button.isClickable = false     // and it stops accepting input
+
+        isActivated, not isEnabled: disabled is a different state with a different
+        meaning and it drops the whole control to 0.38, which is the "broken" read R8
+        forbids. state_activated is picked up by every button ColorStateList
+        (@color/btn_primary_content and its five siblings), which take the label AND
+        the icon to alpha 0 — so THE LABEL IS STILL MEASURED, the button keeps the
+        exact width it had a frame earlier, and it cannot jump. NO button carries a
+        bevel any more — the owner withdrew the last one from the Primary this round
+        («это касается всех кнопок») — so there is no overlay left that has to hold a
+        resting row ahead of its pressed one; a flat fill cannot read as pressed.
+
+        Nothing else on the app sets isActivated on a MaterialButton, and no layout
+        declares duplicateParentState, so no selected row can push a button into this
+        state by accident.
+
+        This style is the arc that goes over it: match the tone to the variant and
+        centre it on the button.
+    -->
+    <style name="Widget.Departament.Progress.Circular.Inline" parent="Widget.Material3.CircularProgressIndicator.ExtraSmall">
+        <item name="indicatorSize">@dimen/glyph_20</item>
+        <item name="trackThickness">2dp</item>
+        <item name="indicatorColor">?attr/colorPrimary</item>
+        <item name="trackColor">@android:color/transparent</item>
+        <item name="android:indeterminate">true</item>
+    </style>
+
+    <!-- On a filled accent surface: inside a Primary button. -->
+    <style name="Widget.Departament.Progress.Circular.Inline.OnAccent" parent="Widget.Departament.Progress.Circular.Inline">
+        <item name="indicatorColor">?attr/colorOnPrimary</item>
+    </style>
+
+    <!-- On the neutral tonal fill: inside a Secondary button or a filled icon disc.
+         onSurface, the same tone the label is already using. -->
+    <style name="Widget.Departament.Progress.Circular.Inline.OnSurface" parent="Widget.Departament.Progress.Circular.Inline">
+        <item name="indicatorColor">?attr/colorOnSurface</item>
+    </style>
+
+    <!-- On the filled red: inside a Destructive button. -->
+    <style name="Widget.Departament.Progress.Circular.Inline.OnError" parent="Widget.Departament.Progress.Circular.Inline">
+        <item name="indicatorColor">?attr/colorOnError</item>
+    </style>
+
+    <!-- On no fill, for a destructive TEXT action: the 6.15:1 text red, not the
+         4.88:1 fill red (00-rules.md 3.5) — the arc replaces a label and has to
+         carry a label's contrast. -->
+    <style name="Widget.Departament.Progress.Circular.Inline.Destructive" parent="Widget.Departament.Progress.Circular.Inline">
+        <item name="indicatorColor">?attr/colorDestructiveText</item>
+    </style>
+
+    <!-- ========================================================================= -->
+    <!-- 18. ALIASES — the 10-design-system.md 4.6 spellings.                      -->
+    <!--     Same components, second name, so neither doc's wording can break a    -->
+    <!--     build. Prefer the Widget.Departament.* names in new work.             -->
+    <!-- ========================================================================= -->
+
+    <style name="Widget.App.Button" parent="Widget.Departament.Button" />
+    <style name="Widget.App.Button.Primary" parent="Widget.Departament.Button.Primary" />
+    <style name="Widget.App.Button.Primary.Tall" parent="Widget.Departament.Button.Primary.Tall" />
+    <!-- "Tonal" is the 4.6 name for the neutral tonal fill = Secondary. -->
+    <style name="Widget.App.Button.Tonal" parent="Widget.Departament.Button.Secondary" />
+    <style name="Widget.App.Button.Text" parent="Widget.Departament.Button.Tertiary" />
+    <style name="Widget.App.Button.Destructive" parent="Widget.Departament.Button.Destructive" />
+    <style name="Widget.App.Button.Destructive.Text" parent="Widget.Departament.Button.Tertiary.Destructive" />
+    <style name="Widget.App.Button.Icon" parent="Widget.Departament.Button.Icon" />
+
+    <!--
+        RETIREMENT DEBT, not a variant. "Outlined" is not one of the five ratified
+        button variants (R15) and no new work may use it; it survives only so legacy
+        call sites keep drawing a legal control boundary
+        (@color/md_theme_outlineControl, 3.43:1) until they migrate to Secondary.
+        Its stroke doubles as the focus ring, so R7 still holds.
+
+        It takes the quiet treatment — the accent press plate, nothing painted at rest.
+
+        The explicit transparent foreground is BELT AND BRACES and stays even though no
+        ancestor style paints one any more: an attribute whose value is @null is skipped
+        by TypedArray, so View never calls setForeground() and an inherited overlay
+        would survive a future edit that reintroduced one upstream.
+    -->
+    <style name="Widget.App.Button.Outlined" parent="Widget.Departament.Button.Secondary">
+        <item name="backgroundTint">@color/btn_quiet_container</item>
+        <item name="strokeColor">@color/btn_outlined_stroke</item>
+        <item name="android:textColor">@color/btn_tertiary_content</item>
+        <item name="iconTint">@color/btn_tertiary_content</item>
+        <item name="android:foreground">@android:color/transparent</item>
+    </style>
+
+    <style name="Widget.App.Card" parent="Widget.Departament.Card" />
+    <style name="Widget.App.TextField" parent="Widget.Departament.TextField" />
+    <style name="Widget.App.Chip.Status" parent="Widget.Departament.Chip" />
+    <style name="Widget.App.SegmentedGroup" parent="Widget.Departament.SegmentGroup" />
+    <style name="Widget.App.SegmentedButton" parent="Widget.Departament.Segment" />
+    <style name="Widget.App.Switch" parent="Widget.Departament.Switch" />
+    <style name="Widget.App.Divider" parent="Widget.Departament.Divider" />
+    <style name="Widget.App.Toolbar.Seamless" parent="Widget.Departament.Toolbar" />
+    <style name="Widget.App.BottomNav" parent="Widget.Departament.NavigationBar" />
+    <style name="Widget.App.Progress.Linear" parent="Widget.Departament.Progress.Linear" />
+    <style name="Widget.App.Progress.Circular.Inline" parent="Widget.Departament.Progress.Circular.Inline" />
+    <style name="Widget.App.BottomSheet" parent="Widget.Departament.Sheet" />
+    <style name="Widget.App.Snackbar" parent="Widget.Departament.Snackbar" />
+    <style name="ThemeOverlay.App.BottomSheet" parent="ThemeOverlay.Departament.BottomSheet" />
+    <style name="ThemeOverlay.App.TextField" parent="ThemeOverlay.Departament.TextField" />
+    <style name="ShapeAppearance.App.Control" parent="ShapeAppearance.Departament.Button" />
+    <style name="ShapeAppearance.App.Fitting" parent="ShapeAppearance.Departament.Fitting" />
+    <style name="ShapeAppearance.App.Object" parent="ShapeAppearance.Departament.Object" />
+    <style name="ShapeAppearance.App.Sheet" parent="ShapeAppearance.Departament.Sheet" />
+
+
+    <!-- =========================================================================
+         THE API-GATED HALF OF THE RAMP, AS SEEN BY API 24-27.
+         =========================================================================
+
+         Every style below is EMPTY here and carries its two platform-gated items in
+         values-v28/styles.xml (and values-v31 for the one card). Each is the PARENT of
+         the role of the same name above, so a role has ONE definition in ONE file and
+         only `android:textFontWeight` / `android:lineHeight` — API 28 — vary by
+         configuration. They must exist here or the reference in the default
+         configuration would not resolve, which is why an empty style is not dead code:
+         it is the fallback branch, stated.
+
+         Below 28 the ramp is carried by the OTHER half, which is not gated: the explicit
+         static master font per role (@font/golos_text_bold / _medium / _regular) and
+         AppCompat`s own `lineHeight`. Nothing about the drawn result changes at 28.
+    -->
+    <style name="TextAppearance.App.Display.Api28" parent="TextAppearance.Material3.HeadlineMedium" />
+    <style name="TextAppearance.App.Headline.Api28" parent="TextAppearance.Material3.HeadlineSmall" />
+    <style name="TextAppearance.App.Title.Api28" parent="TextAppearance.Material3.TitleMedium" />
+    <style name="TextAppearance.App.Title.Medium.Api28" parent="TextAppearance.App.Title" />
+    <style name="TextAppearance.App.Body.Api28" parent="TextAppearance.Material3.BodyMedium" />
+    <style name="TextAppearance.App.Subtitle.Api28" parent="TextAppearance.Material3.BodyMedium" />
+    <style name="TextAppearance.App.Caption.Api28" parent="TextAppearance.Material3.BodySmall" />
+    <style name="TextAppearance.App.Chip.Api28" parent="TextAppearance.Material3.LabelSmall" />
+    <style name="TextAppearance.App.Numeric.Api28" parent="TextAppearance.Material3.BodyMedium" />
+    <style name="ToolbarBrandTitle.Api28" parent="TextAppearance.Material3.TitleLarge" />
+    <style name="BottomNavLabel.Api28" parent="TextAppearance.App.Chip.Ui" />
+    <style name="BottomNavLabel.Active.Api28" parent="BottomNavLabel" />
+    <style name="ThemeOverlay.Departament.Dialog.Api28" parent="ThemeOverlay.Material3.MaterialAlertDialog" />
+    <style name="Widget.Departament.Card.Group.Api31" parent="Widget.Departament.Card" />
+
+</resources>

@@ -1,0 +1,183 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  ONE SERVER, ONE ROW. The list on Главная, and the only place in the product a server
+  can be picked.
+
+  THE LIST IS FLAT AND THE ROWS ARE NOT CARDS (handoff README §4). The outer node carries
+  the 16dp gutter and a 2dp gap — «margin: 2px 16px 0», so the rows very nearly touch —
+  and the inner node carries the box: min 56dp tall, padding 8x12, radius 20, a 1.5dp
+  frame that is transparent until the row is selected, and a separator drawn as an inner
+  top shadow. Every one of those numbers is identical in every state, which is §11 grabl
+  2: geometry that changes on selection makes the whole list jump under the finger. See
+  @drawable/bg_server_row, which holds all seven states and the reasoning.
+
+  THE 8dp GAP THIS ROW USED TO CARRY (space_4 top AND bottom) is what made the list read
+  as a stack of separate slabs rather than one list. 2dp and a hairline is the rhythm the
+  handoff draws.
+-->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/item_bg"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:layout_marginStart="@dimen/screen_gutter"
+    android:layout_marginTop="@dimen/space_2"
+    android:layout_marginEnd="@dimen/screen_gutter"
+    android:gravity="center_vertical">
+
+    <LinearLayout
+        android:id="@+id/info_container"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="@drawable/bg_server_row"
+        android:clickable="true"
+        android:focusable="true"
+        android:gravity="center_vertical"
+        android:minHeight="@dimen/row_min_height"
+        android:orientation="horizontal"
+        android:paddingStart="@dimen/space_12"
+        android:paddingTop="@dimen/space_8"
+        android:paddingEnd="@dimen/space_12"
+        android:paddingBottom="@dimen/space_8"
+        android:stateListAnimator="@anim/press_row">
+
+        <!-- Selection indicator: the side-stripe is retired (impeccable Absolute Ban:
+             no side-stripe > 1px). Selection is carried by bg_server_row's full blue
+             outline+fill via infoContainer.isSelected. The zero-size, gone node is kept
+             because MainRecyclerAdapter still binds layoutIndicator. -->
+        <View
+            android:id="@+id/layout_indicator"
+            android:layout_width="0dp"
+            android:layout_height="0dp"
+            android:visibility="gone" />
+
+        <!-- §4: «флаг 28dp (radius 12dp)», on the handoff's surf3 tile plane — see
+             @drawable/bg_flag_tile. @dimen/flag_size is that 28. -->
+        <TextView
+            android:id="@+id/tv_flag"
+            android:layout_width="@dimen/flag_size"
+            android:layout_height="@dimen/flag_size"
+            android:layout_gravity="center_vertical"
+            android:layout_marginEnd="@dimen/space_4"
+            android:background="@drawable/bg_flag_tile"
+            android:gravity="center"
+            android:importantForAccessibility="no"
+            android:textSize="18sp"
+            tools:text="🇳🇱" />
+
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:orientation="vertical"
+            android:paddingStart="@dimen/space_8">
+
+            <TextView
+                android:id="@+id/tv_name"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:ellipsize="end"
+                android:maxLines="1"
+                android:textAppearance="@style/TextAppearance.App.Title"
+                tools:text="🇳🇱 Netherlands • Amsterdam" />
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/space_4"
+                android:gravity="center_vertical"
+                android:orientation="horizontal">
+
+                <!-- §4: «чипы протокола и JSON, 11sp/500, padding 3x9dp, radius 8dp». The
+                     radius comes from @dimen/radius_chip, which the foundation wave moved
+                     from 12 to 8 for exactly this; the padding is written out because 9 and
+                     3 are not on the spacing scale and are chip-internal metrics rather
+                     than gaps between objects. -->
+                <TextView
+                    android:id="@+id/tv_type"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:background="@drawable/bg_type_chip"
+                    android:lines="1"
+                    android:paddingStart="9dp"
+                    android:paddingTop="3dp"
+                    android:paddingEnd="9dp"
+                    android:paddingBottom="3dp"
+                    android:textAppearance="@style/TextAppearance.App.Chip"
+                    android:textColor="?attr/chipTypeText"
+                    tools:text="VLESS" />
+
+                <!-- The gold JSON chip: shown only when the profile is an operator
+                     xray-json template (EConfigType.CUSTOM). It marks a different KIND
+                     of profile, which is why it is allowed a colour of its own next to
+                     the blue protocol chip; see bg_json_chip.xml. -->
+                <TextView
+                    android:id="@+id/tv_json"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="@dimen/space_4"
+                    android:background="@drawable/bg_json_chip"
+                    android:lines="1"
+                    android:paddingStart="9dp"
+                    android:paddingTop="3dp"
+                    android:paddingEnd="9dp"
+                    android:paddingBottom="3dp"
+                    android:text="@string/server_row_chip_json"
+                    android:textAppearance="@style/TextAppearance.App.Chip"
+                    android:textColor="?attr/chipJsonText"
+                    android:visibility="gone"
+                    tools:visibility="visible" />
+
+                <TextView
+                    android:id="@+id/tv_statistics"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="@dimen/space_8"
+                    android:layout_weight="1"
+                    android:ellipsize="end"
+                    android:lines="1"
+                    android:textAppearance="@style/TextAppearance.App.Caption"
+                    tools:text="TCP · REALITY" />
+
+                <!-- Per-row ping spinner: shown while a latency test is in flight
+                     (testDelayMillis == -2L sentinel), replaced by tv_test_result on completion. -->
+                <ProgressBar
+                    android:id="@+id/progress_ping"
+                    android:layout_width="16dp"
+                    android:layout_height="16dp"
+                    android:layout_marginStart="4dp"
+                    android:indeterminateTint="?attr/colorPrimary"
+                    android:visibility="gone"
+                    tools:visibility="visible" />
+
+                <!-- THE PING, ON THE RIGHT, AND NOTHING BESIDE IT. The figure carries
+                     both channels on its own: the number is the reading and its colour
+                     (?attr/pingGood / ?attr/pingBad, applied in MainRecyclerAdapter) is
+                     the verdict. There WAS a dot in front of it; the owner had it
+                     removed — «точка которая появляется она слишком далеко от пинга,
+                     лучше ее просто убрать и все» — and the reference build he is
+                     measuring against never had one. An unmeasured server shows an
+                     empty slot, which is still what tells "never tested" apart from
+                     "failed". -->
+                <TextView
+                    android:id="@+id/tv_test_result"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="@dimen/space_4"
+                    android:gravity="end"
+                    android:lines="1"
+                    android:minWidth="48dp"
+                    android:textAppearance="@style/TextAppearance.App.Numeric"
+                    android:textColor="?attr/pingGood"
+                    android:textFontWeight="700"
+                    android:textSize="12sp"
+                    tools:text="214ms" />
+
+            </LinearLayout>
+
+        </LinearLayout>
+
+    </LinearLayout>
+
+</LinearLayout>

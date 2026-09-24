@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- cubic-bezier(0.42, 0, 0.58, 1) — CSS `ease-in-out`, design handoff README §8.
+
+     ONE consumer: «Затухание кольца», the connect ring's 5500ms brightness
+     decay (@integer/motion_ring_fade). It is the only motion in the product
+     long enough that an ease-out would be visibly over before the user
+     noticed it started, and the only one that both rises and falls.
+
+     Do not reach for this for a state change. State is ease_standard, press is
+     the ease_press_in / ease_press_out pair, reveal is ease_out_quart. -->
+<pathInterpolator xmlns:android="http://schemas.android.com/apk/res/android"
+    android:controlX1="0.42"
+    android:controlY1="0"
+    android:controlX2="0.58"
+    android:controlY2="1" />

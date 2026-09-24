@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Durations the sub-pages need that `values/motion.xml` does not carry.
+
+  A separate file for the same reason `motion_onboarding.xml` is one — `motion.xml`
+  belongs to the foundation wave and is edited by everyone — and NOT a second motion
+  scale. Everything already named there is used from there; only a number the handoff
+  states outright and the foundation had no reason to know about lands here.
+-->
+<resources>
+
+    <!--
+      README §7 «Устройства»: «при удалении строка гаснет, подпись меняется на
+      "Отключено от подписки", через 700 мс уходит из списка». 700 is the whole gesture
+      — the dim, the held moment in which the new subtitle can be read, and the exit —
+      not the length of any one of its parts.
+    -->
+    <integer name="motion_device_release">700</integer>
+
+    <!--
+      README §7, «Единое лекало»: «Появление — простое проявление 260 мс». The pair used
+      to read @integer/motion_reveal 300 / motion_reveal_exit 225, which is the internal
+      choreography table's number for a reveal in general — and 300 is also §4's shield
+      crossfade, so retiming the shared token to satisfy §7 would have moved the connect
+      object with it. A sub-page opening is its own role and gets its own two numbers.
+
+      The exit stays 75% of the enter (00-rules.md 8.5), which is 195. The handoff does
+      not state an exit; the ratio does, and the two files are a pair that is never
+      retimed one at a time.
+    -->
+    <integer name="motion_subpage_enter">260</integer>
+    <integer name="motion_subpage_exit">195</integer>
+
+</resources>

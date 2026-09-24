@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    «Добавить подписку» — the whole menu, and it is two items.
+
+    Inflated as a PopupMenu by MainActivity.showImportMenu(), anchored to Главная's add control.
+    The owner cut it to this on 2026-07-27: «Tapping "Добавить подписку" offers scan QR, clipboard,
+    enter link, create manually, import from file, send to TV. It must offer QR and clipboard, and
+    nothing else.» A customer of departament adds a подписка by scanning the bot's QR or by pasting
+    the link the bot sent — those are the two, and a menu of six made the two hard to find.
+
+    Where the other four went:
+
+      «Отправить на телевизор»  -> Настройки · Устройства (SettingsTabFragment.rowTvSend). It was
+                                   already there; this entry was a duplicate.
+      «Ввести ссылку»           -> MainHost.showAdvancedAddMethods(), the power-user picker. The
+      «Создать вручную»            three still work, unchanged; only their entry point moved off
+      «Импортировать из файла»     the add menu, which is a subscription action, not a lab.
+
+    The `group_server_list` group that used to sit below — locate / sort / export / three bulk
+    deletes — is gone with the Серверы destination the owner removed on 2026-07-26. Its handlers
+    went with the tab, so every one of those items had become an id nothing dispatched.
+
+    Item ids are consumed by MainActivity.onOptionsItemSelected.
+-->
+<menu xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
+
+    <group android:id="@+id/group_import">
+        <item
+            android:id="@+id/import_qrcode"
+            android:icon="@drawable/ic_scan_24dp"
+            android:title="@string/menu_add_scan_qr"
+            app:showAsAction="never" />
+        <item
+            android:id="@+id/import_clipboard"
+            android:icon="@drawable/ic_dl_copy"
+            android:title="@string/menu_add_clipboard"
+            app:showAsAction="never" />
+    </group>
+
+</menu>

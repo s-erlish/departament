@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  ============================================================================
+  THE SWITCH THUMB'S GEOMETRY AND ITS CLOCK — shared by @drawable/switch_thumb
+  and the four drawables it selects between.
+  ============================================================================
+
+  @drawable/switch_thumb is Material's thumb with ONE state left out; the reason is
+  written at length in its own header. What lives here is the part that has to be
+  identical to the library's or the switch stops looking like itself: the canvas,
+  the two resting radii, the shape the thumb passes through mid-flip, and the two
+  legs of the morph.
+
+  Every number below was read out of material-1.13.0 rather than recalled —
+  mtrl_switch_thumb_size 32dp, viewport 32, centre (16,16), the three paths verbatim
+  from its values.xml, and m3_sys_motion_duration_short2/short3 for the timing.
+  Reproduced and not referenced because material's public.txt lists styles only:
+  every mtrl_switch_* is a private resource of that library and not ours to point at.
+
+  The thumb the app draws is therefore unchanged to the pixel: 16dp off, 24dp on,
+  and the same 250ms two-leg morph between them.
+
+  A file of its own so the row's work does not collide with values/dimens.xml.
+-->
+<resources>
+
+    <dimen name="switch_thumb_size">32dp</dimen>
+    <integer name="switch_thumb_viewport">32</integer>
+    <integer name="switch_thumb_viewport_center">16</integer>
+
+    <!-- r8 about (16,16): the 16dp OFF thumb. -->
+    <string name="switch_thumb_path_unchecked" translatable="false">M8,16 A8,8 0 0,1 16,8 H16 A8,8 0 0,1 16,24 H16 A8,8 0 0,1 8,16</string>
+    <!-- r12 about (16,16): the 24dp ON thumb. The size difference IS the state. -->
+    <string name="switch_thumb_path_checked" translatable="false">M4,16 A12,12 0 0,1 16,4 H16 A12,12 0 0,1 16,28 H16 A12,12 0 0,1 4,16</string>
+    <!-- The squashed stadium the thumb passes through mid-flip. Same command
+         structure as the two above, which is what lets pathType interpolate them. -->
+    <string name="switch_thumb_path_morphing" translatable="false">M0,16 A11,11 0 0,1 11,5 H21 A11,11 0 0,1 21,27 H11 A11,11 0 0,1 0,16</string>
+
+    <!-- M3 splits the flip into a lead and a settle and swaps which is which by
+         direction. 100 + 150 either way round, so the morph is 250ms in both
+         directions, exactly as it ships. -->
+    <integer name="switch_thumb_morph_lead">100</integer>
+    <integer name="switch_thumb_morph_settle">150</integer>
+
+</resources>

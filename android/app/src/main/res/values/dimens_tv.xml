@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Dimensions for the Android TV subscription transfer (module: tv).
+
+  A separate file for the same reason `strings_tv.xml` is one — the TV screens are a
+  self-contained pair and `dimens.xml` is edited by everyone. It follows the
+  `dimens_onboarding.xml` precedent, not a second spacing scale: everything a phone
+  screen needs still comes from `dimens.xml`, and nothing here is reachable from one.
+
+  These are TELEVISION constants, not tokens on the 4dp ramp:
+
+  · OVERSCAN. A TV crops the edges of the panel; the safe area is about 90% of it.
+    These two sit OUTSIDE the 16dp screen gutter, so the pairing card ends up 40dp
+    from the physical edge and no control can be cropped off the panel.
+  · THE PAIRING QR is sized for a phone camera two metres away, which is what makes
+    it a fixed 320dp square and not a fraction of the card.
+-->
+<resources>
+
+    <dimen name="tv_overscan_horizontal">24dp</dimen>
+    <dimen name="tv_overscan_vertical">24dp</dimen>
+    <dimen name="tv_pairing_qr">320dp</dimen>
+
+</resources>

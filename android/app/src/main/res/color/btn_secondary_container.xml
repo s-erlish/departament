@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Secondary button container: the neutral tonal fill, colorSurfaceContainerHighest
+  #20242B on dark. Deliberately NOT colorSecondaryContainer — 00-rules.md 3.6 gives
+  the screen exactly one accent surface and the Secondary is not it.
+-->
+<selector xmlns:android="http://schemas.android.com/apk/res/android">
+    <item
+        android:alpha="0.38"
+        android:color="?attr/colorSurfaceContainerHighest"
+        android:state_enabled="false" />
+    <item android:color="?attr/colorSurfaceContainerHighest" />
+</selector>

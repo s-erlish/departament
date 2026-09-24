@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  R7, the INNER focus case: filled accent surfaces (Primary, filled icon buttons).
+  An accent ring drawn outside an accent fill is invisible, so the ring goes inside
+  in the control's own on-colour at 40%.
+-->
+<selector xmlns:android="http://schemas.android.com/apk/res/android">
+    <item
+        android:alpha="0.40"
+        android:color="?attr/colorOnPrimary"
+        android:state_focused="true" />
+    <item android:color="@android:color/transparent" />
+</selector>

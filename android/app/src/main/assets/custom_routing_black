@@ -1,0 +1,46 @@
+[
+  {
+    "remarks": "Обход BitTorrent",
+    "outboundTag": "direct",
+    "protocol": [
+      "bittorrent"
+    ]
+  },
+  {
+    "remarks": "Блокировать QUIC (UDP 443)",
+    "outboundTag": "block",
+    "port": "443",
+    "network": "udp"
+  },
+  {
+    "remarks": "Обход локальной сети (IP)",
+    "outboundTag": "direct",
+    "ip": [
+      "geoip:private"
+    ]
+  },
+  {
+    "remarks": "Обход локальной сети (домены)",
+    "outboundTag": "direct",
+    "domain": [
+      "geosite:private"
+    ]
+  },
+  {
+    "remarks": "Прокси для заблокированных сервисов",
+    "outboundTag": "proxy",
+    "domain": [
+      "geosite:google",
+      "geosite:telegram",
+      "geosite:twitter",
+      "geosite:facebook",
+      "geosite:instagram",
+      "geosite:youtube"
+    ]
+  },
+  {
+    "remarks": "Финальное прямое подключение",
+    "port": "0-65535",
+    "outboundTag": "direct"
+  }
+]

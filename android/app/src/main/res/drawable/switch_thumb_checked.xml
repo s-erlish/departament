@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  THE ON THUMB: a 24dp disc in the same 32dp canvas as @drawable/switch_thumb_unchecked.
+
+  The eight dp between the two is a STATE, not a decoration — M3 says «on» with size as
+  well as with colour, which is 00-rules.md 6.3's rule from the other direction. Anything
+  that flattens the pair back to one radius takes a channel away from a control whose
+  whole job is to report a boolean.
+
+  Geometry verbatim from material-1.13.0: viewport 32, path r12 about (16,16).
+-->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="@dimen/switch_thumb_size"
+    android:height="@dimen/switch_thumb_size"
+    android:viewportWidth="@integer/switch_thumb_viewport"
+    android:viewportHeight="@integer/switch_thumb_viewport">
+
+    <group
+        android:name="thumb_group"
+        android:pivotX="@integer/switch_thumb_viewport_center"
+        android:pivotY="@integer/switch_thumb_viewport_center">
+        <path
+            android:name="thumb"
+            android:fillColor="#FFFFFFFF"
+            android:pathData="@string/switch_thumb_path_checked" />
+    </group>
+
+</vector>

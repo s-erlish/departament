@@ -1,0 +1,103 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  ============================================================================
+  A-19  The app picker, opened from a routing rule's «Приложения» field. H3 · R1.
+  24-tab-conformance.md A-19.
+  ============================================================================
+
+  It used to be a ten-line bare RecyclerView: no header of its own, no search on
+  screen (it lived in an ActionBar the sub-page toolbar no longer provides), no empty
+  state, no loading state, and no statement of how many apps were selected - the user
+  chose blind and found out on the form behind.
+
+  Same skeleton as A-18, deliberately: the picker and «Прокси по приложениям» are the
+  same list of the same objects, so they are the same screen with a different title
+  and a different owner of the selection.
+-->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="?android:attr/colorBackground"
+    android:fitsSystemWindows="true"
+    android:orientation="vertical"
+    tools:context=".ui.AppPickerActivity">
+
+    <include
+        android:id="@+id/toolbar"
+        layout="@layout/view_sub_header" />
+
+    <FrameLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:paddingStart="@dimen/screen_gutter"
+        android:paddingTop="@dimen/screen_gutter"
+        android:paddingEnd="@dimen/screen_gutter">
+
+        <include
+            android:id="@+id/search"
+            layout="@layout/view_search_field" />
+    </FrameLayout>
+
+    <TextView
+        android:id="@+id/tv_meta"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="@dimen/space_12"
+        android:layout_marginBottom="@dimen/space_8"
+        android:paddingStart="@dimen/screen_gutter"
+        android:paddingEnd="@dimen/screen_gutter"
+        android:textAppearance="@style/TextAppearance.App.Caption"
+        tools:text="Выбрано: 3" />
+
+    <FrameLayout
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1">
+
+        <androidx.recyclerview.widget.RecyclerView
+            android:id="@+id/recycler_view"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:clipToPadding="false"
+            android:paddingBottom="@dimen/space_32"
+            android:scrollbars="vertical"
+            tools:listitem="@layout/view_row_line" />
+
+        <LinearLayout
+            android:id="@+id/skeleton"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:importantForAccessibility="noHideDescendants"
+            android:orientation="vertical"
+            android:visibility="gone">
+
+            <include
+                android:id="@+id/skeleton_1"
+                layout="@layout/view_skeleton_row" />
+
+            <include
+                android:id="@+id/skeleton_2"
+                layout="@layout/view_skeleton_row" />
+
+            <include
+                android:id="@+id/skeleton_3"
+                layout="@layout/view_skeleton_row" />
+
+            <include
+                android:id="@+id/skeleton_4"
+                layout="@layout/view_skeleton_row" />
+
+            <include
+                android:id="@+id/skeleton_5"
+                layout="@layout/view_skeleton_row" />
+        </LinearLayout>
+
+        <include
+            android:id="@+id/empty_state"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center_vertical"
+            layout="@layout/view_empty_state" />
+    </FrameLayout>
+</LinearLayout>

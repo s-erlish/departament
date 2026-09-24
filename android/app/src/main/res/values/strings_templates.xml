@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Hidden host-bound config templates (Module 5). All strings in Russian. -->
+    <string name="template_locked_toast">Это управляемый сервер. Его настройки скрыты: посмотреть, изменить или экспортировать их нельзя.</string>
+</resources>

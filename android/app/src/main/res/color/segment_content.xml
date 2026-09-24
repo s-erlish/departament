@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Segmented-control label. Selected onPrimaryContainer #CFE0FF on #17325C = 9.57:1
+  (AAA); unselected onSurfaceVariant on the surfaceHighest track = 6.00:1 (AA).
+-->
+<selector xmlns:android="http://schemas.android.com/apk/res/android">
+    <item
+        android:alpha="0.38"
+        android:color="?attr/colorOnSurfaceVariant"
+        android:state_enabled="false" />
+    <item android:color="?attr/colorOnPrimaryContainer" android:state_checked="true" />
+    <item android:color="?attr/colorOnSurfaceVariant" />
+</selector>

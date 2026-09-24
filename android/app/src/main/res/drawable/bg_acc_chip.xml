@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- The neutral chip on the account surfaces.
+
+     Same defect, same fix as bg_type_chip: `colorSurfaceVariant` is a 1.09:1 fill in
+     the blue light theme and reads as a chip only because it is a tinted blue-grey.
+     Under the mono overlay it is #F1F1F2 on white — no plate at all. The boundary is
+     transparent in both blue themes, so nothing moves there. -->
+<shape xmlns:android="http://schemas.android.com/apk/res/android" android:shape="rectangle">
+    <solid android:color="?attr/colorSurfaceVariant" />
+    <stroke
+        android:width="@dimen/stroke_hairline"
+        android:color="?attr/colorPlateOutline" />
+    <corners android:radius="@dimen/radius_chip" />
+</shape>

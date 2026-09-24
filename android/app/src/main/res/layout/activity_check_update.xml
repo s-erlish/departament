@@ -1,0 +1,239 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  ============================================================================
+  A-36  Проверка обновлений.  H3 · R1.
+  ============================================================================
+
+  24-tab-conformance.md A-36 marks this screen DELETE - it was unreachable, so it
+  cost nothing to cut. It is reachable now (a row in «Настройки» and one on «О
+  приложении»), and it is the product's only update path: departament ships as a
+  direct APK, so what happens here is what a user gets instead of a store.
+
+  It reported its outcome in toasts once - three of them, one an exception message
+  shown raw to a customer. It has states now, and every one of them is drawn:
+
+      checking     · an inline arc and «Проверяем обновления…»
+      up to date   · «Обновлений нет»
+      available    · «Доступна версия X» + release notes + «Обновить»
+      downloading  · a determinate bar with «12,4 МБ из 31,0 МБ» and «Отменить»
+      ready        · «Обновление готово» + «Установить»
+      permission   · «Нужно разрешение на установку» + «Открыть настройки»
+      failed       · the MAPPED cause, and its retry immediately under it (G2)
+
+  WHY THE ACTION IS NOT THE EMPTY STATE'S ACTION. `EmptyStateBinder` puts its button
+  behind a ViewStub, and a stub inflates once - so the FIRST state that shows a
+  button fixes the tier for the rest of the screen's life. On a screen that alternates
+  between a Primary «Обновить» and a Tertiary «Повторить» that is a coin toss: whoever
+  loses gets the wrong tier. The two tiers are therefore two <include>s here, and
+  exactly ONE of them is ever visible - the component's "one action, or none" rule,
+  enforced by the screen instead of by the stub.
+
+  2026-08 REDESIGN — handoff README §7, checked against the prototype frame
+  (docs/design2026/port-shots-2/48-update.png). The prototype draws this screen as:
+
+      кнопка назад · «Проверить обновление» 24sp/700
+      карточка · «Искать предварительный выпуск» (переключатель)
+               · «Проверить обновление» (акцентная строка действия)
+      подпись  · «departament 2.2.1»
+
+  and this file is now that. What moved: the version stopped being a Row.Value at the
+  top of the card and became the caption under it, where the prototype puts it (it
+  still copies on tap, so nothing was lost but a row); «Проверить обновление» stopped
+  being only an implicit consequence of opening the screen and became the accent row
+  the prototype names.
+
+  THE STATE ACTIONS STAY BUTTONS. §7's lekalo has one row per action, but «Обновить»
+  / «Установить» / «Отменить» / «Повторить» change TIER between states and a row has
+  one appearance. The accent row above is the CHECK; those four are the outcome, they
+  live under the verdict they belong to, and turning them into rows would delete four
+  of the seven states listed above.
+-->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="?android:attr/colorBackground"
+    android:fitsSystemWindows="true"
+    android:orientation="vertical"
+    tools:context=".ui.CheckUpdateActivity">
+
+    <include
+        android:id="@+id/toolbar"
+        layout="@layout/view_sub_header" />
+
+    <androidx.core.widget.NestedScrollView
+        android:id="@+id/main_content"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:clipToPadding="false"
+        android:paddingBottom="@dimen/space_32"
+        android:scrollbars="none">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical">
+
+            <com.google.android.material.card.MaterialCardView
+                style="@style/Widget.Departament.CardSection"
+                android:layout_marginTop="@dimen/screen_gutter">
+
+                <LinearLayout style="@style/Widget.Departament.CardSection.Body">
+
+                    <include
+                        android:id="@+id/row_pre_release"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        layout="@layout/view_row" />
+
+                    <com.google.android.material.divider.MaterialDivider
+                        style="@style/Widget.Departament.Divider.Full"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content" />
+
+                    <include
+                        android:id="@+id/row_check"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        layout="@layout/view_row" />
+                </LinearLayout>
+            </com.google.android.material.card.MaterialCardView>
+
+            <!-- The installed version, as the caption the prototype draws under the card
+                 («departament 2.2.1») rather than as a row of its own. It still copies on tap,
+                 which is what the row it replaced did. -->
+            <TextView
+                android:id="@+id/tv_version"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/space_12"
+                android:background="@drawable/bg_row"
+                android:minHeight="@dimen/view_height_dp48"
+                android:paddingStart="@dimen/screen_gutter"
+                android:paddingTop="@dimen/space_8"
+                android:paddingEnd="@dimen/screen_gutter"
+                android:paddingBottom="@dimen/space_8"
+                android:textAppearance="@style/TextAppearance.App.Caption"
+                tools:text="departament 2.2.1 (25.3.6)" />
+
+            <!-- The result block: one state at a time, never two. Both layout_width and
+                 layout_height are declared because an <include> ignores every layout_*
+                 attribute unless those two are present - which is how the margin above
+                 would have silently done nothing. -->
+            <include
+                android:id="@+id/empty_state"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/space_32"
+                layout="@layout/view_empty_state" />
+
+            <!-- CHECKING. An indeterminate arc: there is no total to divide by. -->
+            <LinearLayout
+                android:id="@+id/checking"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/space_32"
+                android:gravity="center_horizontal"
+                android:orientation="vertical"
+                android:visibility="gone">
+
+                <com.google.android.material.progressindicator.CircularProgressIndicator
+                    android:id="@+id/progress"
+                    style="@style/Widget.Departament.Progress.Circular.Inline"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:indeterminate="true" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="@dimen/space_12"
+                    android:accessibilityLiveRegion="polite"
+                    android:text="@string/upd_checking"
+                    android:textAppearance="@style/TextAppearance.App.Subtitle" />
+            </LinearLayout>
+
+            <!-- DOWNLOADING. The bar starts indeterminate (the size is unknown until
+                 the first chunk) and becomes determinate the moment a Content-Length
+                 arrives; if none ever does it keeps moving and the caption reports the
+                 megabytes so far, rather than inventing a percentage. Only that
+                 direction is legal at runtime - see CheckUpdateActivity.showDownloading. -->
+            <LinearLayout
+                android:id="@+id/downloading"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/space_32"
+                android:orientation="vertical"
+                android:paddingStart="@dimen/screen_gutter"
+                android:paddingEnd="@dimen/screen_gutter"
+                android:visibility="gone">
+
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:accessibilityLiveRegion="polite"
+                    android:text="@string/upd_downloading"
+                    android:textAppearance="@style/TextAppearance.App.Body" />
+
+                <com.google.android.material.progressindicator.LinearProgressIndicator
+                    android:id="@+id/download_progress"
+                    style="@style/Widget.Departament.Progress.Linear"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="@dimen/space_12"
+                    android:max="100" />
+
+                <TextView
+                    android:id="@+id/download_detail"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="@dimen/space_8"
+                    android:textAppearance="@style/TextAppearance.App.Subtitle"
+                    tools:text="12,4 МБ из 31,0 МБ" />
+            </LinearLayout>
+
+            <!-- What is in the new version, between the verdict and the button: the
+                 user decides whether to update after reading it, not before. -->
+            <TextView
+                android:id="@+id/tv_release_notes"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/space_16"
+                android:paddingStart="@dimen/screen_gutter"
+                android:paddingEnd="@dimen/screen_gutter"
+                android:textAppearance="@style/TextAppearance.App.Body"
+                android:visibility="gone"
+                tools:text="Исправлено переподключение после смены сети."
+                tools:visibility="visible" />
+
+            <!-- The one action, in two tiers. 24 above it is the empty state's own
+                 title-line-action rhythm, continued. -->
+            <FrameLayout
+                android:id="@+id/action_area"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/space_24"
+                android:paddingStart="@dimen/screen_gutter"
+                android:paddingEnd="@dimen/screen_gutter"
+                android:visibility="gone"
+                tools:visibility="visible">
+
+                <include
+                    android:id="@+id/action_primary"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="center_horizontal"
+                    layout="@layout/view_action_primary" />
+
+                <include
+                    android:id="@+id/action_tertiary"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="center_horizontal"
+                    android:visibility="gone"
+                    layout="@layout/view_action_tertiary" />
+            </FrameLayout>
+        </LinearLayout>
+    </androidx.core.widget.NestedScrollView>
+</LinearLayout>

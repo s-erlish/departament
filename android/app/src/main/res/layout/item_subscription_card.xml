@@ -1,0 +1,102 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  ONE SUBSCRIPTION = ONE VIEWPAGER2 PAGE, and after the redesign the page is the
+  TRAFFIC RING (handoff README §5.2): 172dp across, a 6dp stroke, filled from the
+  top (−90°) clockwise, with the used figure and its ceiling stacked in the middle.
+
+  WHY THE PAGE IS ONLY THE RING NOW. §5 lays the tab out as one vertical spine —
+  профиль → кольцо → тариф → кнопки → автопродление → управление — and only ONE of
+  those bands is per-подписка in a way the eye should be able to swipe: the traffic.
+  The name, the срок, the two buttons and the auto-renew row all belong to whichever
+  подписка is on screen and are stated ONCE, in activity_account.xml, re-bound by
+  AccountFragment.renderSelectedSub on every page change. Repeating «Пополнить» on
+  each page would have offered the same account-level action N times.
+
+  This replaces the card's old @layout/view_meter include. The meter is not gone —
+  it is this: the ring binds the same four states the meter documented (under quota,
+  over quota, unlimited, no data), from the same figures, in SubscriptionPagerAdapter.
+
+  The ring is a determinate CircularProgressIndicator and not a custom View on
+  purpose. M3's indicator already starts its sweep at the top and runs clockwise,
+  already rounds its cap (trackCornerRadius = half the 6dp stroke), and already
+  draws the unfilled remainder as a track — which is the second circle in the
+  prototype's SVG. What it does NOT do is §5's «переход 500 мс»: its own progress
+  animation runs on the library's clock, so the adapter drives the sweep with a
+  ValueAnimator on @interpolator/ease_out_quart instead (§8 «ease-out-quart»).
+
+  indicatorTrackGapSize is pinned to 0: Material ≥1.11 opens a gap between the
+  indicator and the track by default, and §11 grabl 7 («кольцо с двумя полосками»)
+  is precisely that defect — one arc, never a segmented one.
+
+  No MaterialCardView: §5 floats the ring on the page. A card around it would put a
+  hairline box round the one object on this tab that is supposed to read as weight.
+-->
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
+
+    <FrameLayout
+        android:layout_width="172dp"
+        android:layout_height="172dp"
+        android:layout_gravity="center_horizontal">
+
+        <com.google.android.material.progressindicator.CircularProgressIndicator
+            android:id="@+id/ring_traffic"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:indeterminate="false"
+            android:max="1000"
+            android:progress="1000"
+            app:indicatorColor="?attr/colorPrimary"
+            app:indicatorDirectionCircular="clockwise"
+            app:indicatorInset="0dp"
+            app:indicatorSize="172dp"
+            app:indicatorTrackGapSize="0dp"
+            app:trackColor="?attr/colorSurfaceContainerHighest"
+            app:trackCornerRadius="3dp"
+            app:trackThickness="6dp" />
+
+        <!-- The two centre lines. gravity=center on the column and on each line so a
+             long figure («999,9 ГБ») stays optically centred in the disc instead of
+             hanging off its own start edge. -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:gravity="center"
+            android:orientation="vertical"
+            android:paddingHorizontal="@dimen/space_20">
+
+            <!-- §5: «Цифра 28sp/700, letter-spacing −0.02em, моноширинная (tnum)» —
+                 TextAppearance.App.Numeric.Ring is that token (§8 «28/700 цифра
+                 кольца»), tabular figures and the −0.02 tracking included. The
+                 tracking used to be restated on this view because the token carried
+                 −0.01 while values/styles.xml belonged to another wave; the token is
+                 the design's number now and the override is gone with it. -->
+            <TextView
+                android:id="@+id/tv_ring_value"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:gravity="center"
+                android:maxLines="1"
+                android:textAppearance="@style/TextAppearance.App.Numeric.Ring"
+                tools:text="2,0 ТБ" />
+
+            <!-- «без ограничений» / «из 5 ТБ». Two lines allowed: «Лимит исчерпан»
+                 and «Нет данных» both fit on one, but the ceiling of a long unit
+                 must be able to wrap rather than ellipsize inside the disc. -->
+            <TextView
+                android:id="@+id/tv_ring_caption"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/space_4"
+                android:gravity="center"
+                android:maxLines="2"
+                android:textAppearance="@style/TextAppearance.App.Caption"
+                tools:text="без ограничений" />
+        </LinearLayout>
+    </FrameLayout>
+</FrameLayout>

@@ -1,0 +1,195 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  ============================================================================
+  A-20  settings/routing - Маршрутизация.  H3 · R1.
+  24-tab-conformance.md A-20, 00-rules.md 4.2 / 4.8.
+  ============================================================================
+
+  What changed, beyond the tokens: FIVE ACTIONS CAME OUT OF A TOOLBAR OVERFLOW that
+  nothing else in the app has - «Готовые наборы», «Импорт из буфера», «Импорт из
+  QR-кода», «Экспорт», and «Добавить правило» - and became visible rows in their own
+  group. A-38 removes the ActionBar these lived on, so leaving them there would have
+  deleted five features outright.
+
+  2026-08 REDESIGN — handoff README §7, verified against the prototype frame by frame
+  (docs/design2026/port-shots-2/43-routing.png). The screen is one ledger:
+
+      кнопка назад 44dp · «Маршрутизация» 24sp/700
+      «Доменная стратегия»              · card, one row, select popup
+      «Настройки правил маршрутизации»  · card, one line per rule, or the empty state
+      «Добавить правило»                · card, one accent action row
+      «Наборы и обмен»                  · card, four action rows            (П-09)
+
+  THREE THINGS THE PROTOTYPE HAS AND THIS FILE DID NOT. The strategy card had no
+  section header above it, so the screen opened on an unlabelled row. The rules list
+  was ONE CARD PER RULE — a stack of bordered boxes inside a fourth box, which is
+  both a nested card and the one composition the prototype never uses; it is one card
+  with a full-width hairline between rules now (@layout/view_row_line). And «Добавить
+  правило» was an icon in the header: §7's lekalo carries no toolbar action, and the
+  prototype draws the add as an accent row in its own card under the list, where it
+  has a name instead of being a «+» the user has to interpret.
+
+  «Наборы и обмен» is not in the prototype and stays (П-09): four features —
+  presets, clipboard import, QR import, export — that the handoff was written without
+  sight of. They are ordinary rows, not accent ones: one accent group per screen.
+-->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="?android:attr/colorBackground"
+    android:fitsSystemWindows="true"
+    android:orientation="vertical"
+    tools:context=".ui.RoutingSettingActivity">
+
+    <include
+        android:id="@+id/toolbar"
+        layout="@layout/view_sub_header" />
+
+    <androidx.core.widget.NestedScrollView
+        android:id="@+id/main_content"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:clipChildren="false"
+        android:clipToPadding="false"
+        android:paddingBottom="@dimen/space_32"
+        android:scrollbars="none">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:clipChildren="false"
+            android:orientation="vertical">
+
+            <TextView
+                style="@style/SettingsSectionLabel"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="@string/routing_domain_strategy" />
+
+            <!-- «Доменная стратегия» opens §6's select popup, so this card must NOT clip its
+                 children — a popup anchored on the row would be sliced off at the card's bottom
+                 edge (§11 grabl 4). The row rounds itself instead: it is the card's only one, so
+                 RoutingSettingActivity gives it @drawable/bg_row_only via RowBinder.edge. -->
+            <com.google.android.material.card.MaterialCardView
+                style="@style/Widget.Departament.CardSection"
+                android:clipChildren="false"
+                android:clipToPadding="false">
+
+                <LinearLayout
+                    style="@style/Widget.Departament.CardSection.Body"
+                    android:clipChildren="false"
+                    android:clipToPadding="false">
+
+                    <include
+                        android:id="@+id/row_domain_strategy"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        layout="@layout/view_row" />
+                </LinearLayout>
+            </com.google.android.material.card.MaterialCardView>
+
+            <TextView
+                android:id="@+id/label_rules"
+                style="@style/SettingsSectionLabel"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="@string/routing_section_rules" />
+
+            <!-- §7 «Настройки правил» is a card of rows. The card is the LIST's own
+                 background rather than a MaterialCardView around it, because the screen
+                 hides @id/recycler_view when there are no rules and a wrapper would leave
+                 an empty outlined box above the empty state. -->
+            <androidx.recyclerview.widget.RecyclerView
+                android:id="@+id/recycler_view"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="@dimen/screen_gutter"
+                android:layout_marginEnd="@dimen/screen_gutter"
+                android:background="@drawable/bg_card_inert"
+                android:clipToOutline="true"
+                android:nestedScrollingEnabled="false"
+                tools:listitem="@layout/view_row_line" />
+
+            <include
+                android:id="@+id/empty_state"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/space_24"
+                android:layout_marginBottom="@dimen/space_24"
+                layout="@layout/view_empty_state" />
+
+            <!-- «Добавить правило» — §7 draws it as an accent row in its own card directly
+                 under the rules, not as a «+» in the header. 12 above it, which is the gap
+                 the prototype puts between a card and the card that follows it with no
+                 section header in between. -->
+            <com.google.android.material.card.MaterialCardView
+                style="@style/Widget.Departament.CardSection"
+                android:layout_marginTop="@dimen/space_12">
+
+                <LinearLayout style="@style/Widget.Departament.CardSection.Body">
+
+                    <include
+                        android:id="@+id/row_add_rule"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        layout="@layout/view_row" />
+                </LinearLayout>
+            </com.google.android.material.card.MaterialCardView>
+
+            <TextView
+                style="@style/SettingsSectionLabel"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="@string/routing_section_actions" />
+
+            <com.google.android.material.card.MaterialCardView style="@style/Widget.Departament.CardSection">
+
+                <LinearLayout style="@style/Widget.Departament.CardSection.Body">
+
+                    <include
+                        android:id="@+id/row_presets"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        layout="@layout/view_row" />
+
+                    <!-- §6: «Разделитель во всю ширину карточки», not inset to the text
+                         origin — the prototype draws it as a border-top on the row. -->
+                    <com.google.android.material.divider.MaterialDivider
+                        style="@style/Widget.Departament.Divider.Full"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content" />
+
+                    <include
+                        android:id="@+id/row_import_clipboard"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        layout="@layout/view_row" />
+
+                    <com.google.android.material.divider.MaterialDivider
+                        style="@style/Widget.Departament.Divider.Full"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content" />
+
+                    <include
+                        android:id="@+id/row_import_qrcode"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        layout="@layout/view_row" />
+
+                    <com.google.android.material.divider.MaterialDivider
+                        style="@style/Widget.Departament.Divider.Full"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content" />
+
+                    <include
+                        android:id="@+id/row_export"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        layout="@layout/view_row" />
+                </LinearLayout>
+            </com.google.android.material.card.MaterialCardView>
+        </LinearLayout>
+    </androidx.core.widget.NestedScrollView>
+</LinearLayout>

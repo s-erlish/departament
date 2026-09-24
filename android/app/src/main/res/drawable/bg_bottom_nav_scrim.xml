@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Frameless bottom-nav backdrop: the scrolling content fades out under the nav buttons
+     (transparent at the top -> ?attr/colorSurface at the bottom) instead of meeting a solid bar.
+
+     TWO LAYERS, AND THE REASON IS THE GESTURE BAR. The view this backs is not one fixed height any
+     more: MainActivity.setupEdgeToEdge grows it by the window's bottom inset, because the bar it
+     has to cover grows by exactly that much — the icons are padded clear of the gesture pill (~24dp)
+     or of the 3-button strip (~48dp). A single <gradient> STRETCHES with the view, so every dp the
+     phone's gesture bar added would also stretch the fade: on a 24dp inset the ramp arrived at the
+     icons at a fifth of its opacity and the server list read straight through them, and that is the
+     owner's report from the device («значки выпали выше из-за слайдера внизу экрана… за значками
+     выше он уже пропадает»). The other phone, with no gesture bar, was right all along.
+
+     So the fade is a band of CONSTANT height pinned to the top edge, and the solid body fills
+     whatever is left under it. The band is the same 40dp the old 50/50 gradient drew at the old
+     fixed 80dp height, so a phone with no gesture bar renders exactly what it rendered before, and a
+     phone with one gets that same picture moved up by its inset instead of a squashed one.
+
+     40dp is ONE number written twice — the body's top inset and the band's height tile the view
+     between them, so the two must stay equal. -->
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <!-- THE COLOUR IS THE PAGE'S, NOT THE SURFACE'S. This faded to ?attr/colorSurface while the
+         window root is painted with bg_home_gradient, whose foot is ?android:colorBackground:
+         #141619 over #0A0B0D in the blue theme, #121214 over #000000 in mono. A solid LIGHTER than
+         the page it lies on does not read as a fade, it reads as a band — which is exactly what was
+         reported from the device («какая-то лишняя полоска есть цвета»). Fading to the page colour
+         makes the scrim's foot and the gradient's foot the same pixel in both dark themes.
+
+         AND LIGHT IS CLOSED NOW TOO. It was the one theme still off: its gradient ends #D3E0F7
+         against a colorBackground of #F4F7FC, and that gap is what the owner saw — «на белой теме
+         также есть какая-то прозрачная полоска синяя в самом низу, независимо от положения на
+         экране». The note here used to say a page-edge token was "not worth minting for a theme
+         this product does not ship in"; that stopped being true the moment «Как в системе» became
+         the default. @color/page_edge IS the gradient's endColor, split by the same day/night
+         qualifier the gradient itself is split by, so the two cannot disagree per theme. -->
+
+    <!-- The body: the page colour, from the foot of the fade band down to the screen edge. -->
+    <item android:top="40dp">
+        <shape android:shape="rectangle">
+            <solid android:color="@color/page_edge" />
+        </shape>
+    </item>
+
+    <!-- The fade band: surface at its foot -> transparent at its head. angle=90 runs the ramp
+         bottom-to-top, so the start colour is the one at the bottom. -->
+    <item
+        android:gravity="top"
+        android:height="40dp">
+        <shape android:shape="rectangle">
+            <gradient
+                android:angle="90"
+                android:endColor="@android:color/transparent"
+                android:startColor="@color/page_edge"
+                android:type="linear" />
+        </shape>
+    </item>
+
+</layer-list>

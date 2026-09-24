@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    Strings for the reusable payment-method chooser bottom sheet (PaymentMethodSheet).
+    All user-facing text is Russian, matching the Incy account/payment flow.
+-->
+<resources>
+    <string name="pay_method_title">Способ оплаты</string>
+    <string name="pay_method_from_balance_fmt">С баланса: %1$s</string>
+    <string name="pay_method_icon_cd">Значок способа оплаты</string>
+    <string name="pay_method_chevron_cd">Выбрать</string>
+</resources>

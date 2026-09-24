@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Размеры начального экрана (§2) и экранов прогрузки (§3).
+
+  Отдельный файл, а не дописка в dimens.xml: шкалу отступов, скруглений и
+  таймингов держит волна фундамента (docs/design2026/TOKENS.md), и второго набора
+  имён для того же самого здесь нет — ниже только габариты двух экранов, которых
+  в шкале быть не может (кольцо 112, кольцо прогрузки 132, слот подзаголовка).
+
+  Всё остальное взято из уже заведённого: 16dp — @dimen/screen_gutter,
+  52dp — @dimen/btn_height_tall, 48dp — @dimen/btn_height, 40dp — @dimen/tile_size,
+  20dp — @dimen/radius_card, 24dp — @dimen/radius_button, 14dp — @dimen/radius_card_small,
+  12dp — @dimen/radius_tile, 100dp — @dimen/radius_pill.
+-->
+<resources>
+
+    <!-- §2.1 Щит в кольце. Внешнее кольцо по краю, внутреннее — inset 12dp. -->
+    <dimen name="ob_ring">112dp</dimen>
+    <dimen name="ob_ring_inset">12dp</dimen>
+    <dimen name="ob_shield">44dp</dimen>
+
+    <!-- Обводка контурной пилюли и колец: 1.5dp. Это была единственная толщина,
+         которой не было в шкале обводок фундамента (1 / 2 / 3), поэтому число
+         заводилось здесь. Ступень появилась — @dimen/stroke_frame — и имя
+         остаётся ссылкой на неё, а не вторым числом: рамка строки сервера, кольца
+         кнопки подключения и эти пилюли обязаны быть одной толщины. -->
+    <dimen name="ob_stroke">@dimen/stroke_frame</dimen>
+
+    <!-- §2.3 Подзаголовок: ширина до 290dp, высота под две строки — иначе смена
+         текста при появлении ссылки в буфере дёргает всё, что ниже. -->
+    <dimen name="ob_sub_max_width">290dp</dimen>
+    <dimen name="ob_sub_min_height">42dp</dimen>
+
+    <!-- §2 «Переключение состояний буфера»: две высоты, между которыми едет
+         разметка. 80dp — кнопка с её верхним отступом, 190dp — карточка. -->
+    <dimen name="ob_clip_button_slot">80dp</dimen>
+    <dimen name="ob_clip_card_slot">190dp</dimen>
+
+    <!-- §2.7 «Другие способы» и две строки под ним. -->
+    <dimen name="ob_more_height">44dp</dimen>
+    <dimen name="ob_more_row_height">52dp</dimen>
+
+    <!-- §3 Кольцо прогрузки, глиф внутри него, галочка финала. -->
+    <dimen name="flow_ring">132dp</dimen>
+    <dimen name="flow_glyph">46dp</dimen>
+    <dimen name="flow_check">44dp</dimen>
+
+    <!-- §3 Полоса прогресса и тост. -->
+    <dimen name="flow_bar_height">3dp</dimen>
+    <dimen name="flow_bar_radius">2dp</dimen>
+    <dimen name="flow_toast_height">40dp</dimen>
+    <dimen name="flow_toast_inset">24dp</dimen>
+    <dimen name="flow_toast_bottom">36dp</dimen>
+    <dimen name="flow_gutter">32dp</dimen>
+
+</resources>

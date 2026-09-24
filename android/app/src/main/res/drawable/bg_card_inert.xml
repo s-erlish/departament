@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  THE CARD THAT DOES NOT REACT — the subscription card on Главная, and any surface that
+  HOLDS controls instead of BEING one.
+
+  Same recipe as @drawable/bg_server_card (colorSurface, radius_card, one even hairline
+  outline on all four sides) with the ripple taken out, and the ripple is the whole
+  point of the file existing. bg_server_card is a <ripple>, so it flashes
+  colorPrimaryContainer across its entire area the moment the view is pressed — and the
+  subscription card IS pressable, because a long press on it deletes the подписка. Every
+  touch that landed on the card therefore lit the card.
+
+  The owner reported both halves of that as defects, in the same breath:
+
+      «кнопка скрытия раскрытия слишком сильно подсвечивается слишком огромный свет
+       появляется при нажатии»
+      «при нажатии на раскрытие серверов, почему-то моргает тулбар с подпиской, он
+       ваще должен быть статичный и никаких у него потемнений и тд не должно быть
+       из-за взаимодействия»
+
+  So: the card is INERT. It has no pressed state, no ripple, no elevation change and no
+  tint change, whatever is done to the controls sitting on it. Those controls carry
+  their own feedback, bounded to themselves (@drawable/bg_control_disc).
+
+  The long press still works — it just no longer paints. Feedback for it is the haptic
+  and the dialog it opens, which is what a destructive action should answer with anyway.
+-->
+<shape xmlns:android="http://schemas.android.com/apk/res/android"
+    android:shape="rectangle">
+    <solid android:color="?attr/colorSurface" />
+    <corners android:radius="@dimen/radius_card" />
+    <stroke
+        android:width="@dimen/stroke_hairline"
+        android:color="?attr/colorOutlineVariant" />
+</shape>

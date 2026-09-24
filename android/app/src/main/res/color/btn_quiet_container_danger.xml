@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  The press plate of a destructive TEXT action — a dialog's confirm, a row's
+  «Удалить». Same construction and the same opacities as @color/btn_quiet_container;
+  the hue is the destructive one, because an accent-blue plate under a red label
+  would say two different things about the same tap.
+
+  @color/color_destructive_text (#FF6069 dark, #B3261E-family light) rather than
+  ?attr/colorError: this button's label is the destructive TEXT tone, and the plate
+  belongs to the label, not to a fill that is not there (00-rules.md 3.5).
+-->
+<selector xmlns:android="http://schemas.android.com/apk/res/android">
+    <item
+        android:color="@android:color/transparent"
+        android:state_enabled="false" />
+    <item
+        android:alpha="0.10"
+        android:color="?attr/colorDestructiveText"
+        android:state_pressed="true" />
+    <item
+        android:alpha="0.08"
+        android:color="?attr/colorDestructiveText"
+        android:state_focused="true" />
+    <item
+        android:alpha="0.06"
+        android:color="?attr/colorDestructiveText"
+        android:state_hovered="true" />
+    <item android:color="@android:color/transparent" />
+</selector>

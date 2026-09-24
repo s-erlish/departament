@@ -1,0 +1,243 @@
+name: Сборка Android
+
+# Сборка departament для Android: APK из android/ с нативной библиотекой туннеля (hev-socks5-tunnel,
+# подмодуль android/hev-socks5-tunnel) и ядром Xray (libv2ray.aar из выпусков 2dust/AndroidLibXrayLite,
+# версия — по тегу подмодуля android/AndroidLibXrayLite).
+#
+# Запускается на пуш в main и на запросы на слияние, когда меняется android/: тестовый APK для arm64
+# лежит в артефактах запуска (departament-android-apk). Её же вызывает выпуск (release.yml): тогда
+# собираются APK для всех процессоров и универсальный, и они уходят в релиз рядом с файлами для ПК.
+#
+# ПОДПИСЬ. Android ставит обновление, только если оно подписано тем же ключом, что и установленное
+# приложение. Ключ выпуска — в секретах репозитория: APP_KEYSTORE_BASE64, APP_KEYSTORE_PASSWORD,
+# APP_KEYSTORE_ALIAS, APP_KEY_PASSWORD. Им подписываются и выпуски, и тестовые сборки, поэтому
+# тестовая сборка ставится поверх выпуска. Без ключа тестовая сборка подписывается временным ключом
+# (поверх выпуска такой APK не встанет, в имени файла -debugsigned), а выпуск не собирается вовсе.
+#
+# ИМЕНА ФАЙЛОВ — договор с приложением: departament_<версия>_<abi>.apk. По ним проверка обновлений
+# в приложении находит свой файл в выпуске (UpdateCheckerManager.selectAsset); файлы для ПК
+# называются иначе и ей не попадаются.
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'android/**'
+      - '.gitmodules'
+      - '.github/workflows/android.yml'
+  pull_request:
+    paths:
+      - 'android/**'
+      - '.gitmodules'
+      - '.github/workflows/android.yml'
+  workflow_dispatch:
+  workflow_call:
+    inputs:
+      version:
+        description: Версия X.Y.Z или X.Y.Z-rc.N; пусто — «<последний выпуск>-dev»
+        type: string
+        required: false
+        default: ''
+      package_release:
+        description: Собрать все APK ключом выпуска и выложить артефактом android-release-assets
+        type: boolean
+        required: false
+        default: false
+
+permissions:
+  contents: read
+
+jobs:
+  apk:
+    runs-on: ubuntu-latest
+    steps:
+      # Полная история: номер тестовой сборки берётся из последнего тега выпуска, а версия ядра — из
+      # тега подмодуля AndroidLibXrayLite.
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+          fetch-depth: 0
+
+      - name: Resolve version
+        id: version
+        env:
+          REQUESTED_VERSION: ${{ inputs.version }}
+        run: |
+          set -euo pipefail
+          version="$(printf '%s' "$REQUESTED_VERSION" | tr -d '[:space:]')"
+          version="${version#[vV]}"
+          if [ -z "$version" ]; then
+            last="$(git describe --tags --abbrev=0 --match 'v[0-9]*' 2>/dev/null || echo v0.0.0)"
+            version="${last#v}-dev"
+          fi
+          if ! [[ "$version" =~ ^[0-9]+\.[0-9]+\.[0-9]+(-rc\.[0-9]+)?(-dev)?$ ]]; then
+            echo "::error::Версия '$version' не подходит: нужна вида 1.2.3 или 1.2.3-rc.1"
+            exit 1
+          fi
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+          echo "Android $version из $(git rev-parse HEAD)"
+
+      - name: Prepare signing
+        env:
+          PACKAGE_RELEASE: ${{ inputs.package_release }}
+          APP_KEYSTORE_BASE64: ${{ secrets.APP_KEYSTORE_BASE64 }}
+          APP_KEYSTORE_PASSWORD: ${{ secrets.APP_KEYSTORE_PASSWORD }}
+          APP_KEYSTORE_ALIAS: ${{ secrets.APP_KEYSTORE_ALIAS }}
+          APP_KEY_PASSWORD: ${{ secrets.APP_KEY_PASSWORD }}
+        run: |
+          set -euo pipefail
+          missing=""
+          [ -n "$APP_KEYSTORE_BASE64" ]   || missing="$missing APP_KEYSTORE_BASE64"
+          [ -n "$APP_KEYSTORE_PASSWORD" ] || missing="$missing APP_KEYSTORE_PASSWORD"
+          [ -n "$APP_KEYSTORE_ALIAS" ]    || missing="$missing APP_KEYSTORE_ALIAS"
+          [ -n "$APP_KEY_PASSWORD" ]      || missing="$missing APP_KEY_PASSWORD"
+          if [ -z "$missing" ]; then
+            printf '%s' "$APP_KEYSTORE_BASE64" | base64 -d > "$RUNNER_TEMP/departament-release.jks"
+            {
+              echo "DEPARTAMENT_KEYSTORE=$RUNNER_TEMP/departament-release.jks"
+              echo "DEPARTAMENT_KEYSTORE_PASSWORD=$APP_KEYSTORE_PASSWORD"
+              echo "DEPARTAMENT_KEY_ALIAS=$APP_KEYSTORE_ALIAS"
+              echo "DEPARTAMENT_KEY_PASSWORD=$APP_KEY_PASSWORD"
+              echo "SIGNING=release-key"
+            } >> "$GITHUB_ENV"
+          elif [ "$PACKAGE_RELEASE" = "true" ]; then
+            # Выпуск без постоянного ключа — это приложение, которое потом нечем обновить.
+            echo "::error::Нет ключа подписи Android в секретах репозитория:$missing"
+            exit 1
+          else
+            echo "::warning::Нет ключа подписи Android ($missing): тестовый APK подписан временным ключом и поверх выпуска не встанет."
+            echo "SIGNING=debug-key" >> "$GITHUB_ENV"
+          fi
+
+      - name: Restore the CI debug keystore
+        if: env.SIGNING == 'debug-key'
+        uses: actions/cache@v4
+        with:
+          path: ~/.android/debug.keystore
+          key: departament-android-debug-keystore-v1
+
+      - name: Setup JDK 21
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '21'
+
+      # Без пакета «tools»: его больше нет в репозитории Google, и sdkmanager, которому setup-android
+      # по умолчанию передаёт «tools platform-tools», падал на нём. Платформу и build-tools сборка
+      # докачивает сама, NDK ставит следующий шаг.
+      - name: Setup Android SDK
+        uses: android-actions/setup-android@v3
+        with:
+          packages: 'platform-tools'
+
+      - name: Install NDK
+        run: |
+          echo "y" | sdkmanager --install "ndk;28.2.13676358" >/dev/null
+          echo "NDK_HOME=$ANDROID_HOME/ndk/28.2.13676358" >> $GITHUB_ENV
+
+      - name: Build libhev-socks5-tunnel (tun2socks native lib)
+        run: bash android/compile-hevtun.sh
+
+      # jniLibs.srcDirs("libs") в app/build.gradle.kts: папки ABI должны лежать в android/app/libs/<abi>/.
+      - name: Copy libhev-socks5-tunnel into app
+        run: |
+          set -e
+          mkdir -p android/app/libs
+          cp -r android/libs/. android/app/libs/
+          test -f android/app/libs/arm64-v8a/libhev-socks5-tunnel.so \
+            || { echo "::error::arm64-v8a/libhev-socks5-tunnel.so is not where jniLibs expects it"; exit 1; }
+
+      - name: Fetch AndroidLibXrayLite tag
+        run: |
+          pushd android/AndroidLibXrayLite
+          echo "CURRENT_TAG=$(git describe --tags --abbrev=0)" >> $GITHUB_ENV
+          popd
+
+      - name: Download libv2ray.aar
+        uses: robinraju/release-downloader@v1.12
+        with:
+          repository: '2dust/AndroidLibXrayLite'
+          tag: ${{ env.CURRENT_TAG }}
+          fileName: 'libv2ray.aar'
+          out-file-path: android/app/libs/
+
+      - name: Build APK
+        working-directory: android
+        env:
+          VERSION: ${{ steps.version.outputs.version }}
+          PACKAGE_RELEASE: ${{ inputs.package_release }}
+        run: |
+          set -euo pipefail
+          chmod +x ./gradlew
+          args=(assemblePlaystoreRelease "-PappVersionName=$VERSION")
+          # Выпуск — все процессоры и универсальный APK: приложение выберет свой. Тестовая сборка — один
+          # arm64: так быстрее, а у тестировщика телефон последних лет.
+          [ "$PACKAGE_RELEASE" = "true" ] || args+=("-PABI_FILTERS=arm64-v8a")
+          [ "$SIGNING" = "release-key" ] || args+=("-PdebugSignedRelease=true")
+          ./gradlew "${args[@]}"
+
+      # Файл, который нельзя поставить, не выкладывается под видом того, что можно.
+      - name: Refuse an uninstallable APK
+        env:
+          PACKAGE_RELEASE: ${{ inputs.package_release }}
+        run: |
+          set -euo pipefail
+          mkdir -p dist
+          signer=$(find "$ANDROID_HOME/build-tools" -name apksigner 2>/dev/null | sort | tail -n 1)
+          found=0
+          while IFS= read -r apk; do
+            found=$((found + 1))
+            case "$apk" in
+              *-unsigned.apk)
+                echo "::error::$apk НЕ ПОДПИСАН и не поставится ни на один телефон."; exit 1;;
+              *-debugsigned.apk)
+                if [ "$PACKAGE_RELEASE" = "true" ]; then
+                  echo "::error::$apk подписан временным ключом — в выпуск такой не выкладывается."; exit 1
+                fi;;
+            esac
+            if [ -x "$signer" ]; then
+              "$signer" verify --print-certs "$apk" | grep -m1 'certificate DN' || true
+              "$signer" verify "$apk" || { echo "::error::$apk carries no valid signature"; exit 1; }
+            elif [ "$PACKAGE_RELEASE" = "true" ]; then
+              echo "::error::apksigner не найден — непроверенные APK в выпуск не выкладываются."; exit 1
+            fi
+            cp "$apk" dist/
+          done < <(find android/app/build/outputs/apk -name 'departament_*.apk')
+          if [ "$found" -eq 0 ]; then echo "::error::APK не собран"; exit 1; fi
+          ls -l dist
+
+      # Туннель и ядро — факт о самом APK, а не о шаге копирования: VPN без них не публикуется.
+      - name: Prove both native libraries are inside every APK
+        run: |
+          set -euo pipefail
+          for apk in dist/departament_*.apk; do
+            name=$(basename "$apk")
+            abi=${name%.apk}; abi=${abi%-debugsigned}; abi=${abi##*_}
+            if [ "$abi" = "universal" ]; then pattern='lib/[a-z0-9_-]*/'; else pattern="lib/$abi/"; fi
+            for lib in libhev-socks5-tunnel.so libgojni.so; do
+              unzip -l "$apk" | grep -qE "$pattern$lib" \
+                || { echo "::error::$name: нет $pattern$lib"; exit 1; }
+            done
+            echo "$name: обе нативные библиотеки на месте"
+          done
+
+      - name: Upload test APK
+        if: ${{ !inputs.package_release }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: departament-android-apk
+          path: dist/departament_*.apk
+          if-no-files-found: error
+          compression-level: 0
+
+      - name: Upload release APKs
+        if: ${{ inputs.package_release }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: android-release-assets
+          retention-days: 3
+          path: dist/departament_*.apk
+          if-no-files-found: error
+          compression-level: 0

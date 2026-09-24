@@ -1,0 +1,400 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  ============================================================================
+  НАЧАЛЬНЫЙ ЭКРАН — README §2. Первый запуск, подписок нет.
+  ============================================================================
+
+  Тот же блок @id/gate, что и раньше: он живёт в слоте `fragment_home.xml`
+  (`<include android:id="@+id/layout_gate">`) и никогда не показывается рядом с
+  карточкой подписки. Что изменилось — состав и композиция:
+
+      [ щит в кольце 112dp ]        620 мс из 0.7x
+      [ Приветствуем!      ]  24/700, −0.01em, ПО ЛЕВОМУ КРАЮ
+      [ подзаголовок       ]  14/400, ≤290dp, высота под ДВЕ строки
+      [ карточка ИЛИ кнопка буфера ]  два слота, меняются высотой
+      [ Войти через Telegram ]      контурная пилюля 52dp
+      [ Другие способы ▾   ]        раскрывает QR и вход через сайт
+
+  ЧЕТЫРЕ СОСТОЯНИЯ ГЕЙТА НИКУДА НЕ ДЕЛИСЬ (PORT-DELTA П-01). Прототип рисует
+  только «вход» — @id/tv_gate_title, @id/tv_gate_caption, @id/btn_gate_primary и
+  @id/btn_gate_secondary остаются на месте и остаются под управлением
+  `HomeFragment.paintGate`: ADD_SUBSCRIPTION, BUY (с «Привязать Telegram» на
+  вторичной), SYNC_SERVERS и SYNC_FAILED печатают в те же вьюхи, что и печатали.
+  Онбординговый обвес — щит, карточка буфера, пилюли, «Другие способы» — включает
+  и выключает GateView.bindOnboarding(), и только в форме SIGN_IN.
+
+  ИМЕНА ID СОХРАНЕНЫ НАМЕРЕННО. Переименование @id/btn_gate_primary тихо ломает
+  вход, а @id/gate — сам показ блока; красивое имя этого не стоит.
+
+  ОДНА РАЗМЕТКА НА ВСЕ ТЕМЫ. Ни одного зашитого цвета, кроме фирменного синего
+  Telegram (@color/telegram_brand): кольца и свечение — ?attr/colorPrimary с
+  прозрачностью на вьюхе, поэтому светлая и чёрно-белая работают сами.
+-->
+<com.v2ray.ang.ui.component.GateView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/gate"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:layout_marginStart="@dimen/screen_gutter"
+    android:layout_marginEnd="@dimen/screen_gutter"
+    android:clipChildren="false"
+    android:orientation="vertical"
+    android:visibility="gone"
+    tools:visibility="visible">
+
+    <!--
+      §2.1 ЩИТ В КОЛЬЦЕ, 112dp. Три слоя и глиф:
+      свечение (радиальное, ?attr/colorPrimary на 28%), внешнее кольцо 1.5dp
+      сплошное на 18%, внутреннее с отступом 12dp пунктирное, щит 44dp контурный.
+      Кольца не вращаются и не пульсируют — это метка, а не индикатор.
+    -->
+    <FrameLayout
+        android:id="@+id/gate_shield"
+        android:layout_width="@dimen/ob_ring"
+        android:layout_height="@dimen/ob_ring"
+        android:layout_marginBottom="@dimen/space_24"
+        android:importantForAccessibility="no"
+        android:visibility="gone"
+        tools:visibility="visible">
+
+        <View
+            android:id="@+id/gate_shield_bloom"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:alpha="0.28"
+            android:background="@drawable/bg_ob_bloom" />
+
+        <View
+            android:id="@+id/gate_ring_outer"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:alpha="0.18"
+            android:background="@drawable/bg_ob_ring_outer" />
+
+        <View
+            android:id="@+id/gate_ring_inner"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:layout_margin="@dimen/ob_ring_inset"
+            android:alpha="0.18"
+            android:background="@drawable/bg_ob_ring_inner" />
+
+        <ImageView
+            android:id="@+id/gate_shield_glyph"
+            android:layout_width="@dimen/ob_shield"
+            android:layout_height="@dimen/ob_shield"
+            android:layout_gravity="center"
+            android:alpha="0.45"
+            android:importantForAccessibility="no"
+            android:src="@drawable/ic_shield_outline"
+            app:tint="?attr/colorPrimary" />
+    </FrameLayout>
+
+    <!-- §2.2 «Приветствуем!» — 24sp/700, letter-spacing −0.01em; и то, и другое
+         уже сидит в роли Headline, поэтому здесь нет ни размера, ни трекинга. -->
+    <TextView
+        android:id="@+id/tv_gate_title"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:accessibilityHeading="true"
+        android:maxLines="2"
+        android:textAppearance="@style/TextAppearance.App.Headline"
+        tools:text="@string/onb_title" />
+
+    <!--
+      §2.3 ПОДЗАГОЛОВОК. Ширина до 290dp, чтобы строка не растягивалась на весь
+      экран, и высота зарезервирована под две строки: между «буфер пуст» и
+      «нашли ссылку» текст меняется с одной строки на две, и без брони всё, что
+      ниже, прыгало бы на 20dp прямо под пальцем.
+      minHeight, а не layout_height: на 200% шрифта текст должен расти, а не
+      обрезаться (П-29).
+    -->
+    <TextView
+        android:id="@+id/tv_gate_caption"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="@dimen/space_8"
+        android:maxWidth="@dimen/ob_sub_max_width"
+        android:minHeight="@dimen/ob_sub_min_height"
+        android:textAppearance="@style/TextAppearance.App.Body"
+        android:textColor="?attr/colorOnSurfaceVariant"
+        tools:text="@string/onb_sub_empty" />
+
+    <!--
+      §2.4 КАРТОЧКА НАЙДЕННОЙ ПОДПИСКИ и §2.5 КНОПКА БУФЕРА — два слота, которые
+      никогда не подменяются резко. Оба живут в разметке; GateView едет их
+      высотой (340 мс ease-out-quart) и прозрачностью (240 мс).
+      wrap_content, а не 190/80dp из спецификации: при крупном шрифте карточка
+      выше, и жёсткая высота обрезала бы подпись. Числа спецификации — то, во
+      что это меряется при обычном шрифте.
+    -->
+    <FrameLayout
+        android:id="@+id/gate_clip_card_slot"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:visibility="gone"
+        tools:visibility="visible">
+
+        <LinearLayout
+            android:id="@+id/gate_clip_card"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/space_20"
+            android:background="@drawable/bg_ob_card"
+            android:orientation="vertical"
+            android:padding="@dimen/space_14">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:baselineAligned="false"
+                android:gravity="center_vertical"
+                android:orientation="horizontal">
+
+                <!-- Плитка 40dp, нейтральная. Клевер — тот же знак, что и в
+                     прототипе, но НАРИСОВАННЫЙ: 🍀 запрещён как символ шрифта, а
+                     не как форма, и вектор снимает ровно то, из-за чего запрет
+                     существует — чужой шрифт, своя отрисовка на каждом
+                     устройстве и цвет, который не слушается темы. Тон отсюда,
+                     как у соседних глифов экрана; плитка остаётся нейтральной,
+                     потому что единственный акцент здесь — кнопка ниже. -->
+                <ImageView
+                    android:id="@+id/gate_clip_tile"
+                    android:layout_width="@dimen/tile_size"
+                    android:layout_height="@dimen/tile_size"
+                    android:background="@drawable/bg_ob_tile"
+                    android:importantForAccessibility="no"
+                    android:padding="@dimen/space_8"
+                    android:src="@drawable/ic_ob_clover"
+                    app:tint="?attr/colorOnSurfaceVariant" />
+
+                <LinearLayout
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="@dimen/space_12"
+                    android:layout_weight="1"
+                    android:orientation="vertical">
+
+                    <TextView
+                        android:id="@+id/gate_clip_title"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:maxLines="1"
+                        android:text="@string/onb_clip_title"
+                        android:textAppearance="@style/TextAppearance.App.Title" />
+
+                    <TextView
+                        android:id="@+id/gate_clip_sub"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="@dimen/space_2"
+                        android:maxLines="1"
+                        android:text="@string/onb_clip_sub"
+                        android:textAppearance="@style/TextAppearance.App.Caption"
+                        android:textColor="?attr/colorOnSurfaceVariant" />
+                </LinearLayout>
+            </LinearLayout>
+
+            <!-- Единственное акцентное пятно экрана, и оно контурное: 48dp,
+                 radius 24dp, обводка 1.5dp. Нажимается кнопка, а не карточка —
+                 две цели с одним смыслом в одном объекте не нужны. -->
+            <TextView
+                android:id="@+id/btn_gate_clip_add"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/space_12"
+                android:background="@drawable/bg_ob_cta"
+                android:clickable="true"
+                android:focusable="true"
+                android:gravity="center"
+                android:minHeight="@dimen/btn_height"
+                android:text="@string/home_gate_add_subscription"
+                android:textAppearance="@style/TextAppearance.App.Button"
+                android:textColor="?attr/colorPrimary" />
+        </LinearLayout>
+    </FrameLayout>
+
+    <FrameLayout
+        android:id="@+id/gate_clip_button_slot"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:visibility="gone"
+        tools:visibility="visible">
+
+        <!-- §2.5 Контурная пилюля 52dp. Заливки нет — фон появляется только под
+             пальцем (@color/ob_pill_container). Нажатие перечитывает буфер. -->
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btn_gate_clipboard"
+            style="@style/Widget.Departament.Button.Secondary.Tall"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/space_20"
+            android:fontFamily="@font/golos_text_medium"
+            android:text="@string/home_empty_add_clipboard"
+            android:textAppearance="@style/TextAppearance.App.Button"
+            android:textColor="?attr/colorOnSurface"
+            app:backgroundTint="@color/ob_pill_container"
+            app:cornerRadius="@dimen/radius_button"
+            app:icon="@drawable/ic_ob_clipboard"
+            app:iconTint="?attr/colorOnSurfaceVariant"
+            app:strokeColor="?attr/colorOutline"
+            app:strokeWidth="@dimen/ob_stroke" />
+    </FrameLayout>
+
+    <!--
+      §2.6 «ВОЙТИ ЧЕРЕЗ TELEGRAM» — та же контурная пилюля, глиф в фирменном
+      синем #2AABEE, подпись обычная 15sp/700. Заливки нет: фирменный цвет чужого
+      продукта не занимает акцент нашего экрана, он только помечает способ.
+
+      Это @id/btn_gate_primary — та самая кнопка, которой `paintGate` в остальных
+      формах гейта пишет «Купить подписку», «Загрузить серверы» и «Повторить».
+      В форме SIGN_IN подпись, глиф и действие ставит GateView.
+    -->
+    <com.google.android.material.button.MaterialButton
+        android:id="@+id/btn_gate_primary"
+        style="@style/Widget.Departament.Button.Secondary.Tall"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="@dimen/space_14"
+        android:textAppearance="@style/TextAppearance.App.Button"
+        android:textColor="?attr/colorOnSurface"
+        app:backgroundTint="@color/ob_pill_container"
+        app:cornerRadius="@dimen/radius_button"
+        app:iconTint="@color/telegram_brand"
+        app:strokeColor="?attr/colorOutline"
+        app:strokeWidth="@dimen/ob_stroke"
+        tools:icon="@drawable/ic_telegram_24dp"
+        tools:text="@string/onb_login_telegram" />
+
+    <!-- §2.7 «Другие способы» — текстовая кнопка со стрелкой. Стрелка едет на
+         180° за 300 мс; список под ней раскрывается высотой, как и слоты выше. -->
+    <LinearLayout
+        android:id="@+id/btn_gate_more"
+        android:layout_width="match_parent"
+        android:layout_height="@dimen/ob_more_height"
+        android:layout_marginTop="@dimen/space_12"
+        android:background="@drawable/bg_ob_quiet"
+        android:clickable="true"
+        android:focusable="true"
+        android:gravity="center"
+        android:orientation="horizontal"
+        android:visibility="gone"
+        tools:visibility="visible">
+
+        <TextView
+            android:id="@+id/gate_more_label"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:fontFamily="@font/golos_text_medium"
+            android:text="@string/onb_more"
+            android:textAppearance="@style/TextAppearance.App.Subtitle"
+            android:textColor="?attr/colorOnSurfaceVariant" />
+
+        <ImageView
+            android:id="@+id/gate_more_caret"
+            android:layout_width="@dimen/glyph_20"
+            android:layout_height="@dimen/glyph_20"
+            android:layout_marginStart="@dimen/space_6"
+            android:importantForAccessibility="no"
+            android:src="@drawable/ic_arrow_drop_down"
+            app:tint="?attr/colorOnSurfaceVariant" />
+    </LinearLayout>
+
+    <LinearLayout
+        android:id="@+id/gate_more_list"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:paddingTop="@dimen/space_4"
+        android:visibility="gone">
+
+        <LinearLayout
+            android:id="@+id/row_gate_qr"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:background="@drawable/bg_ob_row"
+            android:baselineAligned="false"
+            android:clickable="true"
+            android:focusable="true"
+            android:gravity="center_vertical"
+            android:minHeight="@dimen/ob_more_row_height"
+            android:orientation="horizontal"
+            android:paddingStart="@dimen/space_12"
+            android:paddingEnd="@dimen/space_12">
+
+            <ImageView
+                android:layout_width="@dimen/glyph_20"
+                android:layout_height="@dimen/glyph_20"
+                android:importantForAccessibility="no"
+                android:src="@drawable/ic_ob_qr"
+                app:tint="?attr/colorOnSurfaceVariant" />
+
+            <TextView
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="@dimen/space_14"
+                android:layout_weight="1"
+                android:text="@string/home_empty_add_qr"
+                android:textAppearance="@style/TextAppearance.App.Body" />
+
+            <ImageView
+                android:layout_width="@dimen/glyph_20"
+                android:layout_height="@dimen/glyph_20"
+                android:importantForAccessibility="no"
+                android:src="@drawable/ic_chevron_right"
+                app:tint="?attr/colorOnSurfaceVariant" />
+        </LinearLayout>
+
+        <LinearLayout
+            android:id="@+id/row_gate_site"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/space_2"
+            android:background="@drawable/bg_ob_row"
+            android:baselineAligned="false"
+            android:clickable="true"
+            android:focusable="true"
+            android:gravity="center_vertical"
+            android:minHeight="@dimen/ob_more_row_height"
+            android:orientation="horizontal"
+            android:paddingStart="@dimen/space_12"
+            android:paddingEnd="@dimen/space_12">
+
+            <ImageView
+                android:layout_width="@dimen/glyph_20"
+                android:layout_height="@dimen/glyph_20"
+                android:importantForAccessibility="no"
+                android:src="@drawable/ic_ob_mail"
+                app:tint="?attr/colorOnSurfaceVariant" />
+
+            <TextView
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="@dimen/space_14"
+                android:layout_weight="1"
+                android:text="@string/onb_login_site"
+                android:textAppearance="@style/TextAppearance.App.Body" />
+
+            <ImageView
+                android:layout_width="@dimen/glyph_20"
+                android:layout_height="@dimen/glyph_20"
+                android:importantForAccessibility="no"
+                android:src="@drawable/ic_chevron_right"
+                app:tint="?attr/colorOnSurfaceVariant" />
+        </LinearLayout>
+    </LinearLayout>
+
+    <!-- П-01: вторичное действие остальных форм гейта. В форме «вошёл, подписки
+         нет» это «Привязать Telegram» — единственный живой вход в привязку на
+         Главной, поэтому кнопка остаётся в разметке, а не удаляется вместе с
+         редизайном первого запуска. На начальном экране её нет. -->
+    <com.google.android.material.button.MaterialButton
+        android:id="@+id/btn_gate_secondary"
+        style="@style/Widget.Departament.Button.Tertiary"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="@dimen/space_12"
+        android:visibility="gone"
+        tools:text="@string/home_gate_link_telegram" />
+</com.v2ray.ang.ui.component.GateView>

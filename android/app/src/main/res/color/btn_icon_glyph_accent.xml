@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Icon-button glyph, .Accent modifier. Counts against the screen's accent budget.
+
+  R8 loading row: state_activated takes the content to alpha 0 instead of to empty
+  text, so the label is still measured and the control keeps its width — see
+  @color/btn_primary_content for the full reasoning. The arc arrives from the
+  matching @drawable/btn_overlay_* on the same state.
+-->
+<selector xmlns:android="http://schemas.android.com/apk/res/android">
+    <item
+        android:alpha="0.38"
+        android:color="?attr/colorPrimary"
+        android:state_enabled="false" />
+    <item
+        android:alpha="0"
+        android:color="?attr/colorPrimary"
+        android:state_activated="true" />
+    <item android:color="?attr/colorPrimary" />
+</selector>

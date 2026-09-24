@@ -1,0 +1,264 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  ============================================================================
+  ЭКРАН ПРОГРУЗКИ — README §3. Один слой на два потока.
+  ============================================================================
+
+  Полноэкранный слой поверх всего, включая нижнюю навигацию: он вешается в
+  android.R.id.content окна-хозяина (см. FlowOverlay), а не в разметку вкладки.
+
+      [ кольцо 132dp ]   одна дуга, оборот 1100 мс, линейно (грабля №7)
+      [ заголовок    ]   20sp/700
+      [ пояснение    ]   13sp
+      [ полоса 3dp   ]   18 / 54 / 86 / 100 %, переезд 900 мс ease-out-quart
+      [ тост         ]   только на четвёртом шаге
+
+  ЧЕТЫРЕ ШАГА, ДВА НАБОРА ТЕКСТОВ — values/strings_flow.xml. Имя подписки не
+  показывается нигде: в карточке буфера стоит «Подписка», здесь не стоит ничего.
+
+  ФИНАЛ — сонар и галочка, а не второй индикатор: кольцо замыкается акцентом,
+  копия контура расходится до 1.6x и гаснет за 600 мс, в центре появляется
+  галочка. Дуга к этому моменту остановлена и снята.
+
+  УХОД — «Проявление»: прозрачность в 0 плюс отдаление до 1.06. Без размытия
+  (грабля №10) и без сдвига. Снятие слоя и запуск сборки Главной — один кадр
+  (грабля №6), см. FlowOverlay.dismiss.
+-->
+<!--
+  ОБРЕЗКА СНЯТА И ЗДЕСЬ, НА КОРНЕ СЛОЯ, И ЭТО НЕ ЛИШНИЙ ШАГ, А НЕДОСТАЮЩИЙ.
+
+  `clipChildren` у родителя решает не «обрезать ли внуков», а **обрезать ли
+  самого ребёнка по ЕГО собственным границам**. Прошлая правка сняла обрезку на
+  `flow_stack` и `flow_ring_box` и остановилась, рассудив, что корень во весь
+  экран и места сонару хватает. Места хватает корню — но обрезался не корень, а
+  `flow_stack`: он `wrap_content`, и его ВЕРХНЯЯ граница проходит ровно по
+  верхнему краю коробки кольца. Сонар уходит на 1.6x, то есть на 39dp выше этого
+  края, и корень с `clipChildren=true` срезал ему макушку по прямой. Снизу под
+  кольцом лежат заголовок, пояснение и полоса, поэтому нижняя половина всегда
+  оставалась целой — отсюда и симптом с видео: «срезано по ВЕРХНЕЙ прямой
+  границе», и только по ней.
+
+  ЭТО НЕ «ДО КОРНЯ ОКНА». Корень окна — `android.R.id.content`, и он остаётся
+  обрезающим. Этот слой лежит В нём, во весь экран, без отступов и без
+  прокрутки: снять обрезку здесь — значит разрешить `flow_stack` вылезти за
+  границы слоя, а слой и так во весь экран. Дефект «содержимое поверх системной
+  панели» появляется, когда обрезку снимают с ПРОКРУЧИВАЕМОГО предка или с
+  такого, который несёт отступ системной панели (`tab_host`); ни то, ни другое
+  здесь не выполняется, и выше этой строки обрезка не снимается.
+-->
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/flow_overlay"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="?android:attr/colorBackground"
+    android:clickable="true"
+    android:clipChildren="false"
+    android:clipToPadding="false"
+    android:focusable="true"
+    android:importantForAccessibility="yes">
+
+    <!--
+      clipChildren/clipToPadding сняты РАДИ СОНАРА: кольцо финала расходится до
+      1.6x, то есть до 211dp вокруг 132-точечной коробки, и каждый предок, чьи
+      границы уже этого круга, закрывает кольцо прямым углом. Цепочка нужна
+      сплошная — коробка, стойка и корень слоя, — потому что срезает не тот, кто
+      «обрезает детей», а тот, чьи собственные границы кончаются раньше круга.
+    -->
+    <LinearLayout
+        android:id="@+id/flow_stack"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center"
+        android:clipChildren="false"
+        android:clipToPadding="false"
+        android:gravity="center_horizontal"
+        android:orientation="vertical"
+        android:paddingStart="@dimen/flow_gutter"
+        android:paddingEnd="@dimen/flow_gutter">
+
+        <FrameLayout
+            android:id="@+id/flow_ring_box"
+            android:layout_width="@dimen/flow_ring"
+            android:layout_height="@dimen/flow_ring"
+            android:clipChildren="false"
+            android:importantForAccessibility="no">
+
+            <View
+                android:id="@+id/flow_bloom"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:alpha="0.28"
+                android:background="@drawable/bg_ob_bloom" />
+
+            <!-- Покоящееся кольцо. Оно остаётся под дугой все три первых шага:
+                 дуга бежит по нему, а не вместо него. -->
+            <View
+                android:id="@+id/flow_ring_rest"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:alpha="0.18"
+                android:background="@drawable/bg_ob_ring_outer" />
+
+            <!-- Сонар финала: та же геометрия, что и у замкнутого кольца, но
+                 расходится до 1.6x и гаснет. Лежит НИЖЕ замкнутого кольца,
+                 чтобы уходящая копия не перекрывала оставшуюся. -->
+            <View
+                android:id="@+id/flow_sonar"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:alpha="0"
+                android:background="@drawable/bg_flow_ring_done" />
+
+            <View
+                android:id="@+id/flow_ring_done"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:alpha="0"
+                android:background="@drawable/bg_flow_ring_done" />
+
+            <ImageView
+                android:id="@+id/flow_arc"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:importantForAccessibility="no"
+                android:src="@drawable/ic_flow_arc"
+                app:tint="?attr/colorPrimary" />
+
+            <!-- Глиф способа. У потока Telegram это его марка в фирменном синем,
+                 у потока «из буфера» глифа нет вовсе — там центр занимает
+                 галочка финала. -->
+            <ImageView
+                android:id="@+id/flow_glyph"
+                android:layout_width="@dimen/flow_glyph"
+                android:layout_height="@dimen/flow_glyph"
+                android:layout_gravity="center"
+                android:importantForAccessibility="no"
+                android:visibility="gone"
+                app:tint="@color/telegram_brand"
+                tools:src="@drawable/ic_telegram_24dp"
+                tools:visibility="visible" />
+
+            <ImageView
+                android:id="@+id/flow_check"
+                android:layout_width="@dimen/flow_check"
+                android:layout_height="@dimen/flow_check"
+                android:layout_gravity="center"
+                android:alpha="0"
+                android:importantForAccessibility="no"
+                android:src="@drawable/ic_fab_check"
+                app:tint="?attr/colorPrimary" />
+        </FrameLayout>
+
+        <!-- Шаг объявляется TalkBack при смене: это единственное, что на экране
+             говорит, где мы находимся. -->
+        <TextView
+            android:id="@+id/flow_title"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/space_24"
+            android:accessibilityLiveRegion="polite"
+            android:gravity="center"
+            android:textAppearance="@style/TextAppearance.App.Headline.Small"
+            tools:text="@string/flow_tg_0_title" />
+
+        <TextView
+            android:id="@+id/flow_note"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/space_8"
+            android:gravity="center"
+            android:textAppearance="@style/TextAppearance.App.Subtitle"
+            android:textColor="?attr/colorOnSurfaceVariant"
+            tools:text="@string/flow_tg_0_note" />
+
+        <FrameLayout
+            android:id="@+id/flow_bar"
+            android:layout_width="match_parent"
+            android:layout_height="@dimen/flow_bar_height"
+            android:layout_marginTop="@dimen/space_22"
+            android:background="@drawable/bg_flow_track"
+            android:importantForAccessibility="no">
+
+            <View
+                android:id="@+id/flow_bar_fill"
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:background="@drawable/bg_flow_fill" />
+        </FrameLayout>
+    </LinearLayout>
+
+    <!--
+      «ОТКРЫТЬ TELEGRAM» — единственное действие на слое, и оно живёт ЗДЕСЬ, а не
+      на отдельном экране. Выбор чужого приложения можно закрыть случайно, Telegram
+      может не открыться вовсе, а ссылка на токен уже выдана и опрос уже идёт: без
+      этой кнопки у ожидания нет второй попытки, и остаётся только «назад».
+
+      ВНИЗУ, А НЕ В СТОЙКЕ. `flow_stack` центрирован, поэтому кнопка внутри него
+      подняла бы кольцо на 76dp в момент своего появления — на экране, весь смысл
+      которого в том, что кольцо стоит на месте. Внизу же она делит место с тостом
+      финала: пока идёт ожидание, снизу эта пилюля, на четвёртом шаге — тост, и
+      вместе они не встречаются никогда. Отсюда и общая коробка: те же боковые
+      поля и тот же нижний отступ, что у тоста.
+
+      Пилюля — та же, что на начальном экране и в гейте: 52dp, radius_button,
+      контур 1.5dp, без заливки, глиф в фирменном #2AABEE. Один способ — один вид,
+      где бы его ни предлагали. Показывается только в потоке Telegram и только
+      после того, как ссылка выдана (FlowOverlay.offerOpenTelegram).
+    -->
+    <com.google.android.material.button.MaterialButton
+        android:id="@+id/flow_open_telegram"
+        style="@style/Widget.Departament.Button.Secondary.Tall"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_gravity="bottom"
+        android:layout_marginStart="@dimen/flow_toast_inset"
+        android:layout_marginEnd="@dimen/flow_toast_inset"
+        android:layout_marginBottom="@dimen/flow_toast_bottom"
+        android:alpha="0"
+        android:text="@string/auth_open_telegram"
+        android:textAppearance="@style/TextAppearance.App.Button"
+        android:visibility="gone"
+        app:backgroundTint="@color/ob_pill_container"
+        app:cornerRadius="@dimen/radius_button"
+        app:icon="@drawable/ic_telegram_24dp"
+        app:iconTint="@color/telegram_brand"
+        app:strokeColor="?attr/colorOutline"
+        app:strokeWidth="@dimen/ob_stroke"
+        tools:visibility="visible" />
+
+    <!-- Тост финала. 40dp, radius 100dp, поверхность на шаг выше фона; поднимается
+         на 260 мс и уходит вместе со слоем. Это не Snackbar: у него нет действия
+         и он ничего не перекрывает — экран под ним всё равно уходит. -->
+    <LinearLayout
+        android:id="@+id/flow_toast"
+        android:layout_width="match_parent"
+        android:layout_height="@dimen/flow_toast_height"
+        android:layout_gravity="bottom"
+        android:layout_marginStart="@dimen/flow_toast_inset"
+        android:layout_marginEnd="@dimen/flow_toast_inset"
+        android:layout_marginBottom="@dimen/flow_toast_bottom"
+        android:alpha="0"
+        android:background="@drawable/bg_flow_toast"
+        android:gravity="center"
+        android:orientation="horizontal">
+
+        <ImageView
+            android:layout_width="@dimen/glyph_16"
+            android:layout_height="@dimen/glyph_16"
+            android:importantForAccessibility="no"
+            android:src="@drawable/ic_fab_check"
+            app:tint="?attr/colorOnSurface" />
+
+        <TextView
+            android:id="@+id/flow_toast_label"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="@dimen/space_8"
+            android:fontFamily="@font/golos_text_medium"
+            android:textAppearance="@style/TextAppearance.App.Subtitle"
+            android:textColor="?attr/colorOnSurface"
+            tools:text="@string/flow_tg_toast" />
+    </LinearLayout>
+</FrameLayout>

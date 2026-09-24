@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  THE BEVEL, pressed — the same light source moved to the other side. The rim and
+  the top lift are gone, a shade sits under the top edge, and a faint lift appears
+  at the base: the button reads as pushed INTO the surface rather than standing on
+  it. Swapped against btn_gloss_rest through @drawable/btn_overlay_* with
+  enterFadeDuration / exitFadeDuration on the selector, so the inversion is a
+  cross-fade on the app's own press clock (90ms in, 160ms out), not a snap.
+
+  Same stop discipline as the resting bevel and for the same reason: the shade is
+  spent by 26% and the lift does not begin until 76%, so the label band keeps the
+  flat fill's contrast while the ripple and the 0.97 press scale carry the rest of
+  the acknowledgement.
+-->
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <!-- 1. SHADE — the top edge goes under. -->
+    <item>
+        <shape android:shape="rectangle">
+            <corners android:radius="@dimen/radius_button" />
+            <gradient
+                android:angle="270"
+                android:centerColor="@color/btn_gloss_clear_dark"
+                android:centerY="0.26"
+                android:endColor="@color/btn_gloss_clear_dark"
+                android:startColor="@color/btn_gloss_press_top"
+                android:type="linear" />
+        </shape>
+    </item>
+
+    <!-- 2. LIFT — the base catches the light that the top lost. -->
+    <item>
+        <shape android:shape="rectangle">
+            <corners android:radius="@dimen/radius_button" />
+            <gradient
+                android:angle="270"
+                android:centerColor="@color/btn_gloss_clear"
+                android:centerY="0.76"
+                android:endColor="@color/btn_gloss_press_bottom"
+                android:startColor="@color/btn_gloss_clear"
+                android:type="linear" />
+        </shape>
+    </item>
+
+</layer-list>

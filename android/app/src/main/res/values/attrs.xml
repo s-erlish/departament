@@ -1,0 +1,182 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Theme attributes.
+
+  An attribute belongs here — rather than a layout naming @color/… directly —
+  when its value must differ between the three shipping themes (blue light, blue
+  dark, mono). Android resolves @color/… by resource qualifier, which covers
+  light vs night but NOT the mono overlay: ThemeOverlay.Mono is applied at
+  runtime in BaseActivity and can only redirect ATTRIBUTES. So the rule is:
+
+      differs light vs night only        -> @color/… with a values-night twin
+      must also change under mono        -> ?attr/… declared here
+
+  Every attr below is bound in all three themes (values/themes.xml,
+  values-night inherits it, ThemeOverlay.Mono overrides it). 00-rules.md 11.1.
+-->
+<resources>
+
+    <style name="TabLayoutTextStyle" parent="TextAppearance.Design.Tab">
+        <item name="textAllCaps">false</item>
+    </style>
+
+    <!-- Connect button state colors, themed so the mono overlay can remap them -->
+    <attr name="connectIdleColor" format="color" />
+    <attr name="connectActiveColor" format="color" />
+    <attr name="connectedColor" format="color" />
+
+    <!-- Accent colors themed so ThemeOverlay.Mono can neutralise them to grey.
+         Coloured in the Blue theme (light+dark), monochrome in Mono. -->
+
+    <!-- Protocol / JSON chips on the server row -->
+    <attr name="chipTypeText" format="color" />
+    <attr name="chipJsonText" format="color" />
+    <attr name="chipJsonBg" format="color" />
+
+    <!-- ===================================================================
+         MONO'S CONTRACT IS NO ACCENT HUE, NOT NO CONTRAST.
+
+         Two roles, and both exist because of the same defect: a surface whose
+         only separation from its ground was CHROMA. In the blue themes a chip
+         plate at #D8E4FF or a meter track at #E9EEF7 reads as an object on
+         white at 1.2:1, because the eye reads the hue; strip the hue for the
+         mono overlay and the identical luminance step is all that is left, so
+         the plate disappears and the chip reads as a bare grey word floating on
+         the card. That is what the owner photographed: «если с белой темы
+         переключиться на черно белую то вот так становится».
+
+         plateContainer / plateOutline — a control plate that has to survive hue
+         removal. In BLUE they alias exactly what these surfaces already used,
+         with a transparent outline, so the blue themes do not move by one bit.
+         In MONO the fill steps down and a real boundary appears under it, which
+         is the WCAG 1.4.11 answer as well as the visual one.
+
+         accentFigure — the connect object's ink. `colorPrimary` in mono is
+         #111214, correctly: it is the fill of a filled button, where near-black
+         on white is the point. The connect object is not a fill, it is a 3dp
+         stroke and a glyph, and at 18.8:1 on white it stops reading as an
+         accent and starts reading as a hard outline drawing. This role carries
+         the WEIGHT the accent has, not the accent's job.
+         =================================================================== -->
+    <attr name="colorPlateContainer" format="color" />
+    <attr name="colorPlateOutline" format="color" />
+    <attr name="colorAccentFigure" format="color" />
+
+    <!-- Latency ping (good / bad) and server selection indicator bar -->
+    <attr name="pingGood" format="color" />
+    <attr name="pingBad" format="color" />
+    <attr name="indicatorColor" format="color" />
+
+    <!-- Settings / sheet icon-tile glyph tints. Two, because D-5 closes the
+         coloured tile set at accent and destructive and the third — neutral —
+         is colorOnSurfaceVariant, not a hue of its own. The Green / Orange /
+         Purple / Yellow tints that stood here were aliases of the accent held
+         open until their last call site migrated; it has. -->
+    <attr name="iconTintBlue" format="color" />
+    <attr name="iconTintRed" format="color" />
+
+    <!-- Settings / sheet icon-tile background fills. Same two, same reason;
+         the neutral tile fills from colorSurfaceContainerHighest so the
+         monochrome overlay can reach it. -->
+    <attr name="iconTileBgBlue" format="color" />
+    <attr name="iconTileBgRed" format="color" />
+
+    <!-- =================================================================== -->
+    <!-- 2026-07 token wave (10-design-system.md 4.7, 2.2). Six semantic      -->
+    <!-- roles that had colour tokens in values/colors.xml + values-night/    -->
+    <!-- but no way to reach them from a layout, and no mono mapping at all.  -->
+    <!-- =================================================================== -->
+
+    <!-- D-9. THE boundary of a control: input field, outlined button, segmented
+         track, switch track decoration. Exists because colorOutline measures
+         1.45:1 on the dark ground and 1.62:1 on white — invisible as a control
+         edge and a WCAG 1.4.11 failure. Resolves:
+           blue dark  #646C7C  3.43:1 on surface, 3.73:1 on background
+           blue light #7D8BA3  3.45:1 on surface, 3.21:1 on background
+           mono dark  #6A6A6E  3.47:1 on mono surface
+           mono light #767679  4.53:1 on mono surface
+         colorOutlineVariant keeps the 1dp hairline role (row separators, card
+         borders); that is structural decoration and 1.4.11 does not apply. -->
+    <attr name="colorOutlineControl" format="color" />
+
+    <!-- The dimmed GLYPH tone, one step below colorOnSurfaceVariant: a chevron
+         or a decorative glyph that must recede without reading as disabled.
+         Dark #6E7480 is 3.86:1 on surface — above the 3:1 icon floor, below the
+         4.5:1 body floor. Never use it for text; text is onSurfaceVariant. -->
+    <attr name="colorOnSurfaceDim" format="color" />
+
+    <!-- The «истекает» / «ждёт оплаты» hue and nothing else. Never a button,
+         never a link, never a selection colour (00-rules.md 1.4.1). It replaces
+         the misnamed iconTintYellow, which is aliased to the accent and cannot
+         carry a warning. Dark #EAB308 9.45:1 on surface; light #8A6300 5.43:1;
+         mono degrades to the secondary text tone and leans on word + glyph. -->
+    <attr name="warning" format="color" />
+
+    <!-- D-10. On LIGHT a status chip's text is not the status hue: amber on its
+         own fill measures 4.24:1 and fails AA, so light uses a darkened #6B5000
+         (6.72:1 on warning_container). On DARK the fill is dark enough that the
+         hue itself clears AA (7.51:1), which is why the two columns differ.
+         Do not "unify" them. -->
+    <attr name="warningText" format="color" />
+
+    <!-- The amber status-chip FILL. A fill delta against the surface, not a
+         boundary, so WCAG 1.4.11 does not apply to its own contrast. -->
+    <attr name="warningContainer" format="color" />
+
+    <!-- Loading placeholder bar, pulsing 0.45 <-> 1.0 over motion_pulse 1000ms.
+         Equals the inset plane in every theme: a skeleton is a shape, not text.
+         Replaces the centred spinner over a blank screen. -->
+    <attr name="colorSkeleton" format="color" />
+
+    <!-- DESTRUCTIVE TEXT, which is not colorError.
+         colorError is the FILL red (#BA1A1A / #F04452); on a surface it measures
+         4.88:1 and a 14sp label sitting on it misses the body floor. The text
+         tone is a lightened red — #FF6069 dark 6.15:1, red_38 light — and that
+         is what every «Удалить» / «Выйти из аккаунта» / field-error line uses.
+
+         It is an ATTRIBUTE and not @color/color_destructive_text because
+         ThemeOverlay.Mono is applied at RUNTIME and can only remap attributes:
+         as a colour resource the red survived into the greyscale theme, which
+         §5.7 rules out in as many words — «Выйти из аккаунта» is «красная в
+         цветной теме, белая в моно». Resolves:
+           blue dark  #FF6069  6.15:1 on surface
+           blue light red_38   AA on surface
+           mono        mono_destructiveText — ink, and the word carries the
+                       meaning instead of the hue (00-rules.md 6.3). -->
+    <attr name="colorDestructiveText" format="color" />
+
+    <!-- THE 12% ACCENT WASH under a selected row, card or list item.
+         Same reason as colorDestructiveText: @color/accent_fill_12 is a colour
+         resource, so the mono overlay could not reach it and every selected row
+         — including the server row on Главная, the most prominent selected
+         surface in the product — kept a blue tint on a screen whose whole point
+         is the absence of colour (60-mono-home.png shows an ink wash there).
+         Resolves:
+           blue dark  #1F4C8DFF   12% of md_theme_primary
+           blue light #1F1E5FC7
+           mono       12% of the ink accent, per theme -->
+    <attr name="colorAccentFill" format="color" />
+
+    <!-- =================================================================== -->
+    <!-- THE PRESS PLANE (handoff README §1, §8 «Фон под нажатием»).          -->
+    <!--                                                                      -->
+    <!-- The second channel of a press, and the only one besides the scale:   -->
+    <!-- while a row or a card is held its background steps DOWN the ramp.    -->
+    <!-- Not up, not a ripple, not a glow — §1 is explicit that a pressed     -->
+    <!-- object is pushed IN, and the shipped step to colorSurfaceContainer-  -->
+    <!-- High was going the wrong way.                                        -->
+    <!--                                                                      -->
+    <!-- It is an attr and not a plain @color because §8 gives it two         -->
+    <!-- different values — #0D1017 in the blue dark theme, #0B0B0C in mono — -->
+    <!-- and the mono overlay is applied at RUNTIME, so only an attribute can -->
+    <!-- be remapped for it. Resolves:                                        -->
+    <!--   blue dark  #0D1017   one step below surface #141619               -->
+    <!--   blue light #EAEFF7   one step below surface #FFFFFF               -->
+    <!--   mono dark  #0B0B0C                                                 -->
+    <!--   mono light #E7E7E9                                                 -->
+    <!-- Consumers: @drawable/bg_row and its two edge variants,               -->
+    <!-- @drawable/bg_select_item, and any pressable object that is not a     -->
+    <!-- MaterialButton.                                                      -->
+    <!-- =================================================================== -->
+    <attr name="colorPressBg" format="color" />
+</resources>

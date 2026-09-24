@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  ON -> OFF, and it is not @drawable/switch_thumb_unchecked_checked played backwards:
+  M3 swaps which leg is the short one, so the thumb leaves its resting size quickly
+  (100) and takes its time arriving (150). Same 250ms total, opposite weighting.
+  Reproduced rather than simplified, because a switch that flips at two different
+  speeds in the two directions is the sort of thing only the finger notices.
+-->
+<animated-vector xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:aapt="http://schemas.android.com/aapt"
+    android:drawable="@drawable/switch_thumb_checked">
+
+    <set
+        android:interpolator="@interpolator/ease_standard"
+        android:shareInterpolator="true">
+
+        <target android:name="thumb">
+            <aapt:attr name="android:animation">
+                <objectAnimator
+                    android:duration="@integer/switch_thumb_morph_lead"
+                    android:propertyName="pathData"
+                    android:valueFrom="@string/switch_thumb_path_checked"
+                    android:valueTo="@string/switch_thumb_path_morphing"
+                    android:valueType="pathType" />
+            </aapt:attr>
+        </target>
+
+        <target android:name="thumb">
+            <aapt:attr name="android:animation">
+                <objectAnimator
+                    android:duration="@integer/switch_thumb_morph_settle"
+                    android:propertyName="pathData"
+                    android:startOffset="@integer/switch_thumb_morph_lead"
+                    android:valueFrom="@string/switch_thumb_path_morphing"
+                    android:valueTo="@string/switch_thumb_path_unchecked"
+                    android:valueType="pathType" />
+            </aapt:attr>
+        </target>
+    </set>
+
+</animated-vector>

@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  THE BARE ICON BUTTON'S PRESS PLATE — a neutral disc that only exists while the
+  finger is down.
+
+  Same argument as @color/btn_quiet_container: an unfilled icon button had nothing
+  but a ripple, and there are 30-odd of them in this app carrying real actions
+  (обновить, отвязать, закрепить, удалить). Neutral rather than accent, because an
+  icon button is chrome and 00-rules.md 3.6 spends the accent budget on the screen's
+  one primary action, not on its toolbar.
+
+  It draws inside the pill shape the style already declares, so the plate is a disc,
+  which is the correct read for a 48x48 target holding a 22dp glyph.
+-->
+<selector xmlns:android="http://schemas.android.com/apk/res/android">
+    <item
+        android:color="@android:color/transparent"
+        android:state_enabled="false" />
+    <item
+        android:alpha="0.10"
+        android:color="?attr/colorOnSurface"
+        android:state_pressed="true" />
+    <item
+        android:alpha="0.08"
+        android:color="?attr/colorOnSurface"
+        android:state_focused="true" />
+    <item
+        android:alpha="0.06"
+        android:color="?attr/colorOnSurface"
+        android:state_hovered="true" />
+    <item android:color="@android:color/transparent" />
+</selector>

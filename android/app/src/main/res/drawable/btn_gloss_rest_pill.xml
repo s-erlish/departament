@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  btn_gloss_rest for a control whose width equals its height — the filled icon
+  button. Identical light model, @dimen/radius_pill instead of radius_button;
+  Canvas.drawRoundRect clamps the radius to half the shorter side, so 100dp on a
+  48x48 box is a circle.
+
+  A disc has no label band to protect, but the stops are left where they are: the
+  glyph is optically centred and the same 30%/74% clearances keep the lift and the
+  settle off it.
+-->
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <item>
+        <shape android:shape="rectangle">
+            <corners android:radius="@dimen/radius_pill" />
+            <gradient
+                android:angle="270"
+                android:centerColor="@color/btn_gloss_clear"
+                android:centerY="0.06"
+                android:endColor="@color/btn_gloss_clear"
+                android:startColor="@color/btn_gloss_rim"
+                android:type="linear" />
+        </shape>
+    </item>
+
+    <item>
+        <shape android:shape="rectangle">
+            <corners android:radius="@dimen/radius_pill" />
+            <gradient
+                android:angle="270"
+                android:centerColor="@color/btn_gloss_clear"
+                android:centerY="0.30"
+                android:endColor="@color/btn_gloss_clear"
+                android:startColor="@color/btn_gloss_top"
+                android:type="linear" />
+        </shape>
+    </item>
+
+    <item>
+        <shape android:shape="rectangle">
+            <corners android:radius="@dimen/radius_pill" />
+            <gradient
+                android:angle="270"
+                android:centerColor="@color/btn_gloss_clear_dark"
+                android:centerY="0.74"
+                android:endColor="@color/btn_gloss_bottom"
+                android:startColor="@color/btn_gloss_clear_dark"
+                android:type="linear" />
+        </shape>
+    </item>
+
+</layer-list>

@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Selection indicator for anything that is not a MaterialCardView: price options,
+  payment-method rows, Select options (22-components.md 18.1). Cards use
+  @style/Widget.Departament.Card.Selectable instead, which drives the same axes
+  through cardBackgroundColor + strokeColor.
+
+  FOUR AXES, ZERO LAYOUT CHANGE: fill, border colour, title weight (set by the
+  adapter), and a check glyph in a slot that is always reserved. The border WIDTH
+  never changes and the radius never changes — the shipped price option moves
+  radius 14 -> 20 and stroke 1 -> 1.5 on selection, so the row jumps, and that jump
+  is the defect this file exists to end.
+
+  RADIUS: @dimen/radius_card_small 14, the handoff README §8 rung for «мелкая
+  карточка». It read radius_button until §8 moved buttons to 24, and a price
+  option is not a button — it is the smallest thing on the ladder that is still
+  a card. Nothing references this file yet; the wave that lands the price option
+  is the one that will.
+-->
+<selector xmlns:android="http://schemas.android.com/apk/res/android">
+    <item android:state_activated="true">
+        <shape android:shape="rectangle">
+            <solid android:color="?attr/colorAccentFill" />
+            <stroke
+                android:width="@dimen/stroke_hairline"
+                android:color="?attr/colorPrimary" />
+            <corners android:radius="@dimen/radius_card_small" />
+        </shape>
+    </item>
+    <item>
+        <shape android:shape="rectangle">
+            <solid android:color="@android:color/transparent" />
+            <stroke
+                android:width="@dimen/stroke_hairline"
+                android:color="?attr/colorOutlineVariant" />
+            <corners android:radius="@dimen/radius_card_small" />
+        </shape>
+    </item>
+</selector>

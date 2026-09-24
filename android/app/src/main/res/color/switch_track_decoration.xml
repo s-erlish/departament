@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  The 2dp ring around the OFF track. A switch boundary is a control boundary, so
+  D-9 applies and it is drawn in @color/md_theme_outlineControl (3.43:1), not in
+  colorOutline (1.45:1). The ring disappears when the track fills with the accent —
+  a border on a filled track is a second edge saying nothing.
+-->
+<selector xmlns:android="http://schemas.android.com/apk/res/android">
+    <item android:color="@android:color/transparent" android:state_checked="true" />
+    <item
+        android:alpha="0.38"
+        android:color="?attr/colorOutlineControl"
+        android:state_enabled="false" />
+    <item android:color="?attr/colorOutlineControl" />
+</selector>

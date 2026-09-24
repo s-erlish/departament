@@ -1,0 +1,378 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  THE SUBSCRIPTION CARD on Главная, one page of the carousel.
+
+  THE CARD IS INERT AND ITS CONTROLS ARE NOT. Read @drawable/bg_card_inert and
+  @drawable/bg_control_disc before changing a background here — between them they carry
+  an owner defect report with two halves: the collapse chevron flooding the whole card
+  with light on press, and the card itself darkening/flickering because of a touch on
+  something sitting on it. The rule that came out of it is one line: NOTHING done to a
+  control on this card may change how the CARD is painted.
+
+  So the root gets a plain shape and never a <ripple>, and every icon affordance gets a
+  ripple with a MASK (bounded) and never ?attr/selectableItemBackgroundBorderless
+  (unbounded, and projected onto whatever is behind it).
+
+  The other half of that flicker is in Kotlin, not here: see HomeMetaPagerAdapter.repaint
+  and HomeFragment.setupHomeMetaPager, which stop RecyclerView's change animation from
+  cross-fading and sliding a full-width page every time the list is collapsed.
+-->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/meta_bar_root"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:layout_marginStart="@dimen/screen_gutter"
+    android:layout_marginTop="@dimen/space_8"
+    android:layout_marginEnd="@dimen/screen_gutter"
+    android:layout_marginBottom="@dimen/space_4"
+    android:background="@drawable/bg_card_inert"
+    android:clipChildren="false"
+    android:clipToPadding="false"
+    android:orientation="vertical"
+    android:paddingStart="@dimen/space_16"
+    android:paddingTop="@dimen/space_12"
+    android:paddingEnd="@dimen/space_12"
+    android:paddingBottom="@dimen/space_12">
+
+    <!-- Row 1: chevron + (title + subtitle) + actions (Ping -> Refresh -> Pin). Telegram moved
+         to the bottom support row's right corner, opposite Поддержка.
+
+         clipChildren IS OFF ON THIS ROW, AND clipToPadding ON THE CARD ABOVE IT, because the
+         chevron is laid out at a NEGATIVE start margin and its press plate is the size of its
+         whole 48dp box. This row's own left edge is the card's 16dp content gutter, so the
+         10dp the chevron is pulled past it put the left slice of that plate outside the row —
+         and a ViewGroup clips its children by default. The owner held the control down to
+         photograph it: «зажал кнопку скрытия раскрытия серверов … там обрезается фон при
+         нажатии». A round plate with one side sheared flat reads as a rendering fault.
+
+         BOTH switches are needed and neither goes further. clipChildren=false lets the row
+         draw outside itself; the card still has clipToPadding=true, which would re-cut the
+         plate on the same line, so that goes too. The card's own BOUNDS still clip, and the
+         plate lives 6dp inside them — the overflow is contained by the card and reaches no
+         scroll container and no window root. That last distinction is not academic here:
+         SelectPopup.unclipAncestors drew the settings screen through the status bar by walking
+         one level too far, and this is that walk stopped at the right level. -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:clipChildren="false"
+        android:gravity="center_vertical"
+        android:orientation="horizontal">
+
+        <!-- Disclosure chevron: unified 22dp glyph (matches the group-header chevron).
+             The 48dp box gives an interactive ≥48dp touch target; 13dp padding insets the
+             fitCenter glyph to 22dp so it reads at the same size as the section chevron.
+
+             IT IS PULLED LEFT BY @dimen/optical_nudge_touch_target, and this is the same
+             arithmetic the sub-page back button already does (view_toolbar.xml): what the
+             eye lines a column up by is the GLYPH's edge, not the edge of the invisible
+             48dp box the glyph is centred in. Without the pull, the box starts on the
+             card's 16dp content gutter and the glyph therefore starts 13dp inside it —
+             visibly indented from the title, the traffic row and the notice below it,
+             which all begin on the gutter. «кнопку скрытия раскрытия серверов тоже нужно
+             левее подвинуть». The touch target keeps every one of its 48dp; only where
+             it is drawn moves.
+
+             AND THE END MARGIN PAYS FOR THE SAME OVERHANG on the other side. The pull moved
+             the glyph, not the box: the box still runs 13dp past the glyph's right edge, so
+             a title spaced off the BOX starts 13dp further right than it looks. space_8 made
+             that a 21dp trench — «много пустого пространства». @dimen/space_after_touch_target
+             is the design's 16 with the overhang taken out; the arithmetic is written on the
+             token. -->
+
+        <ImageView
+            android:id="@+id/btn_collapse"
+            android:layout_width="48dp"
+            android:layout_height="48dp"
+            android:layout_marginStart="@dimen/optical_nudge_touch_target"
+            android:layout_marginEnd="@dimen/space_after_touch_target"
+            android:background="@drawable/bg_control_disc"
+            android:clickable="true"
+            android:contentDescription="@string/title_servers"
+            android:focusable="true"
+            android:padding="13dp"
+            android:scaleType="fitCenter"
+            app:srcCompat="@drawable/ic_arrow_drop_down"
+            app:tint="?attr/colorOnSurfaceVariant" />
+
+        <!-- Title + meta subtitle (last update + auto-update) -->
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:orientation="vertical">
+
+            <TextView
+                android:id="@+id/tv_sub_title"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:ellipsize="end"
+                android:maxLines="1"
+                android:textAppearance="@style/TextAppearance.App.Title"
+                tools:text="🍀 erlish" />
+
+            <TextView
+                android:id="@+id/tv_meta_subtitle"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/space_4"
+                android:ellipsize="end"
+                android:maxLines="1"
+                android:textAppearance="@style/TextAppearance.App.Caption"
+                android:visibility="gone"
+                tools:text="10.07.2026 10:56 · 1 ч"
+                tools:visibility="visible" />
+
+        </LinearLayout>
+
+        <!-- 1) Ping / latency test -->
+        <ImageView
+            android:id="@+id/btn_ping"
+            android:layout_width="36dp"
+            android:layout_height="36dp"
+            android:background="@drawable/bg_control_disc"
+            android:clickable="true"
+            android:contentDescription="@string/connection_test_pending"
+            android:focusable="true"
+            android:padding="@dimen/space_8"
+            app:srcCompat="@drawable/ic_ping_24dp"
+            app:tint="?attr/colorPrimary" />
+
+        <!-- 2) Refresh subscription -->
+        <ImageView
+            android:id="@+id/btn_refresh"
+            android:layout_width="36dp"
+            android:layout_height="36dp"
+            android:background="@drawable/bg_control_disc"
+            android:clickable="true"
+            android:contentDescription="@string/title_sub_update"
+            android:focusable="true"
+            android:padding="@dimen/space_8"
+            app:srcCompat="@drawable/ic_refresh_24dp"
+            app:tint="?attr/colorPrimary" />
+
+        <ProgressBar
+            android:id="@+id/progress_action"
+            android:layout_width="20dp"
+            android:layout_height="20dp"
+            android:layout_marginStart="@dimen/space_4"
+            android:layout_marginEnd="@dimen/space_4"
+            android:indeterminateTint="?attr/colorPrimary"
+            android:visibility="gone"
+            tools:visibility="visible" />
+
+        <!-- 3) Pin — OFF THE CARD, and only off the card.
+
+             «кнопку закрепить у подписки нужно убрать полностью». Пиннинг as a FEATURE is
+             PORT-DELTA П-22 and stays whole: the flag on the подписка, the ordering it
+             drives (SettingsManager reads it), HomeFragment.toggleHomePin and the adapter's
+             handler are all untouched and all still compile against this id. What the owner
+             asked to lose is the affordance — a third disc on a card whose other two do
+             something to the подписка he can see, while this one only reordered a carousel
+             he most often has one page of.
+
+             `gone` and not deleted, because deleting the view would take the id with it and
+             then the tint/label writes in HomeFragment.bindMetaBar and the click in
+             HomeMetaPagerAdapter would have to be deleted too — i.e. the feature, not the
+             button. The one thing that DID have to change with it is the touch-target
+             expansion: an invisible view has a zero hit rect, and expandTouchTarget would
+             have grown that rect to 48dp around the card's top-left corner, straight over
+             the collapse chevron. See HomeMetaPagerAdapter.onCreateViewHolder. -->
+        <ImageView
+            android:id="@+id/btn_pin"
+            android:layout_width="36dp"
+            android:layout_height="36dp"
+            android:background="@drawable/bg_control_disc"
+            android:clickable="true"
+            android:contentDescription="@string/sub_pin"
+            android:focusable="true"
+            android:padding="@dimen/space_8"
+            android:visibility="gone"
+            app:srcCompat="@drawable/ic_pin_24dp"
+            app:tint="?attr/colorOnSurfaceVariant" />
+
+    </LinearLayout>
+
+    <!-- Collapsible body: traffic + announce + support/telegram. Starts EXPANDED. -->
+    <LinearLayout
+        android:id="@+id/layout_meta_body"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:visibility="visible">
+
+    <!--
+      ROW 2: THE TRAFFIC METER, AND THE LABEL IS NOT ON THE BAR ANY MORE.
+
+      `view_meter.xml`'s header names this file as the defect it ends: «The shipped
+      subscription meta bar centres an 11sp label over a moving accent fill: 2.9:1, and
+      it changes mid-word as the bar advances. That is the defect this file ends — the
+      label sits BESIDE the bar, on its own line, at the full 4.5:1 body floor.»
+
+      Both halves of that were true here. «1,7 ТБ / ∞» was printed IN the 16dp track, so
+      every glyph sat on whichever of the two colours the fill had reached — accent under
+      the used part, muted track under the rest — and the contrast was measured against
+      the wrong one either way. Worse, the boundary MOVES: as the month goes on the fill
+      crosses the label and the same word is legible on Monday and not on Thursday. There
+      is no text colour that fixes that, because the problem is that the text has two
+      grounds.
+
+      So the meter takes the shape the component file has always described:
+
+          1,7 ТБ / ∞ .............................. до 12.08.2026
+          [======================                                ]
+
+      The figure and the expiry share one line at body contrast on the card's own ground
+      (onSurface / onSurfaceVariant, at or above 4.5:1 in all four theme combinations),
+      and the bar is a rule under them carrying one thing: the fraction. It is also full
+      width now rather than a 160dp stub, so the fraction is readable to a few percent
+      instead of being a hint. Nothing was removed — the meter still shows exactly what
+      it showed, and it shows it legibly at every fill level.
+    -->
+    <LinearLayout
+        android:id="@+id/layout_traffic"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="@dimen/space_8"
+        android:orientation="vertical">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:baselineAligned="true"
+            android:orientation="horizontal">
+
+            <!-- §4: «Строка слева (12sp/500, tnum)». Numeric and not Caption, and the
+                 difference is the figures: this line is «1,7 ТБ / 10 ТБ», it is redrawn
+                 every few seconds on a live tunnel, and Golos's proportional digits make
+                 the whole string twitch sideways as a 1 becomes an 8. Space Grotesk with
+                 tnum holds every digit on the same advance, so only the digit changes.
+                 The size and the weight are written out because the type scale's 12.5/400
+                 caption is a different role — this is a readout. -->
+            <TextView
+                android:id="@+id/tv_traffic"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:ellipsize="end"
+                android:maxLines="1"
+                android:textAppearance="@style/TextAppearance.App.Numeric"
+                android:textColor="?attr/colorOnSurface"
+                android:textFontWeight="500"
+                android:textSize="12sp"
+                tools:ignore="UnusedAttribute"
+                tools:text="1,7 ТБ / ∞" />
+
+            <!-- Expiry marker (∞ or «до <date>»), at the end of the same line, on the same
+                 readout face so the two halves of the line share one rhythm. -->
+            <TextView
+                android:id="@+id/tv_expiry"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="@dimen/space_12"
+                android:maxLines="1"
+                android:textAppearance="@style/TextAppearance.App.Numeric"
+                android:textColor="?attr/colorOnSurfaceVariant"
+                android:textFontWeight="500"
+                android:textSize="12sp"
+                tools:ignore="UnusedAttribute"
+                tools:text="до 12.08.2026" />
+        </LinearLayout>
+
+        <!-- The bar: a rounded muted track and a clipped flat fill in the one accent
+             (bg_traffic_gradient). No decorative gradient, and nothing printed on it.
+
+             3dp, HANDOFF §4 («под ними полоса 3dp»), and it is @dimen/meter_height
+             again. The number was written out here while values/ belonged to the
+             foundation wave and the token still read 6: halving a token other screens'
+             meters read, from a file this wave did not own, would have re-drawn theirs
+             too. The foundation wave is over, the token is 3, and every meter in the
+             product is one line thick.
+
+             The bar is a RULE, not a pill: at 6dp it read as a container with something
+             in it, at 3 it reads as the fraction itself, which is all it carries. -->
+        <FrameLayout
+            android:id="@+id/layout_traffic_pill"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/space_6">
+
+            <ProgressBar
+                android:id="@+id/progress_traffic"
+                style="?android:attr/progressBarStyleHorizontal"
+                android:layout_width="match_parent"
+                android:layout_height="@dimen/meter_height"
+                android:max="1000"
+                android:progressDrawable="@drawable/bg_traffic_gradient"
+                tools:progress="430" />
+        </FrameLayout>
+    </LinearLayout>
+
+    <!-- Announce banner from the subscription (centered) -->
+    <TextView
+        android:id="@+id/tv_announce"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="@dimen/space_8"
+        android:autoLink="web"
+        android:gravity="center"
+        android:maxLines="5"
+        android:textAppearance="@style/TextAppearance.App.Caption"
+        android:textColorLink="?attr/colorPrimary"
+        android:visibility="gone"
+        tools:text="No ads on YouTube: Hybrid, Russia\nIf it stops working, refresh the subscription @departamentvpn"
+        tools:visibility="visible" />
+
+    <!-- Bottom support row: full-width with «Поддержка» pinned bottom-left and Telegram pinned
+         bottom-right (opposite corners), a weighted spacer between them. -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="@dimen/space_8"
+        android:gravity="center_vertical"
+        android:orientation="horizontal">
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btn_support"
+            style="@style/Widget.Material3.Button.TonalButton.Icon"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:minWidth="0dp"
+            android:minHeight="0dp"
+            android:paddingStart="@dimen/space_12"
+            android:paddingEnd="@dimen/space_16"
+            android:text="@string/sub_support"
+            android:textSize="12sp"
+            android:visibility="gone"
+            app:icon="@drawable/ic_support_24dp"
+            app:iconSize="16dp"
+            tools:visibility="visible" />
+
+        <!-- Spacer pushes Telegram to the bottom-right corner. -->
+        <View
+            android:layout_width="0dp"
+            android:layout_height="1dp"
+            android:layout_weight="1" />
+
+        <!-- Telegram (bottom-right corner): compact icon button, wired in bindMetaBar. -->
+        <ImageView
+            android:id="@+id/btn_telegram"
+            android:layout_width="36dp"
+            android:layout_height="36dp"
+            android:background="@drawable/bg_control_disc"
+            android:clickable="true"
+            android:contentDescription="@string/sub_telegram"
+            android:focusable="true"
+            android:padding="@dimen/space_8"
+            android:visibility="gone"
+            app:srcCompat="@drawable/ic_telegram_24dp"
+            app:tint="?attr/colorPrimary"
+            tools:visibility="visible" />
+
+    </LinearLayout>
+
+    </LinearLayout>
+
+</LinearLayout>

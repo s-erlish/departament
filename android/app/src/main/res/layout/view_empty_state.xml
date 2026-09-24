@@ -1,0 +1,87 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  ============================================================================
+  THE EMPTY STATE. One grammar for all of them.
+  00-rules.md 9.5, 22-components.md 15, 32-master-plan-android.md 8.8.
+  ============================================================================
+
+  Three grammars ship today — a card on Аккаунт, a tile block on Устройства, a
+  drawableTop on История платежей. This is the one that replaces them:
+
+      [ 64 tile r20, 32dp glyph, NEUTRAL ]
+                  16
+      Title    Headline 24/700, centred, max 2 lines      what is not here
+                  8
+      Line     Subtitle 13/400, centred, max 2 lines      why, or what it gives you
+                  24
+      Action   one button, or none
+
+  The tile is neutral on purpose: an empty state is not the screen's primary action
+  surface and does not spend the accent budget on decoration. Never «Нет данных»
+  alone, never two actions, never an illustration, never a blue glyph, never an emoji.
+
+  IT MUST LOOK RIGHT WITH NO ACTION, because two of the six spec'd empty states have
+  none («Платежей пока нет», «Устройств пока нет»). That is why the 24dp gap lives on
+  the ViewStub and not under the line: an un-inflated stub is zero-sized and takes its
+  own margin with it, so the block simply ends after the line.
+
+  THE ACTION IS A TIER, AND A TIER IS A FILE, because a Material style binds at
+  inflation. The stub defaults to the Secondary tier. Point it elsewhere before
+  inflating when the case calls for it:
+      Primary   the action genuinely is the screen's job («Купить», «Добавить провайдера»)
+      Secondary anything else
+      Tertiary  the ERROR variant's «Повторить»
+  A stub inflates once, so «one action» is enforced by construction.
+
+  THE ERROR VARIANT is this same silhouette: the alert glyph, the MAPPED cause in the
+  line (never a hard-wired «Что-то пошло не так» in XML — activity_account.xml does
+  that today while messageFor() maps five real causes), and a Tertiary «Повторить».
+
+  Copy lives in res/values/strings*.xml and is set by the caller; the six ratified
+  title/line/action triples are tabled in 00-rules.md 9.5.
+-->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/empty_state"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:gravity="center_horizontal"
+    android:orientation="vertical"
+    android:paddingStart="@dimen/screen_gutter"
+    android:paddingEnd="@dimen/screen_gutter">
+
+    <!-- 64 square, radius 20, 32dp glyph: the padding in the style is what makes the
+         glyph 32. The caller supplies the glyph; it is decorative, the title names
+         the state. -->
+    <ImageView
+        android:id="@+id/empty_glyph"
+        style="@style/Widget.Departament.EmptyState.Tile"
+        android:layout_width="@dimen/empty_icon"
+        android:layout_height="@dimen/empty_icon"
+        android:importantForAccessibility="no"
+        tools:src="@drawable/ic_subscriptions_24dp" />
+
+    <TextView
+        android:id="@+id/empty_title"
+        style="@style/Widget.Departament.EmptyState.Title"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        tools:text="Платежей пока нет" />
+
+    <TextView
+        android:id="@+id/empty_line"
+        style="@style/Widget.Departament.EmptyState.Line"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        tools:text="Здесь появится история покупок и продлений." />
+
+    <!-- The stub's own layout params win over the inflated button's, which is why the
+         24dp section gap is declared here and not in view_action_*.xml. -->
+    <ViewStub
+        android:id="@+id/empty_action_stub"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="@dimen/space_24"
+        android:inflatedId="@+id/empty_action"
+        android:layout="@layout/view_action_secondary" />
+</LinearLayout>

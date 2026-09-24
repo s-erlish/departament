@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  THE PAGE COMING BACK, on a pop. subpage_enter.xml mirrored, and nothing else.
+
+  It returns from where the push left it. subpage_push_exit.xml sent it to −16 when it
+  was covered, so it comes back from −16 → 0 while the page on top of it leaves toward
+  +16 (subpage_exit.xml): both travel RIGHT, together, and the close reads as the open
+  reversed rather than as two windows arguing.
+
+  Reusing subpage_enter here — which is what the app did — brought this page in from
+  +16, the SAME edge the leaving page was heading for, so the two crossed. Read
+  subpage_push_exit.xml for the full account; that file carries the owner's report.
+
+  Timing and curve are subpage_enter.xml's, unchanged: @integer/motion_subpage_enter 260
+  on @interpolator/ease_out_quint, because arriving settles. The direction is the only
+  difference, which is the reason a second file exists at all instead of a parameter.
+
+  API floor and reduced motion: identical to subpage_push_exit.xml — see the note there.
+-->
+<set xmlns:android="http://schemas.android.com/apk/res/android"
+    android:duration="@integer/motion_subpage_enter"
+    android:fillAfter="false"
+    android:interpolator="@interpolator/ease_out_quint"
+    android:shareInterpolator="true">
+
+    <translate
+        android:fromXDelta="@dimen/space_16_reverse"
+        android:toXDelta="0" />
+
+
+</set>

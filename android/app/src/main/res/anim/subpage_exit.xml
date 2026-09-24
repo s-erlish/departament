@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  SUB-PAGE EXIT. The exact reverse of subpage_enter.xml, and nothing more.
+
+  translationX 0 -> @dimen/space_16 and alpha 1 -> 0, together, over
+  @integer/motion_subpage_exit 195ms on @interpolator/ease_standard
+  (32-master-plan-android.md 7.3, row "Sub-page exit").
+
+  Two rules are doing the work here and both are easy to get wrong:
+
+  1. Exit is 75% of enter (00-rules.md 3.7, 8.5). 195 is 75% of the 260 in
+     subpage_enter.xml — §7's «простое проявление 260 мс» — and it is held as
+     @integer/motion_subpage_exit so the pair cannot drift when the reveal tempo is
+     retuned. It is NOT the desktop's old flat 150 and it is NOT the same 260
+     played backwards.
+  2. The curve changes with the direction. Enter settles, so it is ease_out_quint;
+     leaving is a two-way state change the eye is not following, so it is
+     ease_standard. Reusing quint on the way out makes the page hang at the end
+     of its travel.
+
+  The page leaves toward +16dp, i.e. back the way it came in, so open and close
+  read as one gesture reversed. Copy is Russian and the app is LTR only; there is
+  no RTL mirror here because the platform does not mirror window animations and
+  the product ships no RTL locale.
+
+  Transform and alpha only (00-rules.md 8.7). Reduced motion: apply through
+  ui/component/SubPage.kt, never by hand - see the note in subpage_enter.xml.
+-->
+<set xmlns:android="http://schemas.android.com/apk/res/android"
+    android:duration="@integer/motion_subpage_exit"
+    android:fillAfter="false"
+    android:interpolator="@interpolator/ease_standard"
+    android:shareInterpolator="true">
+
+    <translate
+        android:fromXDelta="0"
+        android:toXDelta="@dimen/space_16" />
+
+    <alpha
+        android:fromAlpha="1.0"
+        android:toAlpha="0.0" />
+
+</set>

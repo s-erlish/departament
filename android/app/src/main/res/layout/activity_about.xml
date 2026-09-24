@@ -1,0 +1,172 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  ============================================================================
+  A-33  settings/about - О приложении.  H3 · R1.
+  24-tab-conformance.md A-33.
+  ============================================================================
+
+  The old file was untouched 2018 upstream: five hand-rolled 16dp rows with untinted
+  24dp icons at `TextAppearance.AppCompat.Subhead`, and a centred pair of
+  `AppCompat.Small` labels at the bottom holding the version and the application id
+  as decoration - unlabelled, uncopyable, and below the fold.
+
+  Now it is a ledger: two Row.Value rows that state what they are and carry a copy
+  action, then the links group. Three rows in that group are the entry points for
+  screens the app declared, built and never launched - «Схемы URL-адресов»,
+  «Журнал» and «Проверить обновления» - so this file is also where three dead
+  activities become reachable.
+
+  2026-08 REDESIGN (handoff README §7). The header is the sub-page lekalo -
+  @layout/view_sub_header, 24sp/700 title under a 44dp back control - and the two
+  groups are CARDS rather than bare rows on the page: §7 draws every sub-screen as
+  «группы карточек с теми же строками, что и в настройках», and a row group with no
+  boundary reads as a list that ran off the edge of the screen.
+
+  THE ROW SET IS UNCHANGED. §7's table names five rows here («Исходный код ·
+  Лицензии · Обратная связь · Канал · Политика») and this screen ships eight: the
+  handoff was assembled without sight of «Схемы URL-адресов», «Журнал» and
+  «Проверить обновления», so its silence about them is a gap and not an instruction.
+  They stay.
+-->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="?android:attr/colorBackground"
+    android:fitsSystemWindows="true"
+    android:orientation="vertical"
+    tools:context=".ui.AboutActivity">
+
+    <include
+        android:id="@+id/toolbar"
+        layout="@layout/view_sub_header" />
+
+    <androidx.core.widget.NestedScrollView
+        android:id="@+id/main_content"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:clipToPadding="false"
+        android:paddingBottom="@dimen/space_32"
+        android:scrollbars="none">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical">
+
+            <TextView
+                style="@style/SettingsSectionLabel"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="@string/about_section_app" />
+
+            <com.google.android.material.card.MaterialCardView style="@style/Widget.Departament.CardSection">
+
+                <LinearLayout style="@style/Widget.Departament.CardSection.Body">
+
+                    <include
+                        android:id="@+id/row_version"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        layout="@layout/view_row" />
+
+                    <com.google.android.material.divider.MaterialDivider
+                        style="@style/Widget.Departament.Divider.Full"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content" />
+
+                    <include
+                        android:id="@+id/row_package"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        layout="@layout/view_row" />
+                </LinearLayout>
+            </com.google.android.material.card.MaterialCardView>
+
+            <TextView
+                style="@style/SettingsSectionLabel"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="@string/about_section_links" />
+
+            <com.google.android.material.card.MaterialCardView style="@style/Widget.Departament.CardSection">
+
+                <LinearLayout style="@style/Widget.Departament.CardSection.Body">
+
+                    <include
+                        android:id="@+id/row_source_code"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        layout="@layout/view_row" />
+
+                    <com.google.android.material.divider.MaterialDivider
+                        style="@style/Widget.Departament.Divider.Full"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content" />
+
+                    <include
+                        android:id="@+id/row_licenses"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        layout="@layout/view_row" />
+
+                    <com.google.android.material.divider.MaterialDivider
+                        style="@style/Widget.Departament.Divider.Full"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content" />
+
+                    <include
+                        android:id="@+id/row_feedback"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        layout="@layout/view_row" />
+
+                    <com.google.android.material.divider.MaterialDivider
+                        style="@style/Widget.Departament.Divider.Full"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content" />
+
+                    <include
+                        android:id="@+id/row_tg_channel"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        layout="@layout/view_row" />
+
+                    <com.google.android.material.divider.MaterialDivider
+                        style="@style/Widget.Departament.Divider.Full"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content" />
+
+                    <include
+                        android:id="@+id/row_privacy_policy"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        layout="@layout/view_row" />
+
+                    <com.google.android.material.divider.MaterialDivider
+                        style="@style/Widget.Departament.Divider.Full"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content" />
+
+                    <!-- «СХЕМЫ URL-АДРЕСОВ» И «ЖУРНАЛ» СНЯТЫ ОТСЮДА по указанию владельца
+                         («в о приложении убери схемы url, журнал»), и обе никуда не делись:
+                         они стоят разделом «О приложении» на вкладке Настроек, и здесь были
+                         вторым входом в те же два экрана. Оба Activity, их строки и значки —
+                         на месте; ушёл дубль двери.
+
+                         «Проверить обновления» остаётся: этот экран здесь единственный,
+                         второго входа у него нет. Он и «Схемы ссылок» с «Журналом» не были
+                         в таблице §7 для этого экрана (П-07) — их дорисовали без ведома
+                         дизайна, и владелец подрезал ровно то, что задвоилось. -->
+
+                    <include
+                        android:id="@+id/row_check_update"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        layout="@layout/view_row" />
+                </LinearLayout>
+            </com.google.android.material.card.MaterialCardView>
+        </LinearLayout>
+    </androidx.core.widget.NestedScrollView>
+</LinearLayout>

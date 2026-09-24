@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- The connect disc's press well. A plain black oval at alpha 0, driven to ~12% by
+     @anim/press_scrim while the object is held. It is exactly the disc's circle, so it
+     never spills past the rounded edge, and it is black rather than a token because
+     "darker than whatever is under me" is the effect — on the light theme's pale disc
+     and the dark theme's near-black one alike. Opacity is the whole colour here. -->
+<shape xmlns:android="http://schemas.android.com/apk/res/android"
+    android:shape="oval">
+    <solid android:color="#000000" />
+</shape>

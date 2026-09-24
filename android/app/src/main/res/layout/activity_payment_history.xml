@@ -1,0 +1,143 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  ============================================================================
+  «История платежей» (PaymentHistoryActivity) — handoff README §7.
+  ============================================================================
+
+      кнопка назад → «История платежей» 24sp/700 → список операций
+
+  The list is a column of item_payment cards. The centred block doubles as the
+  empty state («Платежей пока нет» + a «Купить подписку» CTA) and the error state —
+  its text and visibility are driven by PaymentHistoryActivity via tv_empty.
+
+  THE HEADER IS THE LEKALO'S, not activity_base's MaterialToolbar: §7 puts the
+  title UNDER the back control at 24sp/700, which a Toolbar cannot draw. The ids
+  are view_toolbar's, so ToolbarBinder binds it in one call. Pull-to-refresh
+  (P-14's sibling on this screen) is untouched — it stays under the header, so
+  the gesture never fights the title.
+-->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="?android:attr/colorBackground"
+    android:fitsSystemWindows="true"
+    android:orientation="vertical"
+    tools:context=".ui.PaymentHistoryActivity">
+
+    <include
+        android:id="@+id/toolbar"
+        layout="@layout/view_sub_header" />
+
+    <FrameLayout
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1">
+
+    <androidx.swiperefreshlayout.widget.SwipeRefreshLayout
+        android:id="@+id/refresh_layout"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent">
+
+        <!-- ONE CARD, ROWS INSIDE IT (§7), and the card is the list's own background
+             rather than a wrapper around it: the screen hides @id/rv_payments to show
+             the empty or error block, and a wrapper would leave an outlined box
+             floating over it. clipToOutline keeps the first and last rows inside the
+             20dp corner.
+
+             THE LIST IS wrap_content AND IT SCROLLS ITSELF. Both halves matter and they
+             are not in conflict — the height spec is what decides which one happens.
+
+             §7 wants the card to END where its last operation does, so the list may not
+             be match_parent: a viewport-tall card draws its bottom corner off the
+             screen. It used to get that by living inside a NestedScrollView, and THAT is
+             where the operations went missing. NestedScrollView.measureChildWithMargins
+             hands its child `UNSPECIFIED` with the VIEWPORT as the size, and since API 23
+             RecyclerView keeps that size (`ALLOW_SIZE_IN_UNSPECIFIED_SPEC`) instead of
+             zeroing it — so LinearLayoutManager is NOT in its infinite mode, it fills a
+             viewport's worth of rows, stops, and reports that as the whole list's height.
+             Everything past it is unreachable: there is no scroller left that knows the
+             rows exist. A list that is one screen long looked complete; a longer one lost
+             its tail with nothing on screen to say so.
+
+             A plain FrameLayout gives the child `AT_MOST(viewport)` instead, which is the
+             spec this arrangement has always needed:
+               · few operations  -> measured to the content, card ends with the last row;
+               · many            -> measured to the viewport and the list scrolls itself,
+                                    recycling rows as it goes.
+             SwipeRefreshLayout is told where the top is by an explicit callback, because
+             its own target is now the frame rather than the scrolling view. -->
+        <FrameLayout
+            android:layout_width="match_parent"
+            android:layout_height="match_parent">
+
+            <androidx.recyclerview.widget.RecyclerView
+                android:id="@+id/rv_payments"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_gravity="top"
+                android:layout_marginStart="@dimen/screen_gutter"
+                android:layout_marginTop="@dimen/space_16"
+                android:layout_marginEnd="@dimen/screen_gutter"
+                android:layout_marginBottom="@dimen/space_24"
+                android:background="@drawable/bg_card_inert"
+                android:clipToOutline="true"
+                android:scrollbars="none"
+                app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager"
+                tools:listitem="@layout/item_payment" />
+        </FrameLayout>
+
+    </androidx.swiperefreshlayout.widget.SwipeRefreshLayout>
+
+    <!-- Empty / error onboard block. Icon + line ride tv_empty's visibility (the
+         activity toggles it); btn_history_buy is a wire-ready gone CTA placeholder. -->
+    <LinearLayout
+        android:id="@+id/ll_empty_state"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center"
+        android:gravity="center_horizontal"
+        android:orientation="vertical"
+        android:paddingHorizontal="@dimen/space_24">
+
+        <TextView
+            android:id="@+id/tv_empty"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:drawablePadding="@dimen/space_12"
+            android:gravity="center"
+            android:textAppearance="@style/TextAppearance.App.Body"
+            android:textColor="?attr/colorOnSurfaceVariant"
+            android:visibility="gone"
+            app:drawableTint="?attr/colorOnSurfaceVariant"
+            app:drawableTopCompat="@drawable/ic_acc_history"
+            tools:text="@string/history_empty"
+            tools:visibility="visible" />
+
+        <!-- Empty-state CTA, revealed and wired by PaymentHistoryActivity. Secondary tier: an
+             empty state is not this screen's primary action surface (styles.xml), and the app's
+             own tier carries the bevel, press motion, focus ring and btn_height 48 that a raw
+             Widget.Material3.Button.TonalButton has none of (OWNER-FEEDBACK D1). -->
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btn_history_buy"
+            style="@style/Widget.Departament.Button.Secondary"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/space_16"
+            android:text="@string/buy_title"
+            android:visibility="gone"
+            tools:visibility="visible" />
+    </LinearLayout>
+
+    <ProgressBar
+        android:id="@+id/progress_history"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center"
+        android:indeterminateTint="?attr/colorPrimary"
+        android:visibility="gone"
+        tools:visibility="visible" />
+
+    </FrameLayout>
+</LinearLayout>

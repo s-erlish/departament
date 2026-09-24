@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- progressDrawable for the traffic pill (a horizontal ProgressBar):
+     - background: rounded muted track (colorSurfaceVariant), ~16dp thick pill => 8dp radius
+     - progress: a clipped rounded FLAT fill in the one accent (colorPrimary).
+       No white->blue gradient glow (impeccable: no decorative gradients on near-black). -->
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <item android:id="@android:id/background">
+        <shape android:shape="rectangle">
+            <corners android:radius="8dp" />
+            <solid android:color="?attr/colorSurfaceVariant" />
+            <!-- THE TRACK KEEPS A BOUNDARY WHEN THE HUE GOES. colorSurfaceVariant is
+                 #E9EEF7 in the blue light theme — 1.09:1 against the card, an object
+                 only because it is tinted. Under the mono overlay it is #F1F1F2 and
+                 the pill had, in the owner's words, essentially no plate. The
+                 boundary is transparent in both blue themes (attrs.xml), so this
+                 renders bit-identically there. -->
+            <stroke
+                android:width="@dimen/stroke_hairline"
+                android:color="?attr/colorPlateOutline" />
+        </shape>
+    </item>
+
+    <item android:id="@android:id/progress">
+        <clip>
+            <shape android:shape="rectangle">
+                <corners android:radius="8dp" />
+                <solid android:color="?attr/colorAccentFigure" />
+            </shape>
+        </clip>
+    </item>
+
+</layer-list>

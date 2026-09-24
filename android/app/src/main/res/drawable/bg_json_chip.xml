@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- The gold JSON chip on a server row: the mark that says this profile is an
+     operator xray-json template rather than a plain link.
+
+     Its two tokens (chipJsonBg / chipJsonText) were declared in attrs.xml, bound in
+     all three themes and consumed by nothing — the chip itself had gone missing from
+     the row. Gold is the one colour on this screen that is not the accent and not
+     destructive, and it earns that by marking a different KIND of profile, not a
+     state. Same radius as the protocol chip so the pair reads as one row of chips.
+
+     The boundary is the same plate role the protocol chip carries and for the same
+     reason: mono maps chipJsonBg onto mono_surfaceContainerHighest #E7E7E9, which is
+     1.24:1 on a white card — the gold went and took the chip with it. Transparent in
+     both blue themes, so the gold chip is untouched there. -->
+<shape xmlns:android="http://schemas.android.com/apk/res/android"
+    android:shape="rectangle">
+    <solid android:color="?attr/chipJsonBg" />
+    <stroke
+        android:width="@dimen/stroke_hairline"
+        android:color="?attr/colorPlateOutline" />
+    <corners android:radius="@dimen/radius_chip" />
+</shape>

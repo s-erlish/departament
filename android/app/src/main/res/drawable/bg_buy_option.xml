@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Unselected duration/price option row: transparent fill, quiet outline. Radius and
+  stroke width are tokens and they are the SAME two the selected twin reads
+  (@drawable/bg_buy_option_selected) — a matched pair is the only way «геометрия не
+  меняется при выборе» can hold, and 14dp / 1dp written out here is how the pair
+  drifted apart in the first place.
+-->
+<shape xmlns:android="http://schemas.android.com/apk/res/android"
+    android:shape="rectangle">
+    <corners android:radius="@dimen/radius_card_small" />
+    <solid android:color="@android:color/transparent" />
+    <stroke
+        android:width="@dimen/stroke_frame"
+        android:color="?attr/colorOutlineVariant" />
+</shape>

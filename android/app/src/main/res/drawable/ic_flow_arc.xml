@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  §3 и грабля №7: ОДНА дуга по кольцу, а не несколько сегментов подряд.
+
+  Окружность r=64 в поле 132 — длина 402. Прототип рисует её как
+  stroke-dasharray «80 322», то есть видно 80/402 = 0.199 длины; здесь это
+  trimPathEnd. Оборот — ObjectAnimator на rotation, 1100 мс, линейно,
+  бесконечно; аниматор останавливается вместе с уходом оверлея.
+-->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="@dimen/flow_ring"
+    android:height="@dimen/flow_ring"
+    android:viewportWidth="132"
+    android:viewportHeight="132">
+    <path
+        android:pathData="M66,2 A64,64 0 0,1 66,130 A64,64 0 0,1 66,2"
+        android:strokeColor="#FFFFFF"
+        android:strokeWidth="2"
+        android:strokeLineCap="round"
+        android:trimPathStart="0"
+        android:trimPathEnd="0.199" />
+</vector>

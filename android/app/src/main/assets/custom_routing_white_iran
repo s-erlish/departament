@@ -1,0 +1,37 @@
+[
+  {
+    "remarks": "Блокировать QUIC (UDP 443)",
+    "outboundTag": "block",
+    "port": "443",
+    "network": "udp"
+  },
+  {
+    "remarks": "Обход локальной сети (IP)",
+    "outboundTag": "direct",
+    "ip": [
+      "geoip:private"
+    ]
+  },
+  {
+    "remarks": "Обход локальной сети (домены)",
+    "outboundTag": "direct",
+    "domain": [
+      "geosite:private"
+    ]
+  },
+  {
+    "remarks": "Обход доменов Ирана",
+    "outboundTag": "direct",
+    "domain": [
+      "domain:ir",
+      "geosite:category-ir"
+    ]
+  },
+  {
+    "remarks": "Обход IP-адресов Ирана",
+    "outboundTag": "direct",
+    "ip": [
+       "geoip:ir"
+    ]
+  }
+]

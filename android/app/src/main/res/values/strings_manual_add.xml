@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Hint for the "Ввести вручную" text-input dialog (paste/type a config or subscription link). -->
+    <string name="manual_entry_hint">Вставьте или введите ссылку</string>
+</resources>

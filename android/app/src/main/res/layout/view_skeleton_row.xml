@@ -1,0 +1,100 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  ============================================================================
+  THE SKELETON ROW. The silhouette of view_row.xml, and nothing else.
+  22-components.md 16, 32-master-plan-android.md 8.9, 00-rules.md 15.
+  ============================================================================
+
+  A skeleton that does not match the row it stands in for is worse than a spinner:
+  the swap reads as a pop instead of as content arriving. So this file is view_row.xml
+  with its text replaced by its own boxes — SAME gutter, SAME 40dp tile at the SAME
+  12dp gap, SAME 68dp text origin, SAME 56dp minimum, SAME 12dp vertical padding.
+  Change view_row.xml and change this file in the same edit.
+
+  THE TWO BAR HEIGHTS ARE 24 AND 16 — the boxes a 16sp title and a 13sp subtitle
+  actually occupy. They are not decorative sizes and they are not invented for this
+  component: both are in the dp dictionary.
+
+  WIDTHS ARE DERIVED, NOT HAND-PICKED. The title bar takes 3/5 of the text column and
+  the subtitle bar 2/5, expressed as weights, so they track the real column at every
+  screen width instead of freezing a "varied-looking" dp number.
+
+  A PLAIN group's skeleton hides the tile, exactly as its rows do (5.3):
+      skeletonTile.isVisible = false
+
+  It appears only after 300ms of waiting — a faster response never flashes a
+  skeleton — and it crosses to content in one 220ms fade OF THE WHOLE BLOCK, with no
+  per-item entrance and no stagger. The pulse (0.45 to 1.0 over motion_pulse 1000ms,
+  static at 0.7 under reduced motion) is driven from Kotlin by the skeleton binder;
+  there is nothing to animate in this file.
+
+  It is invisible to TalkBack: a placeholder has nothing to say, and the screen
+  announces «загрузка» once, from the container.
+-->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/skeleton_row"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:baselineAligned="false"
+    android:gravity="center_vertical"
+    android:importantForAccessibility="noHideDescendants"
+    android:minHeight="@dimen/row_min_height"
+    android:orientation="horizontal"
+    android:paddingStart="@dimen/screen_gutter"
+    android:paddingTop="@dimen/space_12"
+    android:paddingEnd="@dimen/screen_gutter"
+    android:paddingBottom="@dimen/space_12">
+
+    <!-- The tile's silhouette: 40 square at radius 12, which is what bg_skeleton_bar
+         draws — the same radius the real tile uses. -->
+    <View
+        android:id="@+id/skeleton_tile"
+        android:layout_width="@dimen/tile_size"
+        android:layout_height="@dimen/tile_size"
+        android:layout_marginEnd="@dimen/space_12"
+        android:background="@drawable/bg_skeleton_bar" />
+
+    <LinearLayout
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_weight="1"
+        android:orientation="vertical">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal">
+
+            <View
+                android:id="@+id/skeleton_title"
+                style="@style/Widget.Departament.Skeleton.Bar"
+                android:layout_width="0dp"
+                android:layout_height="@dimen/space_24"
+                android:layout_weight="3" />
+
+            <Space
+                android:layout_width="0dp"
+                android:layout_height="0dp"
+                android:layout_weight="2" />
+        </LinearLayout>
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/space_8"
+            android:orientation="horizontal">
+
+            <View
+                android:id="@+id/skeleton_subtitle"
+                style="@style/Widget.Departament.Skeleton.Bar"
+                android:layout_width="0dp"
+                android:layout_weight="2" />
+
+            <Space
+                android:layout_width="0dp"
+                android:layout_height="0dp"
+                android:layout_weight="3" />
+        </LinearLayout>
+    </LinearLayout>
+</LinearLayout>

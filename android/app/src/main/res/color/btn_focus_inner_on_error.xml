@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- R7 inner focus case for the Destructive fill: white at 40% inside #F04452. -->
+<selector xmlns:android="http://schemas.android.com/apk/res/android">
+    <item
+        android:alpha="0.40"
+        android:color="?attr/colorOnError"
+        android:state_focused="true" />
+    <item android:color="@android:color/transparent" />
+</selector>

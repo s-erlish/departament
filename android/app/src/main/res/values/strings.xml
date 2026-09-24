@@ -1,0 +1,194 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name" translatable="false">departament</string>
+    <!-- Servers redesign (S3) -->
+    <string name="title_servers">Серверы</string>
+    <string name="search_hint">Поиск серверов…</string>
+    <string name="servers_empty_title">Нет серверов</string>
+    <!-- Home empty state (no servers/subscriptions yet) -->
+    <string name="home_empty_title">Подписок пока нет</string>
+    <string name="home_empty_subtitle">Добавьте подписку, чтобы появились серверы.</string>
+    <string name="home_empty_add_qr">Добавить по QR-коду</string>
+    <string name="home_empty_add_clipboard">Добавить из буфера обмена</string>
+    <!-- Neutral under-shield label when a server is selected but not connected -->
+    <string name="home_not_connected">Не подключено</string>
+    <!-- Toolbar "+" add menu -->
+    <string name="menu_add_scan_qr">Сканировать QR-код</string>
+    <string name="menu_add_clipboard">Добавить из буфера обмена</string>
+    <string name="app_widget_name">departament</string>
+    <string name="app_tile_name">departament</string>
+    <string name="app_tile_first_use">Сначала добавьте сервер в приложении.</string>
+
+    <!-- Notifications -->
+    <string name="notification_action_stop_v2ray">Остановить</string>
+    <!-- Channel names, as the user reads them in Android's own notification settings. -->
+    <string name="notification_channel_subscription">Обновление подписки</string>
+    <string name="notification_channel_core_test">Проверка серверов</string>
+    <!-- The ongoing VPN notification, expanded: the live rate and nothing else. -->
+    <string name="notification_speed" translatable="false">↓ %1$s   ↑ %2$s</string>
+    <string name="toast_permission_denied">Разрешение не получено</string>
+    <string name="toast_services_start">Запуск служб</string>
+    <string name="toast_services_stop">Остановка служб</string>
+
+    <!-- Custom gray status toasts shown on the connect screen (VPN state). -->
+    <string name="toast_status_connecting">Подключение…</string>
+
+    <!--ServerActivity-->
+    <string name="menu_item_save_config">Сохранить сервер</string>
+    <string name="menu_item_del_config">Удалить сервер</string>
+    <string name="menu_item_import_config_qrcode">Импорт из QR-кода</string>
+    <string name="del_config_comfirm">Подтверждаете удаление?</string>
+    <string name="server_lab_remarks">Название</string>
+    <string name="server_lab_address">Адрес</string>
+    <string name="server_lab_port">Порт</string>
+    <string name="server_lab_id">ID</string>
+    <string name="server_lab_security">Безопасность</string>
+    <string name="server_lab_network">Сеть</string>
+    <string name="server_lab_more_function">Транспорт</string>
+    <string name="server_lab_head_type">Тип заголовка</string>
+    <string name="server_lab_mode_type">Режим gRPC</string>
+    <string name="server_lab_request_host">Узел</string>
+    <string name="server_lab_request_host_http">Узел HTTP</string>
+    <string name="server_lab_request_host_ws">Узел WS</string>
+    <string name="server_lab_request_host_httpupgrade">Узел HTTPUpgrade</string>
+    <string name="server_lab_request_host_xhttp">Узел XHTTP</string>
+    <string name="server_lab_request_host_h2">Узел H2</string>
+    <string name="server_lab_request_host_quic">Шифрование QUIC</string>
+    <string name="server_lab_request_host_grpc">Полномочия gRPC</string>
+    <string name="server_lab_path">Путь</string>
+    <string name="server_lab_path_ws">Путь WS</string>
+    <string name="server_lab_path_httpupgrade">Путь HTTPUpgrade</string>
+    <string name="server_lab_path_xhttp">Путь XHTTP</string>
+    <string name="server_lab_path_h2">Путь H2</string>
+    <string name="server_lab_path_quic">Ключ QUIC</string>
+    <string name="server_lab_path_kcp">Сид KCP</string>
+    <string name="server_lab_path_grpc">Служба gRPC</string>
+    <string name="server_lab_stream_security">TLS</string>
+    <string name="server_lab_stream_fingerprint">Отпечаток</string>
+    <string name="server_lab_stream_alpn">ALPN</string>
+    <string name="server_lab_allow_insecure">Разрешать небезопасные соединения</string>
+    <string name="server_lab_sni">SNI</string>
+    <string name="server_lab_address3">Адрес</string>
+    <string name="server_lab_port3">Порт</string>
+    <string name="server_lab_id3">Пароль</string>
+    <string name="server_lab_security3">Безопасность</string>
+    <string name="server_lab_encryption">Шифрование</string>
+    <string name="server_lab_flow">Поток</string>
+    <string name="server_lab_public_key">Открытый ключ</string>
+    <string name="server_lab_short_id">ShortID</string>
+    <string name="server_lab_spider_x">SpiderX</string>
+    <string name="server_lab_mldsa65_verify">mldsa65Verify</string>
+    <string name="server_lab_secret_key">Закрытый ключ</string>
+    <string name="toast_success">Успешно</string>
+    <string name="toast_incorrect_protocol">Неправильный протокол</string>
+    <!-- Показывается, когда выбранная в галерее картинка не содержит QR-кода. «Невозможно
+         декодировать» называло операцию, а не то, что случилось, и не говорило, что делать
+         дальше; вдобавок строка не была разрешена в NoticePolicy и не показывалась вовсе. -->
+    <string name="toast_decoding_failed">В этом изображении нет QR-кода. Выберите другой файл.</string>
+    <string name="title_file_chooser">Выберите файл</string>
+    <string name="toast_require_file_manager">Установите файловый менеджер</string>
+    <string name="toast_config_file_invalid">Файл не похож на сервер. Выберите другой файл.</string>
+    <string name="toast_action_not_allowed">Это действие запрещено</string>
+    <string name="server_obfs_password">Пароль obfs</string>
+    <string name="server_lab_port_hop_interval">Интервал смены портов</string>
+    <string name="server_lab_xhttp_mode">Режим XHTTP</string>
+    <string name="server_lab_ech_config_list">ECHConfigList</string>
+    <string name="server_lab_pinned_ca256">Отпечаток сертификата</string>
+    <string name="server_lab_browser_dialer">Использовать переадресацию браузера</string>
+    <string name="server_lab_browser_dialer_tip">Работает только с XHTTP в режиме packet-up и с WS. Настройки TLS при этом могут не примениться</string>
+
+    <string name="toast_warning_pref_proxysharing_short">Доступ из LAN разрешён, убедитесь, что вы находитесь в доверенной сети</string>
+
+    <string name="title_qr_code">QR-код</string>
+
+    <string name="bottom_nav_home">Главная</string>
+    <string name="sub_pin">Закрепить подписку</string>
+    <string name="sub_support">Поддержка</string>
+    <string name="sub_telegram">Telegram</string>
+
+    <string name="title_sub_update">Обновить подписку</string>
+    <!-- The subscription-refresh notification. The title names the EVENT, not the preference that
+         enables it: «Автоматически обновлять подписки» is a settings row and read as one in the
+         shade. The text takes the RESOLVED подписка name (SubscriptionNaming), never a raw remark —
+         that is how «Обновляем «import sub»» reached the user — and falls back to a whole sentence
+         when the подписка has no name yet, rather than to «Обновляем «»». -->
+    <string name="notification_subscription_title">Обновление подписки</string>
+    <string name="msg_updating_subscription">Обновляем «%1$s»</string>
+    <string name="msg_updating_subscription_unnamed">Обновляем подписку</string>
+
+    <string name="tasker_start_service">Запуск службы</string>
+
+    <!-- RoutingSettingActivity -->
+    <string name="routing_settings_outbound_tag_hint" translatable="false">proxy / direct / block / «название сервера»</string>
+
+    <string name="connection_test_pending">Проверить подключение</string>
+    <string name="connection_connecting">Подключение…</string>
+
+    <!-- WARNING: ServerActivity uses this array as BOTH the spinner labels and the persisted
+         values (ServerActivity.kt:428,595 → ProfileItem.browserDialerMode), and
+         CoreServiceManager.kt:275,278 compares that field against the literals "OkHttp"/"WebView".
+         Translating an item silently disables browser dialer. Keep it untranslated until
+         ServerActivity is switched over to the parallel @array/browser_dialer_mode_value. -->
+    <string-array name="browser_dialer_mode" translatable="false">
+        <item>Disable</item>
+        <item>OkHttp</item>
+        <item>WebView</item>
+    </string-array>
+
+    <string-array name="preset_rulesets">
+        <item>Базовый набор</item>
+        <item>Прокси для заблокированных сайтов</item>
+        <item>Весь трафик через прокси</item>
+        <item>Белый список Ирана</item>
+        <item>Белый список России</item>
+    </string-array>
+
+    <string-array name="policy_group_type">
+        <item>Наименьшая задержка</item>
+        <item>Наименьшая нагрузка</item>
+        <item>Случайно</item>
+        <item>По очереди</item>
+    </string-array>
+
+    <!-- Incy settings tab -->
+    <string name="bottom_nav_settings">Настройки</string>
+    <string name="settings_section_connection">Подключение</string>
+    <string name="settings_section_bypass">Обход блокировок</string>
+    <string name="settings_section_interface">Интерфейс</string>
+    <string name="settings_section_subscription">Подписка</string>
+    <string name="settings_section_devices">Устройства</string>
+    <string name="settings_section_about">О приложении</string>
+    <string name="settings_mode">Режим</string>
+    <string name="settings_per_app">Прокси по приложениям</string>
+    <string name="settings_bypass_lan">Обход локальной сети</string>
+    <string name="settings_dns">DNS</string>
+    <string name="settings_dns_hint">Адрес DNS-сервера</string>
+    <string name="settings_ping_method">Пинг</string>
+    <string name="settings_ping_method_tcp">TCP-соединение</string>
+    <string name="settings_ping_method_http">HTTP-запрос</string>
+    <string name="settings_mux">Мультиплексирование (Mux)</string>
+    <string name="settings_mux_concurrency">Число соединений Mux</string>
+    <string name="settings_fragment">Фрагментация пакетов</string>
+    <string name="settings_language">Язык</string>
+    <string name="settings_language_system">Системный</string>
+    <string name="settings_boot">Запуск при загрузке</string>
+    <string name="settings_sub_auto_update">Автообновление подписки</string>
+    <string name="settings_sub_auto_update_1h">1 час</string>
+    <string name="settings_sub_auto_update_6h">6 часов</string>
+    <string name="settings_sub_auto_update_12h">12 часов</string>
+    <string name="settings_sub_auto_update_minutes">%1$d мин</string>
+    <string name="settings_routing">Маршрутизация</string>
+    <string name="settings_assets">Файлы ресурсов</string>
+    <string name="settings_tv_send">Перенести подписку на телевизор</string>
+    <string name="settings_tv_receive">Принять подписку</string>
+    <string name="settings_about">О приложении</string>
+    <string name="settings_backup">Резервное копирование</string>
+    <string name="settings_value_on">Вкл</string>
+    <string name="settings_value_off">Выкл</string>
+
+    <string name="server_selected_reconnect_prompt">Выбран %1$s. Переподключиться к нему?</string>
+    <string name="server_selected_reconnect_prompt_generic">Сервер выбран. Переподключиться к нему?</string>
+    <string name="server_selected_reconnect_action">Переподключиться</string>
+    <string name="settings_logs">Журнал</string>
+    <string name="settings_check_update">Проверить обновления</string>
+</resources>

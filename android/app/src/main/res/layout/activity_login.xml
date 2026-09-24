@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  ============================================================================
+  THE SIGN-IN HOST.  14-auth.md §3.
+  ============================================================================
+
+  What this replaces: two stacked MaterialCardViews, two filled accent buttons of
+  identical weight, a 26dp radius that exists nowhere else in the product,
+  synthetic bold on a variable font, three fixed 52dp button heights that clip at
+  font scale 200%, a 2FA block hidden inside the second card, and a centred grey
+  error line at the bottom of a scroll. There was no hierarchy and no state
+  machine: the awaiting block and the 2FA block could be visible at once.
+
+  Now: ONE surface at a time inside @id/auth_pages, and the toolbar says which.
+
+      A · the gate       layout_auth_gate   Telegram (the one filled accent)
+                                             + «Войти по почте»
+      B · вход по почте  layout_auth_email  email + password, the 2FA step, and
+                                             the two browser errands as rows
+
+  Surface B is a page in this host rather than a pushed Activity because the
+  manifest belongs to another wave; it enters and leaves on the sub-page motion
+  and system Back pops it back to the gate, so it behaves as the level-1 sub-page
+  the spec describes. See LoginActivity.showPage().
+
+  The header is the seamless view_toolbar (00-rules.md 4.8) — page background, no
+  elevation, no divider, and a hairline that appears only once content has
+  scrolled under it. On the gate its title is empty on purpose: «Вход в
+  departament» is the page's heading, and a bar repeating it would be the product
+  naming itself twice on one screen.
+-->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/login_root"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="?android:attr/colorBackground"
+    android:fitsSystemWindows="true"
+    android:orientation="vertical"
+    tools:context=".ui.LoginActivity">
+
+    <include
+        android:id="@+id/toolbar"
+        layout="@layout/view_toolbar" />
+
+    <FrameLayout
+        android:id="@+id/auth_pages"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1">
+
+        <include
+            android:id="@+id/gate"
+            layout="@layout/layout_auth_gate"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent" />
+
+        <include
+            android:id="@+id/mail"
+            layout="@layout/layout_auth_email"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent" />
+    </FrameLayout>
+</LinearLayout>

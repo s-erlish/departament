@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Ripple ON a filled accent or error surface: the container's own on-colour, never
+  the accent again (an accent ripple on an accent fill is invisible).
+-->
+<selector xmlns:android="http://schemas.android.com/apk/res/android">
+    <item
+        android:alpha="0.12"
+        android:color="?attr/colorOnPrimary"
+        android:state_pressed="true" />
+    <item
+        android:alpha="0.10"
+        android:color="?attr/colorOnPrimary"
+        android:state_focused="true" />
+    <item
+        android:alpha="0.08"
+        android:color="?attr/colorOnPrimary"
+        android:state_hovered="true" />
+    <item android:alpha="0.12" android:color="?attr/colorOnPrimary" />
+</selector>

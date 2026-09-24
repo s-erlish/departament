@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- THE PRESS-RELEASE CURVE. cubic-bezier(0.34, 1.25, 0.64, 1), design handoff
+     README §1/§8.
+
+     controlY1 is 1.25, above the 1.0 end value on purpose: the release
+     OVERSHOOTS by roughly 2% and settles back, which is what makes the finger
+     lift read as a spring letting go instead of a lid snapping shut. Run over
+     @integer/motion_press_out 200ms.
+
+     PathInterpolator accepts a control point above 1 — the path only has to be
+     monotonic in X, never in Y — so no SpringAnimation and no Kotlin is needed
+     to get the rebound; a declarative stateListAnimator carries it, which also
+     means reduced motion collapses it to 0ms for free.
+
+     README §11 grabl 1: the overshoot is exactly when a TextView re-rasterises
+     and snaps to the pixel grid. Anything animating on this curve with text
+     inside it must hold a hardware layer for the duration — see
+     ComponentSupport.withHardwareLayer / PressFeedback.attach. -->
+<pathInterpolator xmlns:android="http://schemas.android.com/apk/res/android"
+    android:controlX1="0.34"
+    android:controlY1="1.25"
+    android:controlX2="0.64"
+    android:controlY2="1" />

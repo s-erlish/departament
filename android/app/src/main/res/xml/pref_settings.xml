@@ -1,0 +1,287 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    Экран «Дополнительно» (SettingsActivity).
+
+    Порядок и состав групп задаёт docs/design2026/12-settings.md, а не порядок
+    ключей в этом файле до переработки:
+
+      «Ядро»                   - 5.9, группа «Ядро»
+      «Туннель»                - 5.9, группа «Туннель»
+      «DNS»                    - 5.4, группы «Дополнительно» и «Свои записи»
+      «Параметры фрагментации» - 5.5
+      «Проверка задержки»      - 5.6, группы «Проверка» и «Автоматически»
+
+    Здесь остались ТОЛЬКО ключи, которые действительно читает код и у которых нет
+    другого места для правки. То, что уже редактируется на вкладке настроек
+    (режим, DNS туннеля, обход локальной сети, IPv6, Mux, включение фрагментации,
+    оформление, язык, запуск при загрузке, метод проверки) и в «Локальном прокси»
+    (порт, логин, пароль, UDP, HTTP-прокси, доступ по сети), сюда не продублировано:
+    12-settings.md 4.7 требует «строк с двумя домами - 0».
+
+    Убрано как мёртвая настройка (ключ не читает никто):
+      pref_local_dns_port, pref_start_scan_immediate, pref_double_column_display.
+
+    Убрано по списку отмен 12-settings.md 6.1 (настройку принимает приложение):
+      pref_speed_enabled, pref_confirm_remove, pref_group_all_display,
+      pref_show_memory, pref_prefer_ipv6, pref_use_hev_tunnel_v2,
+      pref_hev_tunnel_loglevel, pref_hev_tunnel_rw_timeout_v2,
+      pref_dynamic_socks_port, pref_mux_xudp_concurrency, pref_mux_xudp_quic,
+      pref_ip_api_url.
+
+    Каждая группа имеет key: SettingsActivity показывает только одну из них, если
+    его запустили с EXTRA_SECTION (маршруты settings/dns, settings/fragment,
+    settings/latency из 12-settings.md 5.0).
+-->
+<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
+
+    <!-- ===================================================================== -->
+    <!-- Ядро (12-settings.md 5.9)                                             -->
+    <!-- ===================================================================== -->
+    <PreferenceCategory
+        android:key="adv_section_core"
+        android:layout="@layout/preference_with_help_link"
+        android:title="@string/adv_group_core">
+
+        <!-- Пишет v2rayConfig.log.loglevel (CoreConfigManager) и порог LogUtil. -->
+        <ListPreference
+            android:defaultValue="warning"
+            android:entries="@array/adv_loglevel_entries"
+            android:entryValues="@array/adv_loglevel_values"
+            android:key="pref_core_loglevel"
+            android:negativeButtonText="@string/adv_cancel"
+            android:title="@string/adv_loglevel_title"
+            app:iconSpaceReserved="false"
+            app:singleLineTitle="false" />
+
+        <!-- Включает sniffing на входящем соединении (CoreConfigManager). -->
+        <CheckBoxPreference
+            android:defaultValue="true"
+            android:key="pref_sniffing_enabled"
+            android:summary="@string/adv_sniffing_summary"
+            android:title="@string/adv_sniffing_title"
+            app:iconSpaceReserved="false"
+            app:singleLineTitle="false" />
+
+        <!-- routeOnly у sniffing: домен используется только для маршрутизации. -->
+        <CheckBoxPreference
+            android:defaultValue="false"
+            android:key="pref_route_only_enabled"
+            android:summary="@string/adv_route_only_summary"
+            android:title="@string/adv_route_only_title"
+            app:iconSpaceReserved="false"
+            app:singleLineTitle="false" />
+
+        <!-- allowInsecure у TLS во всех форматах серверов (fmt/*.kt). -->
+        <CheckBoxPreference
+            android:defaultValue="false"
+            android:key="pref_allow_insecure"
+            android:summary="@string/adv_allow_insecure_summary"
+            android:title="@string/adv_allow_insecure_title"
+            app:iconSpaceReserved="false"
+            app:singleLineTitle="false" />
+
+        <!--
+            «Переключать сервер при сбое» стоял здесь и снят по прямому указанию владельца:
+            «надо убрать в целом эту функцию о переключении на более быстрый сервер».
+            Ключ pref_auto_fallback принудительно выключается на каждом старте
+            (SettingsManager.retireAutoFallback), поэтому переключателю нечем управлять.
+            Замер задержки, четыре метода проверки и ручное «обновить» остаются (П-26).
+        -->
+
+    </PreferenceCategory>
+
+    <!-- ===================================================================== -->
+    <!-- Туннель (12-settings.md 5.9)                                          -->
+    <!-- ===================================================================== -->
+    <PreferenceCategory
+        android:key="adv_section_tunnel"
+        android:layout="@layout/preference_with_help_link"
+        android:title="@string/adv_group_tunnel">
+
+        <!-- SettingsManager.getVpnMtu() -> Builder.setMtu(). -->
+        <EditTextPreference
+            android:defaultValue="1500"
+            android:dialogMessage="@string/adv_mtu_helper"
+            android:key="pref_vpn_mtu"
+            android:negativeButtonText="@string/adv_cancel"
+            android:positiveButtonText="@string/adv_save"
+            android:title="@string/adv_mtu_title"
+            app:iconSpaceReserved="false"
+            app:singleLineTitle="false" />
+
+        <!-- SettingsManager.getCurrentVpnInterfaceAddressConfig(). -->
+        <ListPreference
+            android:defaultValue="0"
+            android:entries="@array/adv_iface_entries"
+            android:entryValues="@array/adv_iface_values"
+            android:key="pref_vpn_interface_address_config_index"
+            android:negativeButtonText="@string/adv_cancel"
+            android:title="@string/adv_iface_title"
+            app:iconSpaceReserved="false"
+            app:singleLineTitle="false" />
+
+    </PreferenceCategory>
+
+    <!-- ===================================================================== -->
+    <!-- DNS (12-settings.md 5.4)                                              -->
+    <!-- ===================================================================== -->
+    <PreferenceCategory
+        android:key="adv_section_dns"
+        android:layout="@layout/preference_with_help_link"
+        android:title="@string/adv_group_dns">
+
+        <!-- Поднимает dns-модуль ядра вместо системного резолвера. -->
+        <CheckBoxPreference
+            android:defaultValue="false"
+            android:key="pref_local_dns_enabled"
+            android:summary="@string/adv_local_dns_summary"
+            android:title="@string/adv_local_dns_title"
+            app:iconSpaceReserved="false"
+            app:singleLineTitle="false" />
+
+        <!-- fakedns в конфиге ядра. Работает только вместе с локальным резолвером. -->
+        <CheckBoxPreference
+            android:defaultValue="false"
+            android:key="pref_fake_dns_enabled"
+            android:summary="@string/adv_fake_dns_summary"
+            android:title="@string/adv_fake_dns_title"
+            app:iconSpaceReserved="false"
+            app:singleLineTitle="false" />
+
+        <!-- SettingsManager.getDomesticDnsServers(). Умолчание = AppConfig.DNS_DIRECT. -->
+        <EditTextPreference
+            android:defaultValue="77.88.8.8"
+            android:dialogMessage="@string/adv_domestic_dns_helper"
+            android:key="pref_domestic_dns"
+            android:negativeButtonText="@string/adv_cancel"
+            android:positiveButtonText="@string/adv_save"
+            android:title="@string/adv_domestic_dns_title"
+            app:iconSpaceReserved="false"
+            app:singleLineTitle="false" />
+
+        <!-- Пользовательские записи dns.hosts (CoreConfigManager). -->
+        <EditTextPreference
+            android:dialogMessage="@string/adv_dns_hosts_helper"
+            android:key="pref_dns_hosts"
+            android:negativeButtonText="@string/adv_cancel"
+            android:positiveButtonText="@string/adv_save"
+            android:title="@string/adv_dns_hosts_title"
+            app:iconSpaceReserved="false"
+            app:singleLineTitle="false" />
+
+        <!-- CoreOutboundBuilder.getServerAddress() и
+             CoreConfigManager.resolveOutboundDomainsToHosts(). -->
+        <ListPreference
+            android:defaultValue="1"
+            android:entries="@array/adv_resolve_entries"
+            android:entryValues="@array/adv_resolve_values"
+            android:key="pref_outbound_domain_resolve_method"
+            android:negativeButtonText="@string/adv_cancel"
+            android:title="@string/adv_resolve_title"
+            app:iconSpaceReserved="false"
+            app:singleLineTitle="false" />
+
+    </PreferenceCategory>
+
+    <!-- ===================================================================== -->
+    <!-- Параметры фрагментации (12-settings.md 5.5)                           -->
+    <!-- ===================================================================== -->
+    <PreferenceCategory
+        android:key="adv_section_fragment"
+        android:layout="@layout/preference_with_help_link"
+        android:title="@string/adv_group_fragment">
+
+        <!-- fragment.length у outbound-а фрагментации (CoreOutboundBuilder). -->
+        <EditTextPreference
+            android:defaultValue="50-100"
+            android:dialogMessage="@string/adv_fragment_length_helper"
+            android:key="pref_fragment_length"
+            android:negativeButtonText="@string/adv_cancel"
+            android:positiveButtonText="@string/adv_save"
+            android:title="@string/adv_fragment_length_title"
+            app:iconSpaceReserved="false"
+            app:singleLineTitle="false" />
+
+        <!-- fragment.interval у того же outbound-а. -->
+        <EditTextPreference
+            android:defaultValue="10-20"
+            android:dialogMessage="@string/adv_fragment_interval_helper"
+            android:key="pref_fragment_interval"
+            android:negativeButtonText="@string/adv_cancel"
+            android:positiveButtonText="@string/adv_save"
+            android:title="@string/adv_fragment_interval_title"
+            app:iconSpaceReserved="false"
+            app:singleLineTitle="false" />
+
+        <!-- fragment.packets. -->
+        <ListPreference
+            android:defaultValue="tlshello"
+            android:entries="@array/adv_fragment_packets"
+            android:entryValues="@array/adv_fragment_packets"
+            android:key="pref_fragment_packets"
+            android:negativeButtonText="@string/adv_cancel"
+            android:title="@string/adv_fragment_packets_title"
+            app:iconSpaceReserved="false"
+            app:singleLineTitle="false" />
+
+        <!-- Пояснение группы: текст меняется, если фрагментация выключена. -->
+        <Preference
+            android:key="adv_fragment_note"
+            android:persistent="false"
+            android:selectable="false"
+            android:summary="@string/adv_fragment_note"
+            app:iconSpaceReserved="false" />
+
+    </PreferenceCategory>
+
+    <!-- ===================================================================== -->
+    <!-- Проверка задержки (12-settings.md 5.6)                                -->
+    <!-- ===================================================================== -->
+    <PreferenceCategory
+        android:key="adv_section_latency"
+        android:layout="@layout/preference_with_help_link"
+        android:title="@string/adv_group_latency">
+
+        <!-- SettingsManager.getDelayTestUrl() -> проба задержки в ядре. -->
+        <EditTextPreference
+            android:defaultValue="https://www.gstatic.com/generate_204"
+            android:dialogMessage="@string/adv_delay_url_helper"
+            android:key="pref_delay_test_url"
+            android:negativeButtonText="@string/adv_cancel"
+            android:positiveButtonText="@string/adv_save"
+            android:title="@string/adv_delay_url_title"
+            app:iconSpaceReserved="false"
+            app:singleLineTitle="false" />
+
+        <!-- SettingsManager.getRealPingConcurrency(). -->
+        <ListPreference
+            android:defaultValue="16"
+            android:entries="@array/adv_ping_concurrency"
+            android:entryValues="@array/adv_ping_concurrency"
+            android:key="pref_real_ping_concurrency"
+            android:negativeButtonText="@string/adv_cancel"
+            android:title="@string/adv_ping_concurrency_title"
+            app:iconSpaceReserved="false"
+            app:singleLineTitle="false" />
+
+        <!-- MainViewModel: сортировка списка серверов после «проверить все». -->
+        <CheckBoxPreference
+            android:defaultValue="false"
+            android:key="pref_auto_sort_after_test"
+            android:title="@string/adv_auto_sort_title"
+            app:iconSpaceReserved="false"
+            app:singleLineTitle="false" />
+
+        <!-- MainViewModel: удаление серверов, не ответивших на проверку. -->
+        <CheckBoxPreference
+            android:defaultValue="false"
+            android:key="pref_auto_remove_invalid_after_test"
+            android:summary="@string/adv_auto_remove_summary"
+            android:title="@string/adv_auto_remove_title"
+            app:iconSpaceReserved="false"
+            app:singleLineTitle="false" />
+
+    </PreferenceCategory>
+
+</PreferenceScreen>

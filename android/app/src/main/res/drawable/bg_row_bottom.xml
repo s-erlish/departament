@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  THE LAST ROW OF A SECTION CARD. @drawable/bg_row with the two BOTTOM corners
+  rounded to @dimen/radius_row_edge 19. See @drawable/bg_row_top for why the row
+  and not the card carries the corner (README §6, §11 grabl 4).
+-->
+<selector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:enterFadeDuration="@integer/motion_press_in"
+    android:exitFadeDuration="@integer/motion_press_out">
+    <item android:state_pressed="true">
+        <shape android:shape="rectangle">
+            <solid android:color="?attr/colorPressBg" />
+            <corners
+                android:bottomLeftRadius="@dimen/radius_row_edge"
+                android:bottomRightRadius="@dimen/radius_row_edge" />
+        </shape>
+    </item>
+    <item android:state_focused="true">
+        <shape android:shape="rectangle">
+            <solid android:color="@android:color/transparent" />
+            <stroke
+                android:width="@dimen/stroke_focus"
+                android:color="?attr/colorPrimary" />
+            <corners
+                android:bottomLeftRadius="@dimen/radius_row_edge"
+                android:bottomRightRadius="@dimen/radius_row_edge" />
+        </shape>
+    </item>
+    <item android:state_activated="true">
+        <shape android:shape="rectangle">
+            <solid android:color="?attr/colorAccentFill" />
+            <corners
+                android:bottomLeftRadius="@dimen/radius_row_edge"
+                android:bottomRightRadius="@dimen/radius_row_edge" />
+        </shape>
+    </item>
+    <item>
+        <shape android:shape="rectangle">
+            <solid android:color="@android:color/transparent" />
+        </shape>
+    </item>
+</selector>

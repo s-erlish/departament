@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  THE PAGE BEING COVERED, on a push. The fourth of four legs, and the one the app
+  went without for so long that its absence became a reported defect.
+
+  A STACK SLIDES AS ONE SHEET. Pushing, the arriving page comes from +16 and the page
+  it covers goes to −16: both travel LEFT, together, and the eye reads one movement.
+  Popping, both travel RIGHT (subpage_pop_enter.xml + subpage_exit.xml).
+
+  What the app did instead was reuse ONE pair in both directions — subpage_enter for
+  whichever activity was arriving and subpage_exit for whichever was leaving, on the
+  reasoning that "the arriving screen always enters and the leaving screen always
+  exits". That is true of the alpha and false of the translation. It made the covered
+  page travel to +16, i.e. RIGHT, while the page arriving on top of it travelled LEFT:
+  two 16dp movements crossing each other inside 260ms. On the way back it was the same
+  crossing mirrored, and that one is not hidden behind an opaque incoming window, so
+  that is the one the owner saw:
+
+      «когда заходишь во вкладку какую-то и выходишь назад, то анимация выхода она типа
+       дерганная как будто резко влево вправо делает и выход, хотя должно сбоку
+       закрываться как-то»
+
+  He is describing two things moving opposite ways and reading it, correctly, as one
+  thing stuttering.
+
+  Timing is subpage_exit.xml's, unchanged: @integer/motion_subpage_exit 195 = 75% of
+  enter (00-rules.md 3.7, 8.5) on @interpolator/ease_standard, because leaving is a
+  two-way state change the eye is not following. Only the DIRECTION differs, and that is
+  the whole point of the file.
+
+  API floor: fromXDelta/toXDelta only resolve a TYPE_DIMENSION from API 29
+  (Animation.Description.parseValue). minSdk is 24, so on 24-28 the delta reads 0 and
+  this degrades to the 195ms fade — correct tempo, correct curve, one channel short. It
+  degrades, it never breaks, and it degrades identically in all four legs, so the pair
+  can never half-apply.
+
+  Reduced motion: apply through ui/component/SubPage.kt, never by hand (00-rules.md 8.8).
+-->
+<set xmlns:android="http://schemas.android.com/apk/res/android"
+    android:duration="@integer/motion_subpage_exit"
+    android:fillAfter="false"
+    android:interpolator="@interpolator/ease_standard"
+    android:shareInterpolator="true">
+
+    <translate
+        android:fromXDelta="0"
+        android:toXDelta="@dimen/space_16_reverse" />
+
+
+</set>

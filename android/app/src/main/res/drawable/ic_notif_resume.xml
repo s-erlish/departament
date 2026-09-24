@@ -1,0 +1,17 @@
+<!--
+  Значок действия «Возобновить». Треугольник вписан в ту же коробку 6..18, что квадрат
+  ic_notif_stop и дорожки ic_notif_pause; углы скруглены обводкой того же цвета со
+  strokeLineJoin="round", а не отдельным контуром, — иначе он читается острее соседей.
+-->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="24dp"
+    android:height="24dp"
+    android:viewportWidth="24"
+    android:viewportHeight="24">
+    <path
+        android:fillColor="#FFFFFFFF"
+        android:pathData="M9.2,7.6 L16.4,12 L9.2,16.4 Z"
+        android:strokeColor="#FFFFFFFF"
+        android:strokeLineJoin="round"
+        android:strokeWidth="2.4" />
+</vector>

@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Tappable Incy server card: rounded ripple over a dark surface with an even hairline
+     outline. No top rim-light: on the subscription meta / server-info bar the 1dp highlight
+     read as a stray border, so the edge is a single even outline on all four sides. -->
+<ripple xmlns:android="http://schemas.android.com/apk/res/android"
+    android:color="?attr/colorPrimaryContainer">
+    <item>
+        <shape android:shape="rectangle">
+            <solid android:color="?attr/colorSurface" />
+            <corners android:radius="@dimen/radius_card" />
+            <stroke
+                android:width="1dp"
+                android:color="?attr/colorOutlineVariant" />
+        </shape>
+    </item>
+    <!-- Round the ripple to the card radius -->
+    <item android:id="@android:id/mask">
+        <shape android:shape="rectangle">
+            <solid android:color="@android:color/white" />
+            <corners android:radius="@dimen/radius_card" />
+        </shape>
+    </item>
+</ripple>

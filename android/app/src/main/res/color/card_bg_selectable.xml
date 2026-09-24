@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Selection indicator, fill axis, for a MaterialCardView (server card, tariff card,
+  subscription card). 12% accent over the ground computes to #121B2A, on which
+  onSurface measures 15.68:1 — the selected state costs no legibility.
+  Pairs with @color/row_stroke_selectable on strokeColor.
+-->
+<selector xmlns:android="http://schemas.android.com/apk/res/android">
+    <item android:color="?attr/colorAccentFill" android:state_activated="true" />
+    <item android:color="?attr/colorAccentFill" android:state_checked="true" />
+    <item android:color="?attr/colorSurface" />
+</selector>

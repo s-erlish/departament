@@ -1,0 +1,121 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  ============================================================================
+  A-25  settings/assets - Файлы ресурсов.  H3 · R3.
+  24-tab-conformance.md A-25.
+  ============================================================================
+
+  Was: a 12dp-inset card holding a 60dp row with an orange icon tile and an 18dp
+  chevron, then a RecyclerView of one bordered card per file, each with TWO 24dp
+  action glyphs in 8dp boxes (36dp targets, under the 48 floor), and no empty state
+  at all - a fresh install showed a section header above nothing.
+
+  Now: the source row cycles its three values in place, the files are rows in one
+  list with a single overflow each, «Обновить файлы» is a visible action row instead
+  of a toolbar menu item, and the empty state says what the files are for.
+
+  2026-08 REDESIGN (handoff README §7): the sub-page lekalo header, and the file
+  list is drawn INSIDE a card the way §7's «Список файлов» is - as a background on
+  the RecyclerView itself rather than a MaterialCardView wrapped around it. That is
+  deliberate: the screen already hides @id/recycler_view when there are no files,
+  and a card wrapped around a hidden list would leave an empty outlined box on the
+  page. Giving the list the card's own shape means the boundary disappears with it,
+  with no change to UserAssetActivity.refreshData.
+-->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="?android:attr/colorBackground"
+    android:fitsSystemWindows="true"
+    android:orientation="vertical"
+    tools:context=".ui.UserAssetActivity">
+
+    <include
+        android:id="@+id/toolbar"
+        layout="@layout/view_sub_header" />
+
+    <androidx.core.widget.NestedScrollView
+        android:id="@+id/main_content"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:clipChildren="false"
+        android:clipToPadding="false"
+        android:paddingBottom="@dimen/space_32"
+        android:scrollbars="none">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:clipChildren="false"
+            android:orientation="vertical">
+
+            <!-- §7 puts a section header over this card too — the prototype's first group on
+                 «Файлы ресурсов» is «Источник Geo-файлов», and without it the screen opened on an
+                 unlabelled row. -->
+            <TextView
+                style="@style/SettingsSectionLabel"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="@string/asset_source" />
+
+            <!-- «Источник Geo-файлов» opens §6's select popup, so this card must NOT clip its
+                 children or the popup is sliced off at its bottom edge (§11 grabl 4). Its two
+                 rows carry the card's corners themselves — see UserAssetActivity.bindSourceRow. -->
+            <com.google.android.material.card.MaterialCardView
+                style="@style/Widget.Departament.CardSection"
+                android:clipChildren="false"
+                android:clipToPadding="false">
+
+                <LinearLayout
+                    style="@style/Widget.Departament.CardSection.Body"
+                    android:clipChildren="false"
+                    android:clipToPadding="false">
+
+                    <include
+                        android:id="@+id/row_source"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        layout="@layout/view_row" />
+
+                    <com.google.android.material.divider.MaterialDivider
+                        style="@style/Widget.Departament.Divider.Full"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content" />
+
+                    <include
+                        android:id="@+id/row_download"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        layout="@layout/view_row" />
+                </LinearLayout>
+            </com.google.android.material.card.MaterialCardView>
+
+            <TextView
+                android:id="@+id/label_files"
+                style="@style/SettingsSectionLabel"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="@string/asset_section_files" />
+
+            <androidx.recyclerview.widget.RecyclerView
+                android:id="@+id/recycler_view"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="@dimen/screen_gutter"
+                android:layout_marginEnd="@dimen/screen_gutter"
+                android:background="@drawable/bg_card_inert"
+                android:clipToOutline="true"
+                android:nestedScrollingEnabled="false"
+                tools:listitem="@layout/view_row_line" />
+
+            <include
+                android:id="@+id/empty_state"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/space_24"
+                layout="@layout/view_empty_state" />
+        </LinearLayout>
+    </androidx.core.widget.NestedScrollView>
+</LinearLayout>

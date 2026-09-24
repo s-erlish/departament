@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:fitsSystemWindows="true">
+
+    <!--
+        NO app:titleTextAppearance HERE, AND NO FIXED HEIGHT. Both were the same defect
+        wearing two hats and both are the reason twelve sub-screens drew their Russian
+        title wrong (M-36):
+
+        · The title face falls through to themes.xml `toolbarStyle` ->
+          @style/Widget.Departament.Toolbar -> TextAppearance.App.Title
+          (@font/golos_text_bold, 170 Cyrillic codepoints). The inline
+          app:titleTextAppearance="@style/ToolbarBrandTitle" that used to sit here
+          pinned every «Настройки подписок» / «Купить подписку» / «История платежей»
+          to @font/space_grotesk, which carries ZERO codepoints in U+0400-U+04FF, so
+          the platform silently substituted an undeclared fallback face. The wordmark
+          survives in exactly one place, @style/Widget.Departament.Toolbar.Brand, and
+          that place is Главная — never a sub-page, never here.
+
+        · wrap_content, not ?attr/actionBarSize. 56 is a MINIMUM, never a height
+          (view_toolbar.xml:23-26): at font scale 200% a 16sp title needs ~34dp of line
+          box and a fixed height clips it. Widget.Departament.Toolbar supplies
+          android:minHeight=@dimen/toolbar_height, so the bar still rests at 56 and
+          only grows when the text does. The progress indicator and the content
+          container are constrained to this view's BOTTOM, so both follow it down
+          instead of being overlapped.
+    -->
+    <com.google.android.material.appbar.MaterialToolbar
+        android:id="@+id/toolbar"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:background="@android:color/transparent"
+        android:elevation="0dp"
+        android:stateListAnimator="@null"
+        app:elevation="0dp"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent" />
+
+    <!-- indicatorColor is ?attr and not @color/color_fab_active: ThemeOverlay.Mono is
+         applied at runtime and re-points attributes only, so as a colour resource this
+         bar stayed #4C8DFF blue on the greyscale theme. The attribute already exists
+         and mono already maps it (themes.xml, indicatorColor -> mono_primary). -->
+    <com.google.android.material.progressindicator.LinearProgressIndicator
+        android:id="@+id/progress_bar"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        app:layout_constraintTop_toBottomOf="@id/toolbar"
+        android:indeterminate="true"
+        android:visibility="gone"
+        app:indicatorColor="?attr/indicatorColor" />
+
+    <FrameLayout
+        android:id="@+id/content_container"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        app:layout_constraintTop_toBottomOf="@id/toolbar"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent">
+
+    </FrameLayout>
+
+</androidx.constraintlayout.widget.ConstraintLayout>

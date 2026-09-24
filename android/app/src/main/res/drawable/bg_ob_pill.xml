@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- §2.5/2.6: контурная пилюля 52dp. Заливки нет, обводка 1.5dp ?attr/colorOutline.
+     Нажатие — второй канал отклика: шаг фона вниз к ?attr/colorPressBg на том же
+     клоке, что и масштаб из @anim/press_button. Ripple не используется нигде. -->
+<selector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:enterFadeDuration="@integer/motion_press_in"
+    android:exitFadeDuration="@integer/motion_press_out">
+    <item android:state_pressed="true">
+        <shape android:shape="rectangle">
+            <solid android:color="?attr/colorPressBg" />
+            <stroke
+                android:width="@dimen/ob_stroke"
+                android:color="?attr/colorOutline" />
+            <corners android:radius="@dimen/radius_button" />
+        </shape>
+    </item>
+    <item android:state_focused="true">
+        <shape android:shape="rectangle">
+            <solid android:color="@android:color/transparent" />
+            <stroke
+                android:width="@dimen/stroke_focus"
+                android:color="?attr/colorPrimary" />
+            <corners android:radius="@dimen/radius_button" />
+        </shape>
+    </item>
+    <item>
+        <shape android:shape="rectangle">
+            <solid android:color="@android:color/transparent" />
+            <stroke
+                android:width="@dimen/ob_stroke"
+                android:color="?attr/colorOutline" />
+            <corners android:radius="@dimen/radius_button" />
+        </shape>
+    </item>
+</selector>

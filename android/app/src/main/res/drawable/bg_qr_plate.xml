@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  THE PLATE UNDER A QR CODE, and the one place in the tree where white is not a
+  theming defect.
+
+  A QR decodes on contrast between dark modules and a light quiet zone. On
+  colorSurface #141619 the modules vanish; on a themed «light» surface they survive
+  the dark theme and die in the mono one. So the plate is @android:color/white in
+  every theme — it is the scanner's requirement, not the palette's, and it must NOT
+  be given a `?attr/` colour.
+
+  radius_tile 12 rather than the card's 20: this is an object sitting ON the card,
+  and an object that repeats its container's corner reads as a hole in it.
+-->
+<shape xmlns:android="http://schemas.android.com/apk/res/android"
+    android:shape="rectangle">
+    <solid android:color="@android:color/white" />
+    <corners android:radius="@dimen/radius_tile" />
+</shape>

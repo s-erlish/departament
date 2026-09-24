@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Primary button label + icon. onPrimary #00183A on accent #4C8DFF = 5.51:1 (AA),
+  and the bevel drawn over the fill (@drawable/btn_overlay_primary) is stopped clear
+  of the label band precisely so that number holds in every state.
+
+  THE LOADING ROW IS WHY THE BUTTON DOES NOT JUMP. R8 requires a working control to
+  keep its width, and the only way a label can hold its measurement is to still BE
+  the label: state_activated takes it to alpha 0 rather than to empty text, so
+  measure() sees the same string and the button cannot resize under the finger.
+  The arc arrives in the foreground selector on the same state, and opacity stays
+  1.0 — a faded button reads as broken, not as busy.
+
+  Order is the logic: disabled first (a disabled control is never "loading"), then
+  activated, then the resting colour.
+-->
+<selector xmlns:android="http://schemas.android.com/apk/res/android">
+    <item
+        android:alpha="0.38"
+        android:color="?attr/colorOnPrimary"
+        android:state_enabled="false" />
+    <item
+        android:alpha="0"
+        android:color="?attr/colorOnPrimary"
+        android:state_activated="true" />
+    <item android:color="?attr/colorOnPrimary" />
+</selector>

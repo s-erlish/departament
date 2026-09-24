@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Skeleton bar: height 16 (set by the style), radius_chip 12, fill
+  colorSurfaceContainerHighest. A skeleton is the SILHOUETTE of the real content —
+  same block count, same heights, same positions — which is why the widths come from
+  the layout and never from a hand-picked "variety" that makes the swap read as a pop.
+
+  Pulse: opacity 0.45 <-> 1.0 over motion_pulse 1000ms ease_standard, infinite
+  reverse, driven from Kotlin. Reduced motion holds it static at 0.7.
+  This replaces the centred spinner over a blank screen, everywhere.
+  Distinct from the older bg_skeleton.xml (radius_card, surfaceVariant), which stays
+  alive for its existing call sites.
+-->
+<shape xmlns:android="http://schemas.android.com/apk/res/android"
+    android:shape="rectangle">
+    <solid android:color="?attr/colorSurfaceContainerHighest" />
+    <corners android:radius="@dimen/radius_chip" />
+</shape>

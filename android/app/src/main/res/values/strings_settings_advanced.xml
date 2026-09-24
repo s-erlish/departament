@@ -1,0 +1,176 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- ===================================================================== -->
+
+    <string name="adv_title">Дополнительно</string>
+    <!-- Подпись строки-входа на вкладке настроек. 12-settings.md 4.2 строка 1.7
+         подписи не требует; строка живёт здесь на случай, если ряду нужен второй
+         уровень, как у остальных строк группы «Подключение». -->
+    <string name="adv_title_dns">DNS</string>
+    <string name="adv_title_fragment">Параметры фрагментации</string>
+    <string name="adv_title_latency">Проверка задержки</string>
+
+    <!-- ===================================================================== -->
+
+    <string name="adv_group_core">Ядро</string>
+
+    <string name="adv_loglevel_title">Уровень журнала</string>
+    <string name="adv_loglevel_debug_hint">Отладочный журнал заметно нагружает устройство</string>
+
+    <string name="adv_sniffing_title">Определение домена в трафике</string>
+    <string name="adv_sniffing_summary">Помогает правилам маршрутизации</string>
+
+    <string name="adv_route_only_title">Только для маршрутизации</string>
+    <string name="adv_route_only_summary">Не подменять адрес назначения</string>
+
+    <string name="adv_allow_insecure_title">Разрешать небезопасные соединения</string>
+    <string name="adv_allow_insecure_summary">Отключает проверку сертификата сервера</string>
+
+    <!-- ===================================================================== -->
+
+    <string name="adv_group_tunnel">Туннель</string>
+
+    <string name="adv_mtu_title">MTU</string>
+    <string name="adv_mtu_helper">От 576 до 9000. По умолчанию 1500</string>
+    <string name="adv_mtu_error">Введите значение от 576 до 9000</string>
+
+    <string name="adv_iface_title">Адрес интерфейса</string>
+
+    <!-- ===================================================================== -->
+
+    <string name="adv_group_dns">DNS</string>
+
+    <string name="adv_local_dns_title">Локальный резолвер</string>
+    <string name="adv_local_dns_summary">Разрешать домены внутри приложения</string>
+
+    <string name="adv_fake_dns_title">FakeIP</string>
+    <string name="adv_fake_dns_summary">Ускоряет соединение, отвечая на запросы локально</string>
+    <string name="adv_fake_dns_summary_locked">Нужен включённый локальный резолвер</string>
+
+    <string name="adv_domestic_dns_title">DNS для прямых соединений</string>
+    <string name="adv_domestic_dns_helper">IP-адрес или ссылка DoH, несколько через запятую. По умолчанию 77.88.8.8, DNS Яндекса</string>
+    <string name="adv_domestic_dns_error">Нужен IP-адрес или ссылка, которая начинается с https://. Несколько адресов разделите запятой.</string>
+
+    <string name="adv_dns_hosts_title">Записи hosts</string>
+    <string name="adv_dns_hosts_helper">Одна запись в строке: домен и адрес</string>
+    <string name="adv_dns_hosts_empty">Записей нет</string>
+    <string name="adv_dns_hosts_error">В каждой строке укажите домен и адрес IPv4 через пробел, например example.com 93.184.216.34</string>
+
+    <string name="adv_resolve_title">Разрешение адреса сервера</string>
+
+    <!-- ===================================================================== -->
+
+    <string name="adv_group_fragment">Параметры фрагментации</string>
+
+    <string name="adv_fragment_length_title">Длина</string>
+    <string name="adv_fragment_length_helper">Диапазон в байтах, например 50-100</string>
+
+    <string name="adv_fragment_interval_title">Интервал</string>
+    <string name="adv_fragment_interval_helper">Пауза между частями, мс</string>
+
+    <string name="adv_fragment_range_error">Введите диапазон вида 50-100: два числа от 1 до 10000, первое не больше второго.</string>
+
+    <string name="adv_fragment_packets_title">Пакеты</string>
+
+    <string name="adv_fragment_note">Значения по умолчанию подходят большинству сетей. Меняйте их, только если соединение не устанавливается.</string>
+    <string name="adv_fragment_note_off">Фрагментация выключена, поэтому эти значения ни на что не влияют. Включите её в группе «Обход блокировок» на вкладке настроек.</string>
+
+    <!-- ===================================================================== -->
+
+    <string name="adv_group_latency">Проверка задержки</string>
+
+    <string name="adv_delay_url_title">Адрес проверки</string>
+    <string name="adv_delay_url_helper">Ссылка, по которой измеряется задержка. По умолчанию https://www.gstatic.com/generate_204</string>
+    <string name="adv_delay_url_error">Введите ссылку, которая начинается с http:// или https://</string>
+
+    <string name="adv_ping_concurrency_title">Одновременных проверок</string>
+
+    <string name="adv_auto_sort_title">Сортировать по задержке после проверки</string>
+
+    <string name="adv_auto_remove_title">Удалять нерабочие после проверки</string>
+    <string name="adv_auto_remove_summary">Серверы без ответа будут удалены</string>
+
+    <!-- ===================================================================== -->
+
+    <string name="adv_save">Сохранить</string>
+    <string name="adv_cancel">Отмена</string>
+    <!-- Действие у сообщения об ошибке. 12-settings.md 10.1 и 00-rules.md 9.4:
+         у любого сообщения об ошибке есть путь к исправлению. -->
+    <string name="adv_action_retry">Повторить</string>
+    <!-- Единственное сообщение, которое настройкам разрешено слать, и только
+         когда туннель уже поднят (12-settings.md 10.1). -->
+    <string name="adv_notice_reconnecting">Переподключаемся, чтобы применить настройку</string>
+
+    <!-- Уровень журнала ядра. Значения пишутся в pref_core_loglevel и попадают
+         в v2rayConfig.log.loglevel (CoreConfigManager) и в фильтр LogUtil. -->
+    <string-array name="adv_loglevel_entries">
+        <item>Никакой</item>
+        <item>Ошибки</item>
+        <item>Предупреждения</item>
+        <item>Информация</item>
+        <item>Отладка</item>
+    </string-array>
+
+    <string-array name="adv_loglevel_values">
+        <item>none</item>
+        <item>error</item>
+        <item>warning</item>
+        <item>info</item>
+        <item>debug</item>
+    </string-array>
+
+    <!-- Адрес интерфейса туннеля. Индекс читает
+         SettingsManager.getCurrentVpnInterfaceAddressConfig(). -->
+    <string-array name="adv_iface_entries">
+        <item>10.10.14.x</item>
+        <item>10.1.0.x</item>
+        <item>10.0.0.x</item>
+        <item>172.31.0.x</item>
+        <item>172.20.0.x</item>
+        <item>172.16.0.x</item>
+        <item>192.168.100.x</item>
+    </string-array>
+
+    <string-array name="adv_iface_values">
+        <item>0</item>
+        <item>1</item>
+        <item>2</item>
+        <item>3</item>
+        <item>4</item>
+        <item>5</item>
+        <item>6</item>
+    </string-array>
+
+    <!-- Что делать с доменным адресом сервера перед подключением.
+         Читают CoreOutboundBuilder.getServerAddress() и
+         CoreConfigManager.resolveOutboundDomainsToHosts(). -->
+    <string-array name="adv_resolve_entries">
+        <item>Не разрешать</item>
+        <item>Добавить в записи hosts</item>
+        <item>Подставить IP-адрес</item>
+    </string-array>
+
+    <string-array name="adv_resolve_values">
+        <item>0</item>
+        <item>1</item>
+        <item>2</item>
+    </string-array>
+
+    <!-- Какие пакеты разбивать. Значение уходит в fragment-настройки outbound
+         (CoreOutboundBuilder). Набор задан 12-settings.md 5.5. -->
+    <string-array name="adv_fragment_packets">
+        <item>tlshello</item>
+        <item>1-3</item>
+        <item>1-2</item>
+    </string-array>
+
+    <!-- Сколько серверов проверять одновременно.
+         Читает SettingsManager.getRealPingConcurrency(). -->
+    <string-array name="adv_ping_concurrency">
+        <item>4</item>
+        <item>8</item>
+        <item>16</item>
+        <item>32</item>
+        <item>64</item>
+    </string-array>
+</resources>

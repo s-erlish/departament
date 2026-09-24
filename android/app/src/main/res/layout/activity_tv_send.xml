@@ -1,0 +1,172 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  ============================================================================
+  «Отправить на TV» (TvSendActivity) — handoff README §7, «Единое лекало».
+  ============================================================================
+
+      кнопка назад → «Отправить на TV» 24sp/700 → пояснение 13sp
+      → карточка «Сканировать код телевизора»
+      → «Выберите подписку для отправки» + карточка со списком
+      → карточка «Отправить»
+
+  §7 gives this screen three groups and NO buttons: «Сканирование QR · Выбор
+  подписки · Отправить». Both actions were full-width MaterialButtons inside a
+  centred card with a 48dp decorative glyph above the instructions; they are rows
+  now, with the instruction text moved to @id/toolbar_note where §7 puts it — the
+  one place on the lekalo a sentence of explanation is allowed to live.
+
+  THE IDS DID NOT MOVE. @id/btn_scan and @id/btn_send are still the two action
+  targets and still carry those names, so TvSendActivity keeps setting
+  isEnabled / onClick on them exactly as before; they are LinearLayout rows rather
+  than MaterialButtons, and View owns both of those. What a row cannot inherit from
+  MaterialButton is the disabled TINT, so the screen dims them itself (R6, alpha
+  0.38) — see TvSendActivity.setActionEnabled.
+
+  THE PROGRESS BAR IS IN THIS FILE NOW. The screen used to get it from
+  activity_base via setContentViewWithToolbar, and the §7 header replaces that
+  base layout; @id/progress_bar keeps the same name, and TvSendActivity overrides
+  showLoading / hideLoading to drive it, so «Отправка на телевизор…» still reports
+  that it is working.
+-->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="?android:attr/colorBackground"
+    android:fitsSystemWindows="true"
+    android:orientation="vertical"
+    tools:context=".tv.TvSendActivity">
+
+    <include
+        android:id="@+id/toolbar"
+        layout="@layout/view_sub_header" />
+
+    <com.google.android.material.progressindicator.LinearProgressIndicator
+        android:id="@+id/progress_bar"
+        style="@style/Widget.Departament.Progress.Linear"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:indeterminate="true"
+        android:visibility="gone"
+        tools:visibility="visible" />
+
+    <androidx.core.widget.NestedScrollView
+        android:id="@+id/main_content"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:clipToPadding="false"
+        android:paddingBottom="@dimen/space_32"
+        android:scrollbars="none">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical">
+
+            <!-- СКАНИРОВАНИЕ. One row, one card: §7's first group on this screen is a
+                 single action, and an action row states it with a name instead of a
+                 button shouting it. -->
+            <com.google.android.material.card.MaterialCardView
+                style="@style/Widget.Departament.CardSection"
+                android:layout_marginTop="@dimen/space_16">
+
+                <LinearLayout style="@style/Widget.Departament.CardSection.Body">
+
+                    <LinearLayout
+                        android:id="@+id/btn_scan"
+                        style="@style/Widget.Departament.Row"
+                        android:baselineAligned="false">
+
+                        <ImageView
+                            style="@style/Widget.Departament.Tile"
+                            android:backgroundTint="?attr/colorSurfaceContainerHighest"
+                            android:layout_marginEnd="@dimen/space_16"
+                            android:importantForAccessibility="no"
+                            app:srcCompat="@drawable/ic_scan_24dp" />
+
+                        <TextView
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:text="@string/tv_send_scan"
+                            android:textAppearance="@style/TextAppearance.App.Body"
+                            android:textColor="?attr/colorPrimary" />
+                    </LinearLayout>
+                </LinearLayout>
+            </com.google.android.material.card.MaterialCardView>
+
+            <!-- Итог попытки: «Отправка…», «Отправлено», причина отказа. Живёт на фоне
+                 страницы, а не в карточке — это состояние экрана, а не строка списка. -->
+            <TextView
+                android:id="@+id/tv_status"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/space_16"
+                android:accessibilityLiveRegion="polite"
+                android:paddingStart="@dimen/screen_gutter"
+                android:paddingEnd="@dimen/screen_gutter"
+                android:textAppearance="@style/TextAppearance.App.Subtitle"
+                android:visibility="gone"
+                tools:text="Отправка на телевизор…"
+                tools:visibility="visible" />
+
+            <!-- ВЫБОР ПОДПИСКИ. Появляется после удачного сканирования. -->
+            <LinearLayout
+                android:id="@+id/layout_pick"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:visibility="gone"
+                tools:visibility="visible">
+
+                <TextView
+                    style="@style/SettingsSectionLabel"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="@string/tv_send_pick_title" />
+
+                <com.google.android.material.card.MaterialCardView style="@style/Widget.Departament.CardSection">
+
+                    <RadioGroup
+                        android:id="@+id/radio_subs"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="vertical"
+                        android:paddingTop="@dimen/space_4"
+                        android:paddingBottom="@dimen/space_4" />
+                </com.google.android.material.card.MaterialCardView>
+
+                <com.google.android.material.card.MaterialCardView
+                    style="@style/Widget.Departament.CardSection"
+                    android:layout_marginTop="@dimen/space_12">
+
+                    <LinearLayout style="@style/Widget.Departament.CardSection.Body">
+
+                        <LinearLayout
+                            android:id="@+id/btn_send"
+                            style="@style/Widget.Departament.Row"
+                            android:baselineAligned="false">
+
+                            <ImageView
+                                style="@style/Widget.Departament.Tile"
+                                android:backgroundTint="?attr/colorSurfaceContainerHighest"
+                                android:layout_marginEnd="@dimen/space_16"
+                                android:importantForAccessibility="no"
+                                app:srcCompat="@drawable/ic_share_24dp" />
+
+                            <TextView
+                                android:layout_width="0dp"
+                                android:layout_height="wrap_content"
+                                android:layout_weight="1"
+                                android:text="@string/tv_send_button"
+                                android:textAppearance="@style/TextAppearance.App.Body"
+                                android:textColor="?attr/colorPrimary" />
+                        </LinearLayout>
+                    </LinearLayout>
+                </com.google.android.material.card.MaterialCardView>
+            </LinearLayout>
+        </LinearLayout>
+    </androidx.core.widget.NestedScrollView>
+</LinearLayout>

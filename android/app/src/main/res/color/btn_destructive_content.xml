@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Destructive button label + icon: white on #F04452 = 3.71:1. That clears the >=3:1
+  large-text floor ONLY because the label is 16sp/700 (22-components.md 2.5).
+  A destructive label never drops below 16sp/700, which is why this style pins
+  TextAppearance.App.Title and no layout may override it.
+
+  R8 loading row: state_activated takes the content to alpha 0 instead of to empty
+  text, so the label is still measured and the control keeps its width — see
+  @color/btn_primary_content for the full reasoning. The arc arrives from the
+  matching @drawable/btn_overlay_* on the same state.
+-->
+<selector xmlns:android="http://schemas.android.com/apk/res/android">
+    <item
+        android:alpha="0.38"
+        android:color="?attr/colorOnError"
+        android:state_enabled="false" />
+    <item
+        android:alpha="0"
+        android:color="?attr/colorOnError"
+        android:state_activated="true" />
+    <item android:color="?attr/colorOnError" />
+</selector>

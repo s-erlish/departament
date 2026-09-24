@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Ripple over a neutral or transparent container. Material's own state-layer
+  opacities: pressed 12%, focused 10%, hovered 8%. Android has no hover state and
+  00-rules.md 7.1 forbids designing for one, but a connected mouse or a Chromebook
+  still reports it, so the row is present and quiet rather than absent.
+-->
+<selector xmlns:android="http://schemas.android.com/apk/res/android">
+    <item
+        android:alpha="0.12"
+        android:color="?attr/colorPrimary"
+        android:state_pressed="true" />
+    <item
+        android:alpha="0.10"
+        android:color="?attr/colorPrimary"
+        android:state_focused="true" />
+    <item
+        android:alpha="0.08"
+        android:color="?attr/colorPrimary"
+        android:state_hovered="true" />
+    <item android:alpha="0.12" android:color="?attr/colorPrimary" />
+</selector>

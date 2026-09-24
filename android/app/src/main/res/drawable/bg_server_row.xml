@@ -1,0 +1,168 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  THE SERVER ROW'S BACKGROUND — one geometry for every row, in every state.
+
+  Handoff README §4 and §11 grabl 2: «Геометрия одинакова у всех строк и НЕ меняется при
+  выборе — иначе список прыгает.» So @dimen/radius_card 20 and a 1.5dp stroke are present
+  in ALL seven states below; the only things that change are the two COLOURS (fill,
+  stroke) and whether the separator is drawn. The shipped version gave the outline to the
+  selected row alone — every other row was a bare ripple — so picking a server grew its
+  box by 1.5dp on each edge and nudged the whole list.
+
+  THE SEPARATOR IS AN INNER TOP SHADOW, NOT A BORDER, and that is §11 grabl 3: a
+  border-top participates in layout (it moves the content down 1dp on every row but the
+  first) and it draws OVER the selected row's own outline, opening a gap in the top of the
+  accent frame. As the top layer of a layer-list it costs no layout at all, and it is
+  simply absent from the two states that must not have it — the first row, and the
+  selected one (§4: «У первой строки и у выбранной разделителя нет»).
+
+  Android has no inset box-shadow. The closest honest approximation is this: a 1dp band
+  pinned to the top edge in ?attr/colorOutlineVariant (the handoff's line role, #20242B),
+  fading out at both ends over a horizontal gradient. The fade stands in for the 20dp
+  corner radius clipping the CSS shadow — a hard-ended rule would poke into the rounded
+  corners where the real one tapers away. What is NOT reproducible is the shadow's
+  vertical softness: an Android shape gradient cannot be graded across a single dp, so the
+  band is a crisp 1dp line rather than a 1dp blur.
+
+  WHICH ROW HAS A SEPARATOR is the adapter's call, carried on `android:state_activated`
+  (MainRecyclerAdapter.bindServer). Activated is free here — nothing else on this view
+  uses it, and `state_selected` is already spoken for by the selection itself.
+
+  PRESS IS A STEP DOWN THE RAMP AND NEVER A RIPPLE (README §1, and the same decision
+  @drawable/bg_row records for every other row in the product): the fill steps to
+  ?attr/colorPressBg while the finger is held and @anim/press_row takes the scale to
+  0.975. The ripple that used to be here washed a splash across a 20dp corner and read as
+  light coming OFF the surface, which is the opposite gesture to the one §1 describes.
+
+  Focus (R7) keeps its 2dp accent ring — it is not press feedback, it is the only thing
+  that makes this list reachable by D-pad, keyboard and switch access.
+
+  THE FRAME IS @dimen/stroke_frame, and it used to be six copies of `1.5dp` written out
+  here because the stroke scale had no rung for it: stroke_hairline and stroke_control are
+  1, stroke_focus and stroke_emphasis 2, stroke_ring 3. §2/§4 draw every FRAME at 1.5 —
+  this row, the start screen's outlined pills, the connect object's two outer rings — so
+  the rung was added rather than the number repeated a fourth time. All six states below
+  read it, which is what keeps the geometry identical across them.
+-->
+<selector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:enterFadeDuration="@integer/motion_press_in"
+    android:exitFadeDuration="@integer/motion_press_out">
+
+    <!-- D-pad / TV focus: the bold accent ring, and no separator (the ring IS the edge). -->
+    <item android:state_focused="true">
+        <shape android:shape="rectangle">
+            <solid android:color="?attr/colorAccentFill" />
+            <corners android:radius="@dimen/radius_card" />
+            <stroke
+                android:width="@dimen/stroke_focus"
+                android:color="?attr/colorPrimary" />
+        </shape>
+    </item>
+
+    <!-- Selected AND held: the accent frame stays put, only the fill steps down. -->
+    <item
+        android:state_pressed="true"
+        android:state_selected="true">
+        <shape android:shape="rectangle">
+            <solid android:color="?attr/colorPressBg" />
+            <corners android:radius="@dimen/radius_card" />
+            <stroke
+                android:width="@dimen/stroke_frame"
+                android:color="?attr/colorPrimary" />
+        </shape>
+    </item>
+
+    <!-- Selected: accent frame + 12% accent fill, and no separator. -->
+    <item android:state_selected="true">
+        <shape android:shape="rectangle">
+            <solid android:color="?attr/colorAccentFill" />
+            <corners android:radius="@dimen/radius_card" />
+            <stroke
+                android:width="@dimen/stroke_frame"
+                android:color="?attr/colorPrimary" />
+        </shape>
+    </item>
+
+    <!-- Held, with a separator above it. -->
+    <item
+        android:state_activated="true"
+        android:state_pressed="true">
+        <layer-list>
+            <item>
+                <shape android:shape="rectangle">
+                    <solid android:color="?attr/colorPressBg" />
+                    <corners android:radius="@dimen/radius_card" />
+                    <stroke
+                        android:width="@dimen/stroke_frame"
+                        android:color="@android:color/transparent" />
+                </shape>
+            </item>
+            <item
+                android:gravity="top|fill_horizontal"
+                android:height="@dimen/stroke_hairline"
+                android:left="@dimen/space_12"
+                android:right="@dimen/space_12">
+                <shape android:shape="rectangle">
+                    <gradient
+                        android:angle="0"
+                        android:centerColor="?attr/colorOutlineVariant"
+                        android:endColor="@android:color/transparent"
+                        android:startColor="@android:color/transparent"
+                        android:type="linear" />
+                </shape>
+            </item>
+        </layer-list>
+    </item>
+
+    <!-- Held, first row: nothing above it to be separated from. -->
+    <item android:state_pressed="true">
+        <shape android:shape="rectangle">
+            <solid android:color="?attr/colorPressBg" />
+            <corners android:radius="@dimen/radius_card" />
+            <stroke
+                android:width="@dimen/stroke_frame"
+                android:color="@android:color/transparent" />
+        </shape>
+    </item>
+
+    <!-- At rest, with a separator above it: the ordinary row. -->
+    <item android:state_activated="true">
+        <layer-list>
+            <item>
+                <shape android:shape="rectangle">
+                    <solid android:color="@android:color/transparent" />
+                    <corners android:radius="@dimen/radius_card" />
+                    <stroke
+                        android:width="@dimen/stroke_frame"
+                        android:color="@android:color/transparent" />
+                </shape>
+            </item>
+            <item
+                android:gravity="top|fill_horizontal"
+                android:height="@dimen/stroke_hairline"
+                android:left="@dimen/space_12"
+                android:right="@dimen/space_12">
+                <shape android:shape="rectangle">
+                    <gradient
+                        android:angle="0"
+                        android:centerColor="?attr/colorOutlineVariant"
+                        android:endColor="@android:color/transparent"
+                        android:startColor="@android:color/transparent"
+                        android:type="linear" />
+                </shape>
+            </item>
+        </layer-list>
+    </item>
+
+    <!-- At rest, first row of the list: the same box, no separator. -->
+    <item>
+        <shape android:shape="rectangle">
+            <solid android:color="@android:color/transparent" />
+            <corners android:radius="@dimen/radius_card" />
+            <stroke
+                android:width="@dimen/stroke_frame"
+                android:color="@android:color/transparent" />
+        </shape>
+    </item>
+
+</selector>

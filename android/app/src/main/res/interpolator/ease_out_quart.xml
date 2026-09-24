@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- ease-out-quart: smooth deceleration, shallower than quint. cubic-bezier(0.25, 1, 0.5, 1).
+     Use for press feedback and small settles. -->
+<pathInterpolator xmlns:android="http://schemas.android.com/apk/res/android"
+    android:controlX1="0.25"
+    android:controlY1="1"
+    android:controlX2="0.5"
+    android:controlY2="1" />

@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- THE SCREEN-CHANGE CURVE. cubic-bezier(0.33, 0, 0.2, 1), design handoff
+     README §8 («Смена экрана 520–600 мс»).
+
+     A long ease-in-out: the outgoing screen has to LEAVE before the incoming
+     one commits, so unlike every other curve here this one starts slowly.
+     Used with @integer/motion_screen 560 for the whole-screen hand-off and
+     nothing smaller — a row, a chip or a sheet is not a screen change.
+
+     README §11 grabl 10: a screen change animates OPACITY and SCALE only.
+     Never a blur, which drops frames on mid-range hardware. -->
+<pathInterpolator xmlns:android="http://schemas.android.com/apk/res/android"
+    android:controlX1="0.33"
+    android:controlY1="0"
+    android:controlX2="0.2"
+    android:controlY2="1" />

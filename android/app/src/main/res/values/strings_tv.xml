@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Strings for Android TV support + QR Wi-Fi subscription transfer (module: tv).
+  Kept in a separate file to avoid merge collisions with concurrent UI work in strings.xml.
+-->
+<resources>
+    <!-- Shared -->
+    <string name="tv_pairing_qr_desc">QR-код сопряжения</string>
+
+    <!-- TV receive screen -->
+    <string name="tv_receive_title">Приём подписки</string>
+    <string name="tv_receive_instructions">На телефоне откройте departament, выберите подписку и отсканируйте этот код, чтобы отправить её на этот телевизор. Оба устройства должны быть в одной сети Wi-Fi.</string>
+    <string name="tv_receive_seconds_left">Ожидание телефона… %1$d с</string>
+    <string name="tv_receive_success">Подписка импортирована (%1$d).</string>
+    <string name="tv_receive_duplicate">Эта подписка уже добавлена на этом телевизоре.</string>
+    <string name="tv_receive_expired">Код истёк. Покажите новый код и отсканируйте снова.</string>
+    <string name="tv_receive_no_network">Нет подключения к сети. Подключите телевизор к той же сети Wi-Fi, что и телефон.</string>
+    <string name="tv_receive_failed">Что-то пошло не так. Повторите попытку.</string>
+    <string name="tv_receive_regenerate">Показать новый код</string>
+
+    <!-- Phone send screen -->
+    <string name="tv_send_title">Отправить на TV</string>
+    <string name="tv_send_instructions">Отсканируйте QR-код, показанный на телевизоре, затем выберите подписку для отправки. Оба устройства должны быть в одной сети Wi-Fi.</string>
+    <string name="tv_send_scan">Сканировать код телевизора</string>
+    <string name="tv_send_no_subs">Нет подписок для отправки. Сначала добавьте подписку.</string>
+    <string name="tv_send_pick_title">Выберите подписку для отправки</string>
+    <string name="tv_send_button">Отправить</string>
+    <string name="tv_send_scanning_invalid">Этот QR-код не является кодом телевизора departament.</string>
+    <string name="tv_send_sending">Отправка на телевизор…</string>
+    <string name="tv_send_success">Отправлено. Телевизор импортировал подписку.</string>
+    <string name="tv_send_duplicate">На телевизоре уже есть эта подписка.</string>
+    <string name="tv_send_unauthorized">Код истёк. Покажите новый код на телевизоре и повторите.</string>
+    <string name="tv_send_unreachable">Не удалось связаться с телевизором. Убедитесь, что оба устройства находятся в одной сети Wi-Fi без изоляции клиентов (гостевые сети часто блокируют это).</string>
+    <string name="tv_send_failed">Не удалось передать. Повторите попытку.</string>
+</resources>

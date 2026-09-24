@@ -1,0 +1,472 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  ============================================================================
+  A-13 - группа «Шифрование канала», общая у VMess, VLESS, Trojan и Shadowsocks.
+  ============================================================================
+
+  Четыре Spinner'а и семь голых EditText - на тех же лекалах, что группы «Сервер»
+  и «Транспорт»: подпись сверху, поле 56 радиусом 16, строка подсказки под ним, у
+  выбора значения - каретка и лист вариантов.
+
+  ЗАГОЛОВОК ГРУППЫ НЕ «БЕЗОПАСНОСТЬ»: это слово в форме уже занято - у VMess так
+  называется шифр, у VLESS рядом стоит «Шифрование». TLS и REALITY шифруют канал,
+  и группа названа тем, что делает.
+
+  ЧТО ВИДНО КОГДА - решает первое поле, и это состояние «частично» (15):
+      нет TLS   ничего ниже не показывается, потому что настраивать нечего
+      tls       SNI, отпечаток, ALPN, небезопасные, ECH, отпечаток сертификата
+      reality   SNI, отпечаток, открытый ключ, ShortID, SpiderX, mldsa65Verify
+-->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical">
+
+    <TextView
+        style="@style/SettingsSectionLabel"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="@string/srv_section_tls" />
+
+    <LinearLayout
+        android:id="@+id/lay_stream_security"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical">
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:labelFor="@id/et_stream_security"
+            android:paddingStart="@dimen/screen_gutter"
+            android:paddingEnd="@dimen/screen_gutter"
+            android:text="@string/server_lab_stream_security"
+            android:textAppearance="@style/TextAppearance.App.Title.Medium" />
+
+        <com.google.android.material.textfield.TextInputLayout
+            android:id="@+id/til_stream_security"
+            style="@style/Widget.Departament.TextField"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="@dimen/screen_gutter"
+            android:layout_marginTop="@dimen/space_8"
+            android:layout_marginEnd="@dimen/screen_gutter"
+            app:endIconContentDescription="@string/srv_pick_value"
+            app:endIconDrawable="@drawable/ic_arrow_drop_down"
+            app:endIconMode="custom">
+
+            <com.google.android.material.textfield.TextInputEditText
+                android:id="@+id/et_stream_security"
+                style="@style/Widget.Departament.TextField.EditText"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:inputType="none"
+                android:maxLines="1"
+                tools:ignore="TextFields" />
+        </com.google.android.material.textfield.TextInputLayout>
+    </LinearLayout>
+
+    <LinearLayout
+        android:id="@+id/lay_sni"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:visibility="gone"
+        tools:visibility="visible">
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/space_12"
+            android:labelFor="@id/et_sni"
+            android:paddingStart="@dimen/screen_gutter"
+            android:paddingEnd="@dimen/screen_gutter"
+            android:text="@string/server_lab_sni"
+            android:textAppearance="@style/TextAppearance.App.Title.Medium" />
+
+        <com.google.android.material.textfield.TextInputLayout
+            android:id="@+id/til_sni"
+            style="@style/Widget.Departament.TextField"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="@dimen/screen_gutter"
+            android:layout_marginTop="@dimen/space_8"
+            android:layout_marginEnd="@dimen/screen_gutter"
+            app:helperText="@string/srv_hint_optional">
+
+            <com.google.android.material.textfield.TextInputEditText
+                android:id="@+id/et_sni"
+                style="@style/Widget.Departament.TextField.EditText"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:imeOptions="actionNext"
+                android:inputType="textUri"
+                android:maxLines="1"
+                tools:ignore="TextFields" />
+        </com.google.android.material.textfield.TextInputLayout>
+    </LinearLayout>
+
+    <LinearLayout
+        android:id="@+id/lay_stream_fingerprint"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:visibility="gone"
+        tools:visibility="visible">
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/space_12"
+            android:labelFor="@id/et_stream_fingerprint"
+            android:paddingStart="@dimen/screen_gutter"
+            android:paddingEnd="@dimen/screen_gutter"
+            android:text="@string/server_lab_stream_fingerprint"
+            android:textAppearance="@style/TextAppearance.App.Title.Medium" />
+
+        <com.google.android.material.textfield.TextInputLayout
+            android:id="@+id/til_stream_fingerprint"
+            style="@style/Widget.Departament.TextField"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="@dimen/screen_gutter"
+            android:layout_marginTop="@dimen/space_8"
+            android:layout_marginEnd="@dimen/screen_gutter"
+            app:endIconContentDescription="@string/srv_pick_value"
+            app:endIconDrawable="@drawable/ic_arrow_drop_down"
+            app:endIconMode="custom">
+
+            <com.google.android.material.textfield.TextInputEditText
+                android:id="@+id/et_stream_fingerprint"
+                style="@style/Widget.Departament.TextField.EditText"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:inputType="none"
+                android:maxLines="1"
+                tools:ignore="TextFields" />
+        </com.google.android.material.textfield.TextInputLayout>
+    </LinearLayout>
+
+    <LinearLayout
+        android:id="@+id/lay_stream_alpn"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:visibility="gone"
+        tools:visibility="visible">
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/space_12"
+            android:labelFor="@id/et_stream_alpn"
+            android:paddingStart="@dimen/screen_gutter"
+            android:paddingEnd="@dimen/screen_gutter"
+            android:text="@string/server_lab_stream_alpn"
+            android:textAppearance="@style/TextAppearance.App.Title.Medium" />
+
+        <com.google.android.material.textfield.TextInputLayout
+            android:id="@+id/til_stream_alpn"
+            style="@style/Widget.Departament.TextField"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="@dimen/screen_gutter"
+            android:layout_marginTop="@dimen/space_8"
+            android:layout_marginEnd="@dimen/screen_gutter"
+            app:endIconContentDescription="@string/srv_pick_value"
+            app:endIconDrawable="@drawable/ic_arrow_drop_down"
+            app:endIconMode="custom">
+
+            <com.google.android.material.textfield.TextInputEditText
+                android:id="@+id/et_stream_alpn"
+                style="@style/Widget.Departament.TextField.EditText"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:inputType="none"
+                android:maxLines="1"
+                tools:ignore="TextFields" />
+        </com.google.android.material.textfield.TextInputLayout>
+    </LinearLayout>
+
+    <LinearLayout
+        android:id="@+id/lay_allow_insecure"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:visibility="gone"
+        tools:visibility="visible">
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/space_12"
+            android:labelFor="@id/et_allow_insecure"
+            android:paddingStart="@dimen/screen_gutter"
+            android:paddingEnd="@dimen/screen_gutter"
+            android:text="@string/server_lab_allow_insecure"
+            android:textAppearance="@style/TextAppearance.App.Title.Medium" />
+
+        <com.google.android.material.textfield.TextInputLayout
+            android:id="@+id/til_allow_insecure"
+            style="@style/Widget.Departament.TextField"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="@dimen/screen_gutter"
+            android:layout_marginTop="@dimen/space_8"
+            android:layout_marginEnd="@dimen/screen_gutter"
+            app:endIconContentDescription="@string/srv_pick_value"
+            app:endIconDrawable="@drawable/ic_arrow_drop_down"
+            app:endIconMode="custom">
+
+            <com.google.android.material.textfield.TextInputEditText
+                android:id="@+id/et_allow_insecure"
+                style="@style/Widget.Departament.TextField.EditText"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:inputType="none"
+                android:maxLines="1"
+                tools:ignore="TextFields" />
+        </com.google.android.material.textfield.TextInputLayout>
+    </LinearLayout>
+
+    <LinearLayout
+        android:id="@+id/lay_ech_config_list"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:visibility="gone"
+        tools:visibility="visible">
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/space_12"
+            android:labelFor="@id/et_ech_config_list"
+            android:paddingStart="@dimen/screen_gutter"
+            android:paddingEnd="@dimen/screen_gutter"
+            android:text="@string/server_lab_ech_config_list"
+            android:textAppearance="@style/TextAppearance.App.Title.Medium" />
+
+        <com.google.android.material.textfield.TextInputLayout
+            android:id="@+id/til_ech_config_list"
+            style="@style/Widget.Departament.TextField"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="@dimen/screen_gutter"
+            android:layout_marginTop="@dimen/space_8"
+            android:layout_marginEnd="@dimen/screen_gutter"
+            app:helperText="@string/srv_hint_optional">
+
+            <com.google.android.material.textfield.TextInputEditText
+                android:id="@+id/et_ech_config_list"
+                style="@style/Widget.Departament.TextField.EditText"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:imeOptions="actionNext"
+                android:inputType="text|textNoSuggestions"
+                android:maxLines="1"
+                tools:ignore="TextFields" />
+        </com.google.android.material.textfield.TextInputLayout>
+    </LinearLayout>
+
+    <LinearLayout
+        android:id="@+id/lay_pinned_ca256"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:visibility="gone"
+        tools:visibility="visible">
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/space_12"
+            android:labelFor="@id/et_pinned_ca256"
+            android:paddingStart="@dimen/screen_gutter"
+            android:paddingEnd="@dimen/screen_gutter"
+            android:text="@string/server_lab_pinned_ca256"
+            android:textAppearance="@style/TextAppearance.App.Title.Medium" />
+
+        <com.google.android.material.textfield.TextInputLayout
+            android:id="@+id/til_pinned_ca256"
+            style="@style/Widget.Departament.TextField"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="@dimen/screen_gutter"
+            android:layout_marginTop="@dimen/space_8"
+            android:layout_marginEnd="@dimen/screen_gutter"
+            app:helperText="@string/srv_hint_pinned_ca256">
+
+            <com.google.android.material.textfield.TextInputEditText
+                android:id="@+id/et_pinned_ca256"
+                style="@style/Widget.Departament.TextField.EditText"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:imeOptions="actionNext"
+                android:inputType="text|textNoSuggestions"
+                android:maxLines="1"
+                tools:ignore="TextFields" />
+        </com.google.android.material.textfield.TextInputLayout>
+    </LinearLayout>
+
+    <LinearLayout
+        android:id="@+id/lay_public_key"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:visibility="gone"
+        tools:visibility="visible">
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/space_12"
+            android:labelFor="@id/et_public_key"
+            android:paddingStart="@dimen/screen_gutter"
+            android:paddingEnd="@dimen/screen_gutter"
+            android:text="@string/server_lab_public_key"
+            android:textAppearance="@style/TextAppearance.App.Title.Medium" />
+
+        <com.google.android.material.textfield.TextInputLayout
+            android:id="@+id/til_public_key"
+            style="@style/Widget.Departament.TextField"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="@dimen/screen_gutter"
+            android:layout_marginTop="@dimen/space_8"
+            android:layout_marginEnd="@dimen/screen_gutter">
+
+            <com.google.android.material.textfield.TextInputEditText
+                android:id="@+id/et_public_key"
+                style="@style/Widget.Departament.TextField.EditText"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:imeOptions="actionNext"
+                android:inputType="text|textNoSuggestions"
+                android:maxLines="1"
+                tools:ignore="TextFields" />
+        </com.google.android.material.textfield.TextInputLayout>
+    </LinearLayout>
+
+    <LinearLayout
+        android:id="@+id/lay_short_id"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:visibility="gone"
+        tools:visibility="visible">
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/space_12"
+            android:labelFor="@id/et_short_id"
+            android:paddingStart="@dimen/screen_gutter"
+            android:paddingEnd="@dimen/screen_gutter"
+            android:text="@string/server_lab_short_id"
+            android:textAppearance="@style/TextAppearance.App.Title.Medium" />
+
+        <com.google.android.material.textfield.TextInputLayout
+            android:id="@+id/til_short_id"
+            style="@style/Widget.Departament.TextField"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="@dimen/screen_gutter"
+            android:layout_marginTop="@dimen/space_8"
+            android:layout_marginEnd="@dimen/screen_gutter"
+            app:helperText="@string/srv_hint_optional">
+
+            <com.google.android.material.textfield.TextInputEditText
+                android:id="@+id/et_short_id"
+                style="@style/Widget.Departament.TextField.EditText"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:imeOptions="actionNext"
+                android:inputType="text|textNoSuggestions"
+                android:maxLines="1"
+                tools:ignore="TextFields" />
+        </com.google.android.material.textfield.TextInputLayout>
+    </LinearLayout>
+
+    <LinearLayout
+        android:id="@+id/lay_spider_x"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:visibility="gone"
+        tools:visibility="visible">
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/space_12"
+            android:labelFor="@id/et_spider_x"
+            android:paddingStart="@dimen/screen_gutter"
+            android:paddingEnd="@dimen/screen_gutter"
+            android:text="@string/server_lab_spider_x"
+            android:textAppearance="@style/TextAppearance.App.Title.Medium" />
+
+        <com.google.android.material.textfield.TextInputLayout
+            android:id="@+id/til_spider_x"
+            style="@style/Widget.Departament.TextField"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="@dimen/screen_gutter"
+            android:layout_marginTop="@dimen/space_8"
+            android:layout_marginEnd="@dimen/screen_gutter"
+            app:helperText="@string/srv_hint_optional">
+
+            <com.google.android.material.textfield.TextInputEditText
+                android:id="@+id/et_spider_x"
+                style="@style/Widget.Departament.TextField.EditText"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:imeOptions="actionNext"
+                android:inputType="text|textNoSuggestions"
+                android:maxLines="1"
+                tools:ignore="TextFields" />
+        </com.google.android.material.textfield.TextInputLayout>
+    </LinearLayout>
+
+    <LinearLayout
+        android:id="@+id/lay_mldsa65_verify"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:visibility="gone"
+        tools:visibility="visible">
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/space_12"
+            android:labelFor="@id/et_mldsa65_verify"
+            android:paddingStart="@dimen/screen_gutter"
+            android:paddingEnd="@dimen/screen_gutter"
+            android:text="@string/server_lab_mldsa65_verify"
+            android:textAppearance="@style/TextAppearance.App.Title.Medium" />
+
+        <com.google.android.material.textfield.TextInputLayout
+            android:id="@+id/til_mldsa65_verify"
+            style="@style/Widget.Departament.TextField"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="@dimen/screen_gutter"
+            android:layout_marginTop="@dimen/space_8"
+            android:layout_marginEnd="@dimen/screen_gutter"
+            app:helperText="@string/srv_hint_optional">
+
+            <com.google.android.material.textfield.TextInputEditText
+                android:id="@+id/et_mldsa65_verify"
+                style="@style/Widget.Departament.TextField.EditText"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:imeOptions="actionNext"
+                android:inputType="text|textNoSuggestions"
+                android:maxLines="1"
+                tools:ignore="TextFields" />
+        </com.google.android.material.textfield.TextInputLayout>
+    </LinearLayout>
+</LinearLayout>

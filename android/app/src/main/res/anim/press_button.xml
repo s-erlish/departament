@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- THE PRESS LADDER, RUNG 2 — BUTTON, CHIP AND SELECT OPTION, scale 0.965
+     (handoff README §1).
+
+     Attach to: every @style/Widget.Departament.Button.* variant, a pressable
+     chip, a segment, and every option inside a select popup
+     (@layout/view_select_popup_item). A button is smaller than a card, so it
+     travels further to feel like the same push.
+
+     NO RIPPLE COMES WITH IT. §1: «Никакой подсветки вокруг кнопки и никакого
+     ripple» — the scale IS the feedback on a filled control, and where a
+     background step is also wanted (the Tertiary's quiet plate, a select
+     option) it comes from a ColorStateList with state_pressed, never from a
+     RippleDrawable. Every Departament button style therefore sets rippleColor
+     to transparent.
+
+     Clock: in @integer/motion_press_in 70ms on ease_press_in, out
+     @integer/motion_press_out 200ms on ease_press_out (≈2% overshoot).
+     Reduced motion collapses it to 0ms declaratively. -->
+<selector xmlns:android="http://schemas.android.com/apk/res/android">
+    <item android:state_pressed="true">
+        <set>
+            <objectAnimator
+                android:duration="@integer/motion_press_in"
+                android:interpolator="@interpolator/ease_press_in"
+                android:propertyName="scaleX"
+                android:valueTo="0.965"
+                android:valueType="floatType" />
+            <objectAnimator
+                android:duration="@integer/motion_press_in"
+                android:interpolator="@interpolator/ease_press_in"
+                android:propertyName="scaleY"
+                android:valueTo="0.965"
+                android:valueType="floatType" />
+        </set>
+    </item>
+    <item>
+        <set>
+            <objectAnimator
+                android:duration="@integer/motion_press_out"
+                android:interpolator="@interpolator/ease_press_out"
+                android:propertyName="scaleX"
+                android:valueTo="1.0"
+                android:valueType="floatType" />
+            <objectAnimator
+                android:duration="@integer/motion_press_out"
+                android:interpolator="@interpolator/ease_press_out"
+                android:propertyName="scaleY"
+                android:valueTo="1.0"
+                android:valueType="floatType" />
+        </set>
+    </item>
+</selector>

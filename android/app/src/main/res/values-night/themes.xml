@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Night theme — the DEFAULT column, the one the product is designed against.
+
+  This file is deliberately almost empty, and that is the design, not an
+  omission. Every colour AppThemeBase binds is a @color/… that already has a
+  values-night twin, so the night theme is produced by the resource qualifier
+  rather than by a second copy of the theme. A duplicated theme item here would
+  be a second place for a value to drift — exactly the failure mode
+  values-night/colors.xml opens with. Only genuinely night-specific items —
+  the polarity of the system-bar icons — belong in this file.
+
+  What the shared bindings resolve to in NIGHT (values-night/colors.xml):
+
+    colorPrimary            md_theme_primary        #4C8DFF   5.66:1 on surface
+    colorOnPrimary          md_theme_onPrimary      #00183A   5.51:1 on accent
+    colorError              md_theme_error          #F04452   fill / glyph only
+    colorSurface            md_theme_surface        #141619
+    colorOnSurface          md_theme_onSurface      #F2F4F8   16.46:1 on surface
+    colorOnSurfaceVariant   md_theme_onSurfaceVariant #9BA1AD  6.99:1 on surface
+    colorOutlineControl     md_theme_outlineControl #646C7C   3.43:1 on surface
+    colorOnSurfaceDim       md_theme_onSurfaceDim   #6E7480   3.86:1 on surface
+    warning                 warning                 #EAB308   9.45:1 on surface
+    warningText             warning_text            #EAB308   7.51:1 on its chip
+    warningContainer        warning_container       #32290C
+    colorSkeleton           skeleton                #20242B
+    pingGood                color_success_text      #22C55E   6.53:1 on its chip
+    pingBad                 color_destructive_text  #FF6069   6.15:1 on surface
+    iconTintBlue (R11)      md_theme_primary        #4C8DFF   unchanged by the
+                                                              R11 fix: this is
+                                                              what icon_blue was
+    iconTintRed  (R11)      md_theme_error          #F04452   likewise icon_red
+
+  The R11 repoint in values/themes.xml is therefore a LIGHT-ONLY correction:
+  dark is pixel-identical before and after, and light moves from the dark
+  accent (#4C8DFF, 2.98:1 on #F4F7FC) to its own (#1E5FC7, 5.56:1).
+
+  Component defaults, the shape lock and the new attribute bindings all live in
+  AppThemeBase and need no night restatement — they are styles and dimensions,
+  not colours, and they are identical in both themes by design (00-rules.md 3.2).
+-->
+<resources xmlns:tools="http://schemas.android.com/tools">
+
+    <!-- Night theme: inherit the shared AppThemeBase and only override night-specific items -->
+    <style name="AppThemeDayNight" parent="AppThemeBase">
+        <!-- Night mode specific overrides: light content on dark bars. -->
+        <item name="android:windowLightStatusBar">false</item>
+        <item name="android:windowLightNavigationBar" tools:targetApi="27">false</item>
+    </style>
+
+</resources>

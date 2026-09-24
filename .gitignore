@@ -405,3 +405,16 @@ FodyWeavers.xsd
 
 # Session scratchpad (internal reports/plans — never committed)
 scratchpad/
+
+# Android (android/): сборка, локальные настройки, ключ подписи и то, что сборка кладёт сама
+android/.gradle/
+android/build/
+android/app/build/
+android/local.properties
+android/keystore.properties
+android/keystore/
+android/libs/
+android/app/libs/
+*.apk
+*.aar
+*.jks

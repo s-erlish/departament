@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  THE BLUE GROUND, light theme. The page Главная stands on, and the one place the
+  brand's blue is allowed to be a field rather than a mark.
+
+  It reads as blue now. It did not before: the ramp was #FFFFFF -> #EEF3FB ->
+  #DFE6F1, three tones a hair apart on the blue axis, so the screen arrived as
+  white fading to grey — «синего фона нет на светлой и темной версии на главной».
+  (The dark twin in drawable-night/ was always navy at the centre; what hid THAT
+  was fragment_home.xml painting ?android:attr/colorBackground over both.)
+
+  Contrast, measured (WCAG 2.1) against the muted caption tone
+  md_theme_onSurfaceVariant #54607A, the lightest ink that sits directly on this
+  ground:  #FFFFFF 6.28:1 · #ECF2FE 5.59:1 · #D3E0F7 4.72:1.
+  The edge tone is the floor of this ramp — one step deeper into the blue drops
+  caption copy below 4.5:1, which is why it stops here.
+-->
+<shape xmlns:android="http://schemas.android.com/apk/res/android" android:shape="rectangle">
+    <gradient
+        android:type="radial"
+        android:gradientRadius="560dp"
+        android:centerX="0.5"
+        android:centerY="0.30"
+        android:startColor="#FFFFFF"
+        android:centerColor="#ECF2FE"
+        android:endColor="#D3E0F7" />
+</shape>

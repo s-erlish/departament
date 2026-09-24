@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Neutral chip fill for a plain TextView badge where a real Chip is overkill.
+  radius_chip 12. Prefer @style/Widget.Departament.Chip on a real
+  com.google.android.material.chip.Chip; this exists so the five TextViews wearing
+  shape drawables today have one legal shape to point at while they migrate.
+-->
+<shape xmlns:android="http://schemas.android.com/apk/res/android"
+    android:shape="rectangle">
+    <solid android:color="?attr/colorSurfaceContainerHighest" />
+    <corners android:radius="@dimen/radius_chip" />
+</shape>

@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  One action, SECONDARY tier: the realistic alternative, or an action with no
+  competitor on the screen. 22-components.md 2.1, 32-master-plan-android.md 8.5.
+
+  A NEUTRAL tonal fill, deliberately not a second accent-tinted one — a screen that
+  spends the accent budget twice reads as two primaries. This is the DEFAULT action
+  of an empty state (22-components.md 15): the empty state is not the screen's
+  primary action surface, so it only takes the Primary tier when the action it
+  offers genuinely is the screen's job.
+
+  Tier is a file because a Material style is bound at inflation; see
+  view_action_primary.xml for the reasoning.
+-->
+<com.google.android.material.button.MaterialButton
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/action_button"
+    style="@style/Widget.Departament.Button.Secondary"
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content"
+    tools:text="Добавить провайдера" />

@@ -1,0 +1,268 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:id="@+id/home_root"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@drawable/bg_home_gradient"
+    android:orientation="vertical">
+
+        <!-- No app bar: every tab draws its own 56dp header on the ground plane, so the shell has
+             nothing to put in one. The AppBarLayout that used to sit here was inflated, given the
+             status-bar inset and then set GONE on every single tab switch — a measure pass that
+             rendered nothing. Edge-to-edge: the gradient (home_root) draws behind the status bar and
+             each tab's content takes the top inset itself (setupEdgeToEdge). -->
+
+        <!-- Content + overlaid bottom nav: the nav floats over the content so the
+             server list scrolls UNDER a faint scrim rather than sitting on a solid bar. -->
+        <FrameLayout
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="1">
+
+            <FrameLayout
+                android:id="@+id/main_content"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent">
+
+            <!-- ==================== TAB HOST (fragment tabs) ==================== -->
+            <!-- The shell's fragment container: one fragment per bottom-nav destination, kept alive
+                 (hide/show, never replace) so scroll position and in-flight state survive a tab
+                 switch. It hosts ALL THREE tabs — Главная (HomeFragment), Аккаунт (AccountFragment)
+                 and Настройки (SettingsTabFragment); the shell itself holds only this container,
+                 the scrim and the bottom bar.
+                 Главная is attached at launch and the other two the first time their tab is
+                 opened (see MainActivity.syncTabFragments). -->
+            <androidx.fragment.app.FragmentContainerView
+                android:id="@+id/tab_host"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:visibility="gone" />
+
+            </FrameLayout>
+
+            <!-- Faint gradient scrim (transparent -> surface): the content fades out
+                 under the nav buttons so the bar reads as frameless, no solid fill.
+
+                 80dp, halved from 160 on the owner's report from the device: «серый фон
+                 от навигации нужно сделать меньше раза в 2 именно по размеру». At 160 it
+                 covered roughly a fifth of a phone screen, so the fade read as a grey band
+                 over the content rather than as the bar dissolving into it. The gradient
+                 itself is what the owner wants — only its extent was ever wrong.
+
+                 THIS 80 IS THE ZERO-INSET FIGURE AND NOTHING ELSE: 56dp of bar plus 24dp of
+                 headroom above the icons. The bar below grows UPWARD by the window's bottom
+                 inset (setupEdgeToEdge pads it so the icons clear the gesture pill), and a
+                 scrim that stayed 80 tall while the icons climbed 24-48dp left them standing
+                 above their own backdrop — the owner's second phone, the one with the gesture
+                 bar. So setupEdgeToEdge adds the same inset to this height, reading the number
+                 below as its baseline: the scrim is always bar + inset + headroom, and the
+                 phone with no gesture bar keeps precisely the 80 it has today.
+                 The DRAWABLE carries the fade at a constant 40dp so growing this height moves
+                 the ramp up instead of stretching it; see bg_bottom_nav_scrim.xml. -->
+            <View
+                android:id="@+id/bottom_nav_scrim"
+                android:layout_width="match_parent"
+                android:layout_height="80dp"
+                android:layout_gravity="bottom"
+                android:background="@drawable/bg_bottom_nav_scrim" />
+
+            <!-- Custom bottom bar (replaces Material BottomNavigationView, which reserved tall
+                 internal whitespace below the label and floated the items well above the edge).
+                 A plain weighted row of icon+label hugs the very bottom, and the WHOLE system inset
+                 is padded in at runtime (setupEdgeToEdge) so the buttons stand clear of the gesture
+                 pill or the 3-button strip rather than sharing that strip with them. The bar is
+                 wrap_content, so that padding grows it UPWARD: 56dp on a phone with no gesture bar,
+                 and 56 + the inset on a phone with one. Anything drawn behind these buttons has to
+                 follow that (see bottom_nav_scrim above) — that is the whole of the owner's «значки
+                 выпали выше из-за слайдера внизу экрана»: the buttons moved, the backdrop did not.
+                 (An earlier note here promised «a SMALL fixed bottom pad, a few dp» and the code
+                 never did that; the full inset is the Material rule and the one that keeps a 48dp
+                 touch target off the system strip.)
+                 The destination set is Главная · Аккаунт · Настройки, in that order — three items.
+                 Аккаунт used to require a LOGIN and deleted itself otherwise, which is the two-item
+                 bar the owner photographed after pasting a подписка from the clipboard; it now
+                 stands on a departament подписка as well, and signing in is something done INSIDE
+                 it. There is no Серверы item: the owner removed that destination on 2026-07-26
+                 (docs/design2026/11-app-structure.md 2.0) and none of its functions were moved
+                 elsewhere.
+
+                 THE BAR IS A FRAME AND NOT A ROW ANY MORE, and the reason is the indicator.
+                 Handoff README §4: «Полоска активной вкладки ОДНА на всю панель и переезжает —
+                 28x3dp, 280 мс ease-out-quart. Не три отдельные, которые гаснут и зажигаются.»
+                 A pill that lives inside its own tab column can only ever fade out over here and
+                 fade in over there; travelling needs one view whose x is free of the weighted row.
+                 So the row of destinations and the single indicator are siblings in this frame,
+                 and MainActivity.positionNavIndicator drives the indicator's translationX.
+
+                 The id `bottom_nav` is unchanged and still names the whole bar — MainActivity
+                 pads it with the system inset, shows/hides it, anchors snackbars to it and posts
+                 to it, and every one of those is a plain View call that a FrameLayout answers
+                 exactly as the LinearLayout did. -->
+            <FrameLayout
+                android:id="@+id/bottom_nav"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_gravity="bottom"
+                android:background="@android:color/transparent"
+                android:minHeight="56dp">
+
+                <!-- The three destinations. Equal weights, and each column hugs the bottom edge
+                     of the bar (§4: «вся группа прижата к нижнему краю, padding 6-9dp») rather
+                     than floating in the middle of it. -->
+                <LinearLayout
+                    android:id="@+id/nav_items"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="bottom"
+                    android:baselineAligned="false"
+                    android:orientation="horizontal">
+
+                    <LinearLayout
+                        android:id="@+id/nav_home"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:background="@null"
+                        android:clickable="true"
+                        android:focusable="true"
+                        android:gravity="center_horizontal|bottom"
+                        android:orientation="vertical"
+                        android:paddingTop="@dimen/space_6"
+                        android:paddingBottom="9dp"
+                        android:stateListAnimator="@anim/nav_press">
+
+                        <!-- 26dp, and that is a DELIBERATE DEPARTURE from §4's 23.
+                             23dp was ported correctly and the owner still read it as small on
+                             the device: «иконки у кнопок навигацией слишком маленькие». The
+                             prototype is a 360dp browser mock-up; a 412dp phone at 2.6x makes
+                             the same number a smaller share of the bar than §4 was drawn
+                             against. 26 is the largest that keeps the relationship the
+                             original 23 was chosen for — the glyph still sits INSIDE the 28dp
+                             indicator's width, so the mark never outgrows the bar under it —
+                             and the label goes 11 -> 12sp with it (@style/BottomNavLabel) so
+                             the stacked mark scales as one thing instead of growing a head.
+                             Everything else in §4 holds: label flush under the glyph, group
+                             hugged to the bottom edge, padding 6 / 9dp. -->
+                        <ImageView
+                            android:id="@+id/nav_home_icon"
+                            android:layout_width="26dp"
+                            android:layout_height="26dp"
+                            android:importantForAccessibility="no"
+                            app:srcCompat="@drawable/ic_nav_home"
+                            app:tint="?attr/colorOnSurfaceVariant" />
+
+                        <!-- Flush under the glyph (§4 «подпись вплотную, без зазора»): the
+                             -1dp pulls the 14sp line box's own leading back out, so the label
+                             sits on the icon rather than 3dp below it. -->
+                        <TextView
+                            android:id="@+id/nav_home_label"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="-1dp"
+                            android:text="@string/bottom_nav_home"
+                            android:textAppearance="@style/BottomNavLabel"
+                            android:textColor="?attr/colorOnSurfaceVariant" />
+
+                    </LinearLayout>
+
+                    <!-- 2nd item: the Account tab. It carried android:visibility="gone" and was
+                         switched on only after a LOGIN; MainActivity.updateAccountNav now
+                         shows it for a departament подписка too, so the user who pasted one
+                         has somewhere to sign in. Starting visible costs nothing — the gate
+                         runs in onResume, before the first frame — and it means the common
+                         case is not a bar that grows an item under the user's eyes.
+                         Still a weighted item: where the destination genuinely does not exist
+                         (no backend in the build, no session and no departament подписка) it
+                         goes GONE and the 2 remaining items take equal halves. The indicator
+                         follows the columns' measured geometry, so it re-centres itself when
+                         this one comes and goes — see MainActivity.positionNavIndicator. -->
+                    <LinearLayout
+                        android:id="@+id/nav_account"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:background="@null"
+                        android:clickable="true"
+                        android:focusable="true"
+                        android:gravity="center_horizontal|bottom"
+                        android:orientation="vertical"
+                        android:paddingTop="@dimen/space_6"
+                        android:paddingBottom="9dp"
+                        android:stateListAnimator="@anim/nav_press">
+
+                        <ImageView
+                            android:id="@+id/nav_account_icon"
+                            android:layout_width="26dp"
+                            android:layout_height="26dp"
+                            android:importantForAccessibility="no"
+                            app:srcCompat="@drawable/ic_nav_account"
+                            app:tint="?attr/colorOnSurfaceVariant" />
+
+                        <TextView
+                            android:id="@+id/nav_account_label"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="-1dp"
+                            android:text="@string/bottom_nav_account"
+                            android:textAppearance="@style/BottomNavLabel"
+                            android:textColor="?attr/colorOnSurfaceVariant" />
+
+                    </LinearLayout>
+
+                    <LinearLayout
+                        android:id="@+id/nav_settings"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:background="@null"
+                        android:clickable="true"
+                        android:focusable="true"
+                        android:gravity="center_horizontal|bottom"
+                        android:orientation="vertical"
+                        android:paddingTop="@dimen/space_6"
+                        android:paddingBottom="9dp"
+                        android:stateListAnimator="@anim/nav_press">
+
+                        <ImageView
+                            android:id="@+id/nav_settings_icon"
+                            android:layout_width="26dp"
+                            android:layout_height="26dp"
+                            android:importantForAccessibility="no"
+                            app:srcCompat="@drawable/ic_nav_settings"
+                            app:tint="?attr/colorOnSurfaceVariant" />
+
+                        <TextView
+                            android:id="@+id/nav_settings_label"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="-1dp"
+                            android:text="@string/bottom_nav_settings"
+                            android:textAppearance="@style/BottomNavLabel"
+                            android:textColor="?attr/colorOnSurfaceVariant" />
+
+                    </LinearLayout>
+
+                </LinearLayout>
+
+                <!-- THE ONE INDICATOR. 28x3dp, sitting 2dp off the bar's bottom edge, moved
+                     to the selected column by translationX over @integer/motion_nav_indicator
+                     (280ms) on ease_out_quart. It is a sibling of the destinations and never a
+                     child of one, which is the whole difference between travelling and
+                     blinking. Starts INVISIBLE: the first paint places it before showing it,
+                     so it can never flash at x=0 on the way to Главная. -->
+                <View
+                    android:id="@+id/nav_indicator"
+                    android:layout_width="28dp"
+                    android:layout_height="3dp"
+                    android:layout_gravity="bottom|start"
+                    android:layout_marginBottom="@dimen/space_2"
+                    android:background="@drawable/bg_nav_dot"
+                    android:importantForAccessibility="no"
+                    android:visibility="invisible" />
+
+            </FrameLayout>
+
+        </FrameLayout>
+
+</LinearLayout>

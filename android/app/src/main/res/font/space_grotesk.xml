@@ -1,0 +1,80 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Space Grotesk — THE BRAND / FIGURE FACE (00-rules.md 3.4 / 5.1, decision D-2).
+
+  Scope, exhaustively: the Display figure, the Chip label, the Numeric role, the
+  wordmark, units, currency and Latin technical tokens (VLESS, Reality, WS, TCP,
+  hosts, ports). NOTHING ELSE. Every Russian string is Golos Text (@font/golos_text).
+
+  WHY THE SCOPE IS A HARD RULE, MEASURED. The vendored binary maps 735 codepoints
+  and ZERO of them fall in U+0400-U+04FF. Not "few" — zero. So every Russian
+  string that has ever carried android:fontFamily="@font/space_grotesk" has been a
+  no-op that handed the glyphs to the platform fallback: Roboto on Android, some
+  other face on desktop — the same screen set in three faces on three operating
+  systems. That is the defect the two-face split exists to end, and it is why the
+  face is a property of the ramp style and never of a layout.
+  It DOES map: 0-9, the Latin alphabet, ₽ U+20BD, U+00A0 NBSP, U+2009 THIN SPACE
+  and U+2007 FIGURE SPACE — everything 10-design-system.md 2.10 needs for numerals.
+
+  WHAT THE BINARY CAN ACTUALLY DO (2.9.2's verification gate, settled by
+  inspecting the file rather than by screenshotting it). spacegrotesk.ttf is a
+  VARIABLE font: one axis, wght, min 300 / DEFAULT 300 / max 700, and
+  usWeightClass 300. It ships a single Light default instance and no static masters.
+
+  That measurement is the point of this file. Three <font> entries pointing at one
+  variable file only tell Android which entry to MATCH; they do not tell the
+  rasteriser which instance to CUT. So before this change every "700" brand run in
+  the product was drawn at Light 300 while every style file looked correct — the
+  exact failure 2.9.2 predicted. android:fontVariationSettings is what pins the
+  instance, so each entry now carries it.
+
+  API FLOOR, STATED HONESTLY. android:fontVariationSettings in a font resource is
+  API 28+; app:fontVariationSettings is read by androidx.core's
+  FontResourcesParserCompat and forwarded from API 26. On API 24-25 there is no
+  variation path at all, so those two levels render Space Grotesk at its 300
+  default and the Display/Chip weight difference is lost there. The fix is baked
+  static instances (SpaceGrotesk-Medium/Bold.ttf) vendored as the fallback family;
+  that is vendoring work, tracked as debt, and it changes nothing structural here —
+  the three entries would simply point at three files, the way @font/golos_text
+  already does.
+-->
+<font-family
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
+
+    <!-- 400 — the axis floor is 300, so 'wght' 400 is the lightest honest
+         instance this binary can cut. It exists so the family has a normal
+         weight; no ramp role asks Space Grotesk for 400. -->
+    <font
+        android:font="@font/spacegrotesk"
+        android:fontStyle="normal"
+        android:fontVariationSettings="'wght' 400"
+        android:fontWeight="400"
+        app:font="@font/spacegrotesk"
+        app:fontStyle="normal"
+        app:fontVariationSettings="'wght' 400"
+        app:fontWeight="400" />
+
+    <!-- 500 — Chip labels and the Numeric role (D-4). -->
+    <font
+        android:font="@font/spacegrotesk"
+        android:fontStyle="normal"
+        android:fontVariationSettings="'wght' 500"
+        android:fontWeight="500"
+        app:font="@font/spacegrotesk"
+        app:fontStyle="normal"
+        app:fontVariationSettings="'wght' 500"
+        app:fontWeight="500" />
+
+    <!-- 700 — the Display figure and the wordmark. -->
+    <font
+        android:font="@font/spacegrotesk"
+        android:fontStyle="normal"
+        android:fontVariationSettings="'wght' 700"
+        android:fontWeight="700"
+        app:font="@font/spacegrotesk"
+        app:fontStyle="normal"
+        app:fontVariationSettings="'wght' 700"
+        app:fontWeight="700" />
+
+</font-family>

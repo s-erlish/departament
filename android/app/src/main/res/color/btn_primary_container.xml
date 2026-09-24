@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Primary button container. R6: disabled is 0.38 on the WHOLE control, not on the
+  label alone, and a MaterialButton style cannot set a state-dependent
+  android:alpha — so the 0.38 lives in the ColorStateList of every tinted part
+  (backgroundTint, textColor, iconTint, strokeColor) instead. Set isEnabled=false
+  and the styles do the rest; no imperative alpha anywhere.
+-->
+<selector xmlns:android="http://schemas.android.com/apk/res/android">
+    <item
+        android:alpha="0.38"
+        android:color="?attr/colorPrimary"
+        android:state_enabled="false" />
+    <item android:color="?attr/colorPrimary" />
+</selector>

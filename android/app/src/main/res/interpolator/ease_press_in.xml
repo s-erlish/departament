@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- THE PRESS-IN CURVE. cubic-bezier(0.4, 0, 0.6, 1), design handoff README §1/§8.
+
+     Symmetric in and out, so the finger-down reads as a single quick settle
+     rather than a decelerating drift: over @integer/motion_press_in 70ms the
+     eye sees the object arrive, not travel. It is deliberately NOT
+     ease_out_quart — quart front-loads the movement, which at 70ms lands the
+     whole squeeze in the first two frames and reads as a jump.
+
+     Paired with @interpolator/ease_press_out on the way back. Every press in
+     the product uses this pair and no other: @anim/press_row 0.975,
+     @anim/press_button 0.965, @anim/press_icon 0.88, @anim/press_connect 0.97. -->
+<pathInterpolator xmlns:android="http://schemas.android.com/apk/res/android"
+    android:controlX1="0.4"
+    android:controlY1="0"
+    android:controlX2="0.6"
+    android:controlY2="1" />

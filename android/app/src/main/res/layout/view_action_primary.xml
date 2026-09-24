@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  One action, PRIMARY tier: the one thing the screen wants you to do.
+  22-components.md 2.1, 32-master-plan-android.md 8.5.
+
+  AT MOST ONE PER SCREEN, and never on the same screen as a full-strength connect
+  control (00-rules.md 3.6). The .Tall modifier is the screen's single full-width
+  CTA: 52 as a MINIMUM, never as a height, with the Material button's 6dp insets
+  zeroed by the style — that inset pair is why the app's declared-52dp CTAs draw at
+  40dp today.
+
+  This file exists because a Material style is bound at inflation: a caller cannot
+  change a button's tier with <include> or at runtime without hand-painting tokens.
+  So the tier is a file, and the ViewStub that hosts it picks the tier
+  (view_empty_state.xml, view_status_strip.xml). The label is the caller's and says
+  what happens: «Купить», «Добавить провайдера» — never «OK», never «Далее».
+-->
+<com.google.android.material.button.MaterialButton
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/action_button"
+    style="@style/Widget.Departament.Button.Primary.Tall"
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content"
+    tools:text="Купить" />

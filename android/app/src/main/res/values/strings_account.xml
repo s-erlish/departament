@@ -1,0 +1,217 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Hub -->
+    <string name="account_balance_inline">%1$s</string>
+    <string name="account_manage_title">Управление</string>
+    <string name="account_hub_devices">Устройства</string>
+    <string name="account_hub_devices_sub">Управление устройствами</string>
+    <string name="account_hub_buy">Купить подписку</string>
+    <string name="account_hub_buy_sub">Тарифы и продление</string>
+    <string name="account_hub_history">История платежей</string>
+    <string name="account_hub_history_sub">Все ваши операции</string>
+
+    <!-- Header / balance -->
+    <string name="account_top_up">Пополнить</string>
+    <!-- DEAD: no reference in any .kt/.xml (checked 2026-07-26). Delete with 24.2, do not translate. -->
+    <string name="account_referral_copied">Реферальный код скопирован</string>
+
+    <!-- Subscriptions -->
+    <string name="account_subs_header">Мои подписки</string>
+    <!-- «departament» is lower case in every string on both platforms — owner ruling B2. -->
+    <string name="account_no_subscription">Купите тариф, чтобы подключаться к серверам departament.</string>
+    <string name="account_empty_title">Подписки пока нет</string>
+    <string name="account_error_load_title">Не удалось загрузить данные</string>
+    <string name="account_retry">Повторить</string>
+    <!-- The SAME row when the live connected count is not known for this подписка.
+         GET /client/subscription/all does not carry one (SubscriptionDtos: «NOT present on
+         /all — always 0 from this endpoint»), and only the ACTIVE подписка has a
+         /client/devices call behind it, so every secondary card was printing the root's
+         figure as if it were its own. The allowance is real and stays; the usage is not
+         known and is not invented. -->
+    <string name="account_unlimited">∞</string>
+
+    <!-- The subscription card's own controls, brought across from the desktop's AccountView.
+         «Продлить» is shown on a perpetual подписка too — owner ruling, «она должна быть и при
+         бессрочной подписке». -->
+    <string name="account_sub_renew">Продлить</string>
+    <string name="account_sub_autorenew">Автопродление</string>
+    <string name="account_sub_autorenew_on">Автопродление включено</string>
+    <string name="account_sub_autorenew_next">Спишется %1$s · %2$s</string>
+    <string name="account_sub_autorenew_off">Автопродление выключено</string>
+    <string name="account_sub_autorenew_failed">Не удалось изменить автопродление</string>
+    <!-- The traffic meter on the subscription card. Unlimited plans state the figure used and
+         say so, because a bar with no ceiling encodes nothing. -->
+    <string name="account_meter_traffic_over">Лимит исчерпан</string>
+    <!-- The подписка carries no traffic payload — every secondary подписка, whose endpoint
+         does not return one. The meter STAYS and says so: a card with a hole where the
+         figure belongs is what reads as unfinished. -->
+    <string name="account_meter_traffic_none">Нет данных</string>
+
+    <!-- THE TRAFFIC RING's caption, under the 28sp figure in the middle of the disc
+         (handoff README §5.2: «в центре «2,0 ТБ» и «без ограничений»» / «"1,9 ТБ" и "из 5 ТБ"»).
+
+         Both are transcribed verbatim from the prototype, and neither duplicates the meter
+         strings above: those state a figure AND its ceiling in one line («1,9 ТБ из 5 ТБ»,
+         «1,9 ТБ · безлимит») because the meter is a bar with a label beside it. The ring
+         splits the two — the figure is the hero line, the ceiling is the caption under it —
+         so the ceiling has to be sayable on its own. Reusing the meter strings here would
+         print the figure twice inside a 172dp disc. -->
+    <string name="account_ring_unlimited">без ограничений</string>
+    <string name="account_ring_of">из %1$s</string>
+
+    <!-- «Способы входа»: what this account can be signed in with — Telegram and the site — and
+         each row names the account it is actually linked to rather than only the method.
+
+         THE TWO STATE LINES ARE SHARED BY BOTH ROWS. They are not Telegram's private copy: the
+         sentences are «Привязан · …» and «Не привязан», which say nothing about the method, and
+         both agree in gender with «Telegram» and with «Сайт» alike. A second pair spelling the
+         same two words would be a second name for one string, which this project does not do.
+         Their keys keep the older word because an id is not copy; see @string/auth_btn_email. -->
+    <string name="account_login_methods">Способы входа</string>
+    <string name="account_login_telegram">Telegram</string>
+    <string name="account_login_telegram_linked">Привязан · %1$s</string>
+    <string name="account_login_telegram_unlinked">Не привязан</string>
+    <!-- ТРЕТЬЕ СОСТОЯНИЕ СТРОКИ «ПОЧТА», и оно существует потому, что привязка адреса пароля НЕ
+         задаёт: `verify-link-email` на панели пишет только `email`. Аккаунт с адресом и без пароля
+         по этой почте не пускает, и до сих пор строка про это молчала — говорила «Привязан» и вела
+         в смену адреса, то есть предлагала чинить не то.
+
+         СОСТОЯНИЕ ВПЕРЕДИ АДРЕСА, как и у «Привязан · …». Строка в одну линию с многоточием: если
+         адрес длинный, обрезается он, а не новость. Тап ведёт в «Придумайте пароль» — тот же шаг,
+         что и сразу после привязки. -->
+    <string name="account_login_email_no_password">Нужен пароль для входа · %1$s</string>
+    <!-- «в аккаунте добавь кнопку где способы входа туда сайт, чтобы можно было привязать почту
+         с сайта». One word, and it is the SAME word the two sign-in surfaces use for this door, so
+         the row and the button are recognisably one thing.
+
+         IT WAS «Сайт», on the grounds that the e-mail is what the row REPORTS while the site is the
+         way in. The way in moved: registration and sign-in both happen in the app now, the door
+         says «Войти по почте», and a row still called «Сайт» would send the user looking for a
+         browser that is no longer part of it.
+
+         И СТРОКА НАКОНЕЦ ЧТО-ТО ДЕЛАЕТ. Она вела на экран входа, который для вошедшего человека
+         закрывается сам, — то есть для того единственного, кто по ней нажимает (вошёл через
+         Telegram, хочет добавить адрес), не делала ничего. Теперь она открывает «Привязку почты»:
+         одно поле, письмо со ссылкой, ожидание. Когда адрес есть, строка его называет и никуда не
+         ведёт — смены адреса в приложении нет. -->
+    <string name="account_login_site">Почта</string>
+
+    <!-- Payments history -->
+    <string name="account_payment_pending">Платёж обрабатывается…</string>
+
+    <!-- The healthy state's whole sentence, and it is the DESIGN'S sentence, word for word:
+         handoff §5.3 writes «Действует до 04.06.2099» under the tariff name. It replaces
+         «Активна до 4 июня 2099» in that one branch only — the urgent branches keep the split
+         label/figure silhouette, because the design draws no urgent state to copy from and the
+         colour that rides on the figure is the tab's only expiry warning. -->
+    <string name="account_time_valid_until">Действует до %1$s</string>
+    <string name="account_time_left">Осталось</string>
+    <string name="account_time_today">Истекает</string>
+    <string name="account_time_expired">Истекла</string>
+    <string name="account_time_detail_today">Сегодня последний день</string>
+    <!-- «Осталось 24 дня» — the figure and its plural form are formatted separately. -->
+    <string name="account_time_detail_left">Осталось %1$d %2$s</string>
+    <string name="account_time_detail_until">Активна до %1$s</string>
+    <string name="account_time_perpetual">Бессрочная подписка</string>
+    <string name="account_time_perpetual_sub">Срок не ограничен</string>
+    <string name="account_time_unknown">Срок неизвестен</string>
+    <string name="account_time_unknown_sub">Обновите страницу или проверьте позже</string>
+    <!-- «3 августа» -->
+    <string name="account_date_long">%1$d %2$s</string>
+    <!-- «августа 2027» — the year appears only when it is not the current one. -->
+    <string name="account_month_year">%1$s %2$d</string>
+
+    <!-- Russian day forms, selected in CODE (AccountFragment.dayWord) and deliberately not a
+         <plurals> set.
+
+         This whole file is the Russian UI and lives in the default folder, but the app follows the
+         SYSTEM locale until the user picks one (SettingsManager.getLocale → Language.AUTO), and
+         getQuantityString chooses its form from the CONFIGURATION locale rather than from the
+         folder the words live in. On an English-locale phone that applies English rules to Russian
+         words: only «one» and «other» exist there, so 5, 6 and 7 all resolved to «дня» — «Осталось
+         5 дня» — across most of the 1-7 day window this hero exists to serve, and 21 read
+         «Осталось 21 дня». 23-account-rework.md 4.4 gives the selector; it is the same rule the
+         desktop's Plural.cs runs, so both clients say the same word for the same number.
+
+         Order is fixed and the code indexes it: ONE, FEW, MANY. -->
+    <string-array name="account_day_forms">
+        <item>день</item>
+        <item>дня</item>
+        <item>дней</item>
+    </string-array>
+
+    <!-- Genitive months: they are only ever read after a day figure («3 августа»). -->
+    <string-array name="account_months_genitive">
+        <item>января</item>
+        <item>февраля</item>
+        <item>марта</item>
+        <item>апреля</item>
+        <item>мая</item>
+        <item>июня</item>
+        <item>июля</item>
+        <item>августа</item>
+        <item>сентября</item>
+        <item>октября</item>
+        <item>ноября</item>
+        <item>декабря</item>
+    </string-array>
+
+    <!-- Top-up dialog -->
+    <string name="account_top_up_title">Сумма пополнения</string>
+    <string name="account_top_up_hint">Введите сумму</string>
+    <string name="account_top_up_invalid">Введите корректную сумму</string>
+    <string name="account_top_up_success">Баланс пополнён</string>
+    <!-- Балансовый платёж принят, но ещё не проведён: банк/провайдер отвечает позже. -->
+    <string name="account_pay_pending">Платёж принят, идёт обработка. Баланс обновится, когда придёт ответ.</string>
+
+    <!-- Payment statuses -->
+    <string name="account_status_paid">Оплачено</string>
+    <string name="account_status_pending">В обработке</string>
+    <string name="account_status_failed">Ошибка</string>
+    <string name="account_status_canceled">Отменён</string>
+
+    <!-- Errors -->
+    <string name="account_error_service_unavailable">Сервис временно недоступен. Повторите попытку позже.</string>
+    <string name="account_error_network">Нет подключения к интернету. Проверьте сеть и повторите.</string>
+    <string name="account_error_unauthorized">Сессия истекла. Войдите снова, чтобы продолжить.</string>
+    <string name="account_error_rate_limited">Слишком много запросов. Подождите минуту и повторите.</string>
+    <string name="account_error_timeout">Сервер не ответил вовремя. Повторите попытку.</string>
+    <string name="account_error_generic">Что-то пошло не так. Повторите попытку.</string>
+    <string name="account_checkout_no_browser">Не удалось открыть страницу оплаты. Попробуйте другой способ оплаты.</string>
+
+    <!-- The label a money button wears while its charge is in flight. One control, one word,
+         both billing surfaces — a control that is working says so, and stops taking taps (D10). -->
+    <string name="account_pay_in_progress">Оплата…</string>
+
+    <string name="account_payment_error_title">Ошибка оплаты</string>
+    <string name="account_payment_error_body">Платёж не прошёл: %2$s\n\nПопробуйте другой способ оплаты. Код: %1$s</string>
+    <string name="account_payment_error_body_nodetail">Платёж не прошёл. Попробуйте другой способ оплаты.\n\nКод: %1$s</string>
+
+    <!-- Sign out. Placement, copy and component per 23-account-rework.md 2 / 6.6 / 6.8 and
+         15-account-tab.md 1286-1288: the last group on the tab, a destructive row with no value
+         and no chevron, opening a themed confirm dialog whose primary action is the verb «Выйти»
+         (never «OK», never «Да»/«Нет»; 00-rules.md 7.5 and the ThemeOverlay.Departament.Dialog
+         comment in styles.xml).
+
+         The group is «Аккаунт и вход», not «Вход»: a header meaning "sign IN" over a row that
+         signs OUT is the contradiction 23-account-rework.md 6.6 calls out by name. It is also not
+         «Аккаунт» on its own, which would just restate the tab's own nav label.
+
+         Two bodies because the tab has two truthful shapes here (00-rules.md 15): signing out
+         drops a live tunnel, and saying so when there is no tunnel would be noise. -->
+    <string name="account_row_logout">Выйти</string>
+    <string name="account_logout_title">Выйти из аккаунта?</string>
+    <string name="account_logout_body">Подписка останется активной. Серверы подписки исчезнут из приложения. Чтобы вернуться, войдите снова.</string>
+    <string name="account_logout_body_connected">Подписка останется активной. Активное подключение прервётся, серверы подписки исчезнут из приложения. Чтобы вернуться, войдите снова.</string>
+    <string name="account_logout_cancel">Отмена</string>
+    <!-- R8's loading contentDescription: "<label>, загрузка" (styles.xml, inline spinner). -->
+    <string name="account_logout_progress">Выйти, загрузка</string>
+    <string name="account_logout_failed">Не удалось выйти. Повторите.</string>
+
+    <!-- Avatar -->
+    <string name="account_change_avatar">Сменить фото</string>
+    <string name="account_avatar_gallery">Выбрать из галереи</string>
+    <string name="account_avatar_remove">Убрать фото</string>
+    <string name="account_avatar_updated">Аватар обновлён</string>
+    <string name="account_avatar_error">Не удалось загрузить фото. Выберите другое изображение.</string>
+</resources>

@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- THE PRESS LADDER, RUNG 4 — THE CONNECT BUTTON, scale 0.97 (handoff README §1).
+
+     ONE consumer: the connect object's frame on Главная. It gets its own rung
+     because it is neither a row nor a button — 224dp of touch target wrapped
+     around a 176dp disc, the single most-pressed control in the product, and
+     the one the owner has commented on most.
+
+     It is the OUTER layer of a three-layer press and does not travel alone:
+     @anim/press_dip takes the disc and each shield a further 0.97 inside it, so
+     the glyph sinks INTO the disc instead of riding along with it, and
+     @anim/press_scrim rides a black scrim to 12% underneath. All three run on
+     the same 70/200 clock as everything else, so the layers cannot drift.
+
+     NO RIPPLE and NO BLOOM on press — §1 is explicit that the object is pushed
+     in, not lit up. The bloom belongs to the connected STATE, not to the touch.
+
+     Clock: in @integer/motion_press_in 70ms on ease_press_in, out
+     @integer/motion_press_out 200ms on ease_press_out. -->
+<selector xmlns:android="http://schemas.android.com/apk/res/android">
+    <item android:state_pressed="true">
+        <set>
+            <objectAnimator
+                android:duration="@integer/motion_press_in"
+                android:interpolator="@interpolator/ease_press_in"
+                android:propertyName="scaleX"
+                android:valueTo="0.97"
+                android:valueType="floatType" />
+            <objectAnimator
+                android:duration="@integer/motion_press_in"
+                android:interpolator="@interpolator/ease_press_in"
+                android:propertyName="scaleY"
+                android:valueTo="0.97"
+                android:valueType="floatType" />
+        </set>
+    </item>
+    <item>
+        <set>
+            <objectAnimator
+                android:duration="@integer/motion_press_out"
+                android:interpolator="@interpolator/ease_press_out"
+                android:propertyName="scaleX"
+                android:valueTo="1.0"
+                android:valueType="floatType" />
+            <objectAnimator
+                android:duration="@integer/motion_press_out"
+                android:interpolator="@interpolator/ease_press_out"
+                android:propertyName="scaleY"
+                android:valueTo="1.0"
+                android:valueType="floatType" />
+        </set>
+    </item>
+</selector>

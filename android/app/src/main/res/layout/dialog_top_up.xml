@@ -1,0 +1,110 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  «Пополнить» — the amount, and its confirm.
+
+  REACHED FROM TWO PLACES AND IT IS ONE DIALOG: AccountFragment.showTopUpDialog is
+  called by the «Пополнить» button under the ring and by the balance chip in the
+  profile row, so this layout is what both of them open. There is no second copy to
+  drift out of step with.
+
+  WHY IT WAS «слишком толсто». Widget.Departament.TextField is the app's FILLED
+  field — boxBackgroundColor colorSurfaceContainerHighest — and it carries
+  errorEnabled, which reserves a caption line under the box whether or not there is
+  ever an error to put in it. A filled 56dp slab plus a reserved error line, inside a
+  24dp-padded dialog, was the heaviest object on a screen that asks for one number.
+  The mass came from those three things and not from the height, which is the touch
+  floor and stays.
+
+  WHAT IT IS NOW, in the account's own language: a CONTOUR, no fill, radius_control
+  16, stroke_frame 1.5dp — the same 1.5 the two buttons on the tab draw and the same
+  1.5 «Оплатить» draws — and no reserved error line. The typography is the ramp's:
+  the amount is TextAppearance.App.Numeric.Money, which is the role every ₽ figure
+  in the product already takes (Space Grotesk, tabular figures), instead of the
+  16sp hardcoded on the shared EditText style.
+
+  Colours are attributes only: ?attr/colorOnSurface for the value,
+  ?attr/colorOnSurfaceVariant for the placeholder, @color/field_stroke_selector for
+  the boundary (accent on focus, colorOutlineControl at rest — the 3:1 component
+  boundary, not the hairline). ThemeOverlay.Mono can reach all of them.
+
+  THE CONFIRM IS IN THE DIALOG, not in the AlertDialog's button bar, and it is the
+  account's ONE button shape: 48dp, radius_button 24, accent contour, no fill —
+  «Пополнить» on the tab, «Оплатить» on the buy screen and this are now one control
+  drawn three times. «Отмена» is the same shape with the quiet label, so the pair
+  reads like §5's «Пополнить»/«Продлить» row rather than like a system dialog.
+
+  The dialog's own corner stays @drawable/bg_dialog's 20dp: that is the app-wide
+  dialog surface, shared by every AlertDialog in the product, and giving this one
+  screen its own radius would be the inconsistency the request is about.
+-->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:paddingHorizontal="@dimen/screen_gutter"
+    android:paddingTop="@dimen/space_8"
+    android:paddingBottom="@dimen/space_4">
+
+    <com.google.android.material.textfield.TextInputLayout
+        android:id="@+id/til_top_up"
+        style="@style/Widget.Departament.TextField"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        app:boxBackgroundColor="@android:color/transparent"
+        app:boxStrokeWidth="@dimen/stroke_frame"
+        app:errorEnabled="false">
+
+        <com.google.android.material.textfield.TextInputEditText
+            android:id="@+id/et_top_up"
+            style="@style/Widget.Departament.TextField.EditText"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:hint="@string/account_top_up_hint"
+            android:imeOptions="actionDone"
+            android:inputType="numberDecimal"
+            android:maxLines="1"
+            android:textAppearance="@style/TextAppearance.App.Numeric.Money"
+            android:textColor="?attr/colorOnSurface" />
+    </com.google.android.material.textfield.TextInputLayout>
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="@dimen/space_16"
+        android:baselineAligned="false"
+        android:orientation="horizontal">
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btn_top_up_cancel"
+            style="@style/Widget.Departament.Button.Tertiary"
+            android:layout_width="0dp"
+            android:layout_height="@dimen/btn_height"
+            android:layout_weight="1"
+            android:minWidth="0dp"
+            android:paddingStart="@dimen/space_8"
+            android:paddingEnd="@dimen/space_8"
+            android:text="@android:string/cancel"
+            android:textAppearance="@style/TextAppearance.App.Button"
+            android:textColor="?attr/colorOnSurfaceVariant"
+            app:cornerRadius="@dimen/radius_button"
+            app:strokeColor="?attr/colorOutlineControl"
+            app:strokeWidth="@dimen/stroke_frame" />
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btn_top_up_confirm"
+            style="@style/Widget.Departament.Button.Tertiary"
+            android:layout_width="0dp"
+            android:layout_height="@dimen/btn_height"
+            android:layout_marginStart="@dimen/space_8"
+            android:layout_weight="1"
+            android:minWidth="0dp"
+            android:paddingStart="@dimen/space_8"
+            android:paddingEnd="@dimen/space_8"
+            android:text="@string/account_top_up"
+            android:textAppearance="@style/TextAppearance.App.Button"
+            app:cornerRadius="@dimen/radius_button"
+            app:strokeColor="?attr/colorPrimary"
+            app:strokeWidth="@dimen/stroke_frame" />
+    </LinearLayout>
+</LinearLayout>

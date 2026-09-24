@@ -1,0 +1,321 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  ============================================================================
+  A-21  settings/routing/rule/{id} - Правило.  H3 · R4 (form).
+  24-tab-conformance.md A-21, 22-components.md 4, 00-rules.md 4.2.
+  ============================================================================
+
+  Replaces seven bare `EditText`s with no container, no label style, no helper slot
+  and no error slot; a `SwitchCompat` with its label glued to it as `android:text`;
+  and two `ImageButton`s absolutely positioned over the end of a field in a
+  `RelativeLayout`.
+
+  R4, and every block is the same shape, which is the whole point of a form:
+
+      label   Title.Medium 16/500
+      8
+      field   56 minimum, radius 16, on colorSurfaceContainerHighest
+      helper  Caption, RESERVED even when empty so the form never jumps when an
+              error appears (errorEnabled on @style/Widget.Departament.TextField)
+
+  Two fields carry an end icon instead of a floating ImageButton: «Приложения» opens
+  the app picker, «Исходящее соединение» opens the list of known outbound tags. Both
+  stay free-text - the sheet FILLS the field, it does not replace typing, because a
+  user may route to a server whose name we cannot enumerate.
+
+  «Правило включено» is new here. It exists on RulesetItem and the list row used to
+  own it; §4.5 allows a row one trailing element, so the switch moved to the form
+  where A-21 puts it, together with «Защитить от перезаписи» and «Удалить правило».
+  Nothing about the rule is unreachable.
+-->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="?android:attr/colorBackground"
+    android:fitsSystemWindows="true"
+    android:orientation="vertical"
+    tools:context=".ui.RoutingEditActivity">
+
+    <!-- §7's lekalo: back 44dp, then the title at 24sp/700 UNDER it. The ids are
+         view_toolbar's, so ToolbarBinder.bind/attachTo below need no change. -->
+    <include
+        android:id="@+id/toolbar"
+        layout="@layout/view_sub_header" />
+
+    <androidx.core.widget.NestedScrollView
+        android:id="@+id/main_content"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:clipToPadding="false"
+        android:paddingBottom="@dimen/space_32"
+        android:scrollbars="none">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical">
+
+            <!-- ================================================ Название -->
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/space_24"
+                android:paddingStart="@dimen/screen_gutter"
+                android:paddingEnd="@dimen/screen_gutter"
+                android:text="@string/routing_ed_name"
+                android:textAppearance="@style/TextAppearance.App.Title.Medium" />
+
+            <com.google.android.material.textfield.TextInputLayout
+                android:id="@+id/til_remarks"
+                style="@style/Widget.Departament.TextField"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="@dimen/screen_gutter"
+                android:layout_marginTop="@dimen/space_8"
+                android:layout_marginEnd="@dimen/screen_gutter">
+
+                <com.google.android.material.textfield.TextInputEditText
+                    android:id="@+id/et_remarks"
+                    style="@style/Widget.Departament.TextField.EditText"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:hint="@string/routing_ed_name_hint"
+                    android:imeOptions="actionNext"
+                    android:inputType="text"
+                    android:maxLines="1" />
+            </com.google.android.material.textfield.TextInputLayout>
+
+            <include
+                android:id="@+id/row_enabled"
+                layout="@layout/view_row" />
+
+            <include
+                android:id="@+id/row_locked"
+                layout="@layout/view_row" />
+
+            <!-- ==================================== Что попадает под правило -->
+            <TextView
+                style="@style/SettingsSectionLabel"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="@string/routing_ed_section_match" />
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:paddingStart="@dimen/screen_gutter"
+                android:paddingEnd="@dimen/screen_gutter"
+                android:text="@string/routing_ed_domain"
+                android:textAppearance="@style/TextAppearance.App.Title.Medium" />
+
+            <com.google.android.material.textfield.TextInputLayout
+                style="@style/Widget.Departament.TextField"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="@dimen/screen_gutter"
+                android:layout_marginTop="@dimen/space_8"
+                android:layout_marginEnd="@dimen/screen_gutter"
+                app:helperText="@string/routing_ed_list_hint">
+
+                <com.google.android.material.textfield.TextInputEditText
+                    android:id="@+id/et_domain"
+                    style="@style/Widget.Departament.TextField.EditText"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:gravity="top|start"
+                    android:inputType="textMultiLine"
+                    android:maxLines="6" />
+            </com.google.android.material.textfield.TextInputLayout>
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/space_16"
+                android:paddingStart="@dimen/screen_gutter"
+                android:paddingEnd="@dimen/screen_gutter"
+                android:text="@string/routing_ed_ip"
+                android:textAppearance="@style/TextAppearance.App.Title.Medium" />
+
+            <com.google.android.material.textfield.TextInputLayout
+                style="@style/Widget.Departament.TextField"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="@dimen/screen_gutter"
+                android:layout_marginTop="@dimen/space_8"
+                android:layout_marginEnd="@dimen/screen_gutter"
+                app:helperText="@string/routing_ed_list_hint">
+
+                <com.google.android.material.textfield.TextInputEditText
+                    android:id="@+id/et_ip"
+                    style="@style/Widget.Departament.TextField.EditText"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:gravity="top|start"
+                    android:inputType="textMultiLine"
+                    android:maxLines="6" />
+            </com.google.android.material.textfield.TextInputLayout>
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/space_16"
+                android:paddingStart="@dimen/screen_gutter"
+                android:paddingEnd="@dimen/screen_gutter"
+                android:text="@string/routing_ed_process"
+                android:textAppearance="@style/TextAppearance.App.Title.Medium" />
+
+            <com.google.android.material.textfield.TextInputLayout
+                android:id="@+id/til_process"
+                style="@style/Widget.Departament.TextField"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="@dimen/screen_gutter"
+                android:layout_marginTop="@dimen/space_8"
+                android:layout_marginEnd="@dimen/screen_gutter"
+                app:endIconContentDescription="@string/routing_ed_process_pick"
+                app:endIconDrawable="@drawable/ic_per_apps_24dp"
+                app:endIconMode="custom"
+                app:helperText="@string/routing_ed_list_hint">
+
+                <com.google.android.material.textfield.TextInputEditText
+                    android:id="@+id/et_process"
+                    style="@style/Widget.Departament.TextField.EditText"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:gravity="top|start"
+                    android:inputType="textMultiLine"
+                    android:maxLines="6" />
+            </com.google.android.material.textfield.TextInputLayout>
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/space_16"
+                android:paddingStart="@dimen/screen_gutter"
+                android:paddingEnd="@dimen/screen_gutter"
+                android:text="@string/routing_ed_port"
+                android:textAppearance="@style/TextAppearance.App.Title.Medium" />
+
+            <com.google.android.material.textfield.TextInputLayout
+                style="@style/Widget.Departament.TextField"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="@dimen/screen_gutter"
+                android:layout_marginTop="@dimen/space_8"
+                android:layout_marginEnd="@dimen/screen_gutter"
+                app:helperText="@string/routing_ed_port_hint">
+
+                <com.google.android.material.textfield.TextInputEditText
+                    android:id="@+id/et_port"
+                    style="@style/Widget.Departament.TextField.EditText"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:imeOptions="actionNext"
+                    android:inputType="text"
+                    android:maxLines="1" />
+            </com.google.android.material.textfield.TextInputLayout>
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/space_16"
+                android:paddingStart="@dimen/screen_gutter"
+                android:paddingEnd="@dimen/screen_gutter"
+                android:text="@string/routing_ed_protocol"
+                android:textAppearance="@style/TextAppearance.App.Title.Medium" />
+
+            <com.google.android.material.textfield.TextInputLayout
+                style="@style/Widget.Departament.TextField"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="@dimen/screen_gutter"
+                android:layout_marginTop="@dimen/space_8"
+                android:layout_marginEnd="@dimen/screen_gutter"
+                app:helperText="@string/routing_ed_protocol_hint">
+
+                <com.google.android.material.textfield.TextInputEditText
+                    android:id="@+id/et_protocol"
+                    style="@style/Widget.Departament.TextField.EditText"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:imeOptions="actionNext"
+                    android:inputType="text"
+                    android:maxLines="1" />
+            </com.google.android.material.textfield.TextInputLayout>
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/space_16"
+                android:paddingStart="@dimen/screen_gutter"
+                android:paddingEnd="@dimen/screen_gutter"
+                android:text="@string/routing_ed_network"
+                android:textAppearance="@style/TextAppearance.App.Title.Medium" />
+
+            <com.google.android.material.textfield.TextInputLayout
+                style="@style/Widget.Departament.TextField"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="@dimen/screen_gutter"
+                android:layout_marginTop="@dimen/space_8"
+                android:layout_marginEnd="@dimen/screen_gutter"
+                app:helperText="@string/routing_ed_network_hint">
+
+                <com.google.android.material.textfield.TextInputEditText
+                    android:id="@+id/et_network"
+                    style="@style/Widget.Departament.TextField.EditText"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:imeOptions="actionNext"
+                    android:inputType="text"
+                    android:maxLines="1" />
+            </com.google.android.material.textfield.TextInputLayout>
+
+            <!-- ========================================== Куда направлять -->
+            <TextView
+                style="@style/SettingsSectionLabel"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="@string/routing_ed_section_route" />
+
+            <com.google.android.material.textfield.TextInputLayout
+                android:id="@+id/til_outbound_tag"
+                style="@style/Widget.Departament.TextField"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="@dimen/screen_gutter"
+                android:layout_marginEnd="@dimen/screen_gutter"
+                app:endIconContentDescription="@string/routing_ed_outbound_pick"
+                app:endIconDrawable="@drawable/ic_arrow_drop_down"
+                app:endIconMode="custom">
+
+                <com.google.android.material.textfield.TextInputEditText
+                    android:id="@+id/et_outbound_tag"
+                    style="@style/Widget.Departament.TextField.EditText"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:hint="@string/routing_settings_outbound_tag_hint"
+                    android:imeOptions="actionDone"
+                    android:inputType="text"
+                    android:maxLines="1" />
+            </com.google.android.material.textfield.TextInputLayout>
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btn_save"
+                style="@style/Widget.Departament.Button.Primary.Tall"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="@dimen/screen_gutter"
+                android:layout_marginTop="@dimen/space_24"
+                android:layout_marginEnd="@dimen/screen_gutter"
+                android:text="@string/editor_save" />
+
+            <include
+                android:id="@+id/row_delete"
+                layout="@layout/view_row" />
+        </LinearLayout>
+    </androidx.core.widget.NestedScrollView>
+</LinearLayout>

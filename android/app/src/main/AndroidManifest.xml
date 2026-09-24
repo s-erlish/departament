@@ -1,0 +1,424 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    tools:ignore="MissingLeanbackLauncher">
+
+    <supports-screens
+        android:anyDensity="true"
+        android:largeScreens="true"
+        android:normalScreens="true"
+        android:smallScreens="true"
+        android:xlargeScreens="true" />
+
+    <uses-feature
+        android:name="android.hardware.camera"
+        android:required="false" />
+    <uses-feature
+        android:name="android.hardware.camera.autofocus"
+        android:required="false" />
+    <uses-feature
+        android:name="android.software.leanback"
+        android:required="false" />
+    <uses-feature
+        android:name="android.hardware.touchscreen"
+        android:required="false" />
+
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+    <uses-permission android:name="android.permission.CHANGE_NETWORK_STATE" />
+    <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.CAMERA" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE"
+        tools:ignore="ForegroundServicesPolicy" />
+    <uses-permission
+        android:name="android.permission.FOREGROUND_SERVICE_SPECIAL_USE"
+        android:minSdkVersion="34" />
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+    <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
+
+    <!--
+      Touch haptics — the two feels in 32-master-plan-android.md 7.6 («Вибрация при касании»), and
+      nothing else. It is a normal permission: granted at install, never prompted for, and it does
+      not appear in the store listing's permission list.
+
+      Why it is needed at all, when `View.performHapticFeedback()` needs no permission: that call
+      asks the SYSTEM to vibrate on our behalf, and the system is free to refuse. It refuses when the
+      device firmware has no vibration mapped for the constant we named — which is why the same APK
+      buzzes on MIUI and is completely silent on One UI. `MotionUtils.playHaptic` reads the Boolean
+      that call returns and, only when it says nothing was played AND the user has touch feedback
+      switched on, repeats the request as an explicit VibrationEffect. That second path is ours, so
+      it is ours to declare.
+
+      It is deliberately NOT a licence to vibrate for anything else: no notification buzz, no error
+      shake, no alarm. Every use goes through `View.pressHaptic()` / `tickHaptic()` / `confirmHaptic()`,
+      which are gated on the user's own system setting and never on `FLAG_IGNORE_GLOBAL_SETTING`.
+    -->
+    <uses-permission android:name="android.permission.VIBRATE" />
+
+    <!--
+      The self-updater's install step, and the ONLY thing this permission is used for:
+      «Настройки → Проверить обновления» downloads departament's own APK from departament's own
+      GitHub release and hands it to the system package installer
+      (`CheckUpdateActivity.install()` → ACTION_VIEW / application/vnd.android.package-archive over
+      the `${applicationId}.cache` FileProvider).
+
+      Since Android 8 (API 26) an app that starts that intent without REQUEST_INSTALL_PACKAGES is
+      refused, so the alternative is not "no permission" — it is a «Скачать» button that ends in a
+      file the user has to find and open themselves. This build is distributed as a direct APK, so
+      the in-app update IS the update path.
+
+      Two things it deliberately is not:
+        - It is not a silent installer. The permission only lets us *ask*; the user still sees the
+          system installer, still has to allow this app as an unknown-app source
+          (canRequestPackageInstalls, which the screen checks and routes to), and still confirms.
+        - It is not a channel for third-party code. UpdateCheckerManager accepts only assets named
+          `departament_<version>[-fdroid]_<abi>.apk`, and re-parses the downloaded file before
+          offering it: a package name other than this application id, or a versionCode that is not
+          higher than the installed one, is deleted and reported instead of installed.
+
+      Note for the store listing, if there ever is one: Google Play forbids an app distributed
+      through Play from carrying its own update channel, so a Play build must ship without this
+      permission and without the row. `Utils.isGoogleFlavor()` exists for that gate and is
+      deliberately NOT applied here, because the `playstore` flavour is what CI publishes to GitHub
+      today — gating on it would disable the updater on the only flavour that has one.
+    -->
+    <uses-permission android:name="android.permission.REQUEST_INSTALL_PACKAGES" />
+
+    <!--
+      Package visibility (Android 11+). The only feature that needs to see other apps is the
+      per-app proxy picker: AppManagerUtil.loadNetworkAppList() calls getInstalledPackages() and
+      PerAppProxyActivity / AppPickerActivity list what comes back so the user can route chosen
+      apps through the tunnel.
+
+      This used to be QUERY_ALL_PACKAGES. That permission is granted by Google Play only for a
+      short list of use cases — accessibility, antivirus, device search, file management,
+      banking-fraud prevention, device automation — and "per-app VPN routing" is not one of them,
+      so a VPN client declaring it is refused at review. The tools:ignore that sat on it silenced
+      lint, not the reviewer.
+
+      The supported form below covers exactly what the picker needs: every app the user can launch,
+      which is every app the user can meaningfully choose to route. Apps with no launcher entry
+      (headless services, some system packages) are no longer listed — nothing else in the app
+      reads the installed-package list, and PerAppProxyAdapter's user/system split still works on
+      what is visible.
+      https://developer.android.com/about/versions/11/privacy/package-visibility
+    -->
+    <queries>
+        <intent>
+            <action android:name="android.intent.action.MAIN" />
+            <category android:name="android.intent.category.LAUNCHER" />
+        </intent>
+    </queries>
+
+    <application
+        android:name=".AngApplication"
+        android:allowBackup="true"
+        android:banner="@mipmap/ic_banner"
+        android:icon="@mipmap/ic_launcher"
+        android:label="@string/app_name"
+        android:networkSecurityConfig="@xml/network_security_config"
+        android:supportsRtl="true"
+        android:theme="@style/AppThemeDayNight.NoActionBar"
+        android:usesCleartextTraffic="true">
+
+        <activity
+            android:name=".ui.MainActivity"
+            android:exported="true"
+            android:launchMode="singleTask">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+
+                <category android:name="android.intent.category.LAUNCHER" />
+                <category android:name="android.intent.category.LEANBACK_LAUNCHER" />
+            </intent-filter>
+            <intent-filter>
+                <action android:name="android.service.quicksettings.action.QS_TILE_PREFERENCES" />
+            </intent-filter>
+
+            <meta-data
+                android:name="android.app.shortcuts"
+                android:resource="@xml/shortcuts" />
+        </activity>
+        <activity
+            android:name=".ui.ServerActivity"
+            android:exported="false"
+            android:windowSoftInputMode="stateUnchanged" />
+        <activity
+            android:name=".ui.ServerCustomConfigActivity"
+            android:exported="false"
+            android:windowSoftInputMode="stateUnchanged" />
+        <activity
+            android:name=".ui.ServerGroupActivity"
+            android:exported="false"
+            android:windowSoftInputMode="stateUnchanged" />
+        <activity
+            android:name=".ui.ServerProxyChainActivity"
+            android:exported="false"
+            android:windowSoftInputMode="stateUnchanged" />
+        <activity
+            android:name=".ui.SettingsActivity"
+            android:exported="false" />
+        <activity
+            android:name=".ui.PerAppProxyActivity"
+            android:exported="false" />
+        <activity
+            android:name=".ui.AppPickerActivity"
+            android:exported="false" />
+        <activity
+            android:name=".ui.ScannerActivity"
+            android:exported="false" />
+        <activity
+            android:name=".ui.LogcatActivity"
+            android:exported="false" />
+        <activity
+            android:name=".ui.RoutingSettingActivity"
+            android:exported="false" />
+        <activity
+            android:name=".ui.RoutingEditActivity"
+            android:exported="false" />
+        <activity
+            android:name=".ui.SubSettingActivity"
+            android:exported="false" />
+        <activity
+            android:name=".ui.UserAssetActivity"
+            android:exported="false" />
+        <activity
+            android:name=".ui.UserAssetUrlActivity"
+            android:exported="false" />
+
+        <activity
+            android:name=".ui.SubEditActivity"
+            android:exported="false" />
+
+        <activity
+            android:name=".ui.LoginActivity"
+            android:exported="false" />
+
+        <!-- =====================Android TV: QR Wi-Fi subscription transfer===================== -->
+        <!-- TV-side receiver: shows the pairing QR and runs the one-shot LAN listener. -->
+        <activity
+            android:name=".tv.TvReceiveActivity"
+            android:exported="false"
+            android:screenOrientation="landscape"
+            tools:ignore="DiscouragedApi,LockedOrientationActivity" />
+        <!-- Phone-side sender: scans the TV QR and POSTs the selected subscription. -->
+        <activity
+            android:name=".tv.TvSendActivity"
+            android:exported="false" />
+        <!-- =====================Android TV===================== -->
+
+        <activity
+            android:name=".ui.ScScannerActivity"
+            android:exported="false" />
+        <activity
+            android:name=".ui.ScSwitchActivity"
+            android:excludeFromRecents="true"
+            android:exported="false"
+            android:process=":RunSoLibV2RayDaemon"
+            android:theme="@style/AppThemeDayNight.NoActionBar.Translucent" />
+        <activity
+            android:name=".ui.ScStartActivity"
+            android:excludeFromRecents="true"
+            android:exported="false"
+            android:process=":RunSoLibV2RayDaemon"
+            android:theme="@style/AppThemeDayNight.NoActionBar.Translucent" />
+        <activity
+            android:name=".ui.ScStopActivity"
+            android:excludeFromRecents="true"
+            android:exported="false"
+            android:process=":RunSoLibV2RayDaemon"
+            android:theme="@style/AppThemeDayNight.NoActionBar.Translucent" />
+
+        <activity
+            android:name=".ui.UrlSchemeActivity"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.intent.action.SEND" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <data android:mimeType="text/plain" />
+            </intent-filter>
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
+
+                <category android:name="android.intent.category.BROWSABLE" />
+                <category android:name="android.intent.category.DEFAULT" />
+
+                <data android:scheme="v2rayng" />
+                <data android:host="install-config" />
+                <data android:host="install-sub" />
+            </intent-filter>
+            <!-- departament deeplinks: connect/open, disconnect/close, toggle,
+                 import/{base64}, add/{url}, routing/add|onadd/{base64} -->
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
+
+                <category android:name="android.intent.category.BROWSABLE" />
+                <category android:name="android.intent.category.DEFAULT" />
+
+                <data android:scheme="depv" />
+            </intent-filter>
+        </activity>
+        <activity
+            android:name=".ui.CheckUpdateActivity"
+            android:exported="false" />
+        <activity
+            android:name=".ui.BackupActivity"
+            android:exported="false" />
+        <activity
+            android:name=".ui.AboutActivity"
+            android:exported="false" />
+
+        <!-- departament wave activities (registered here per manifest ownership) -->
+        <activity
+            android:name=".ui.DeviceManagementActivity"
+            android:exported="false"
+            android:parentActivityName=".ui.MainActivity" />
+        <activity
+            android:name=".ui.BuyTariffActivity"
+            android:exported="false"
+            android:parentActivityName=".ui.MainActivity" />
+        <activity
+            android:name=".ui.PaymentHistoryActivity"
+            android:exported="false"
+            android:parentActivityName=".ui.MainActivity" />
+        <activity
+            android:name=".ui.LocalProxyActivity"
+            android:exported="false"
+            android:parentActivityName=".ui.MainActivity" />
+        <activity
+            android:name=".ui.ProviderSettingsActivity"
+            android:exported="false"
+            android:parentActivityName=".ui.MainActivity" />
+        <activity
+            android:name=".ui.UrlSchemeListActivity"
+            android:exported="false"
+            android:parentActivityName=".ui.MainActivity" />
+
+        <service
+            android:name=".service.CoreVpnService"
+            android:enabled="true"
+            android:exported="false"
+            android:foregroundServiceType="specialUse"
+            android:label="@string/app_name"
+            android:permission="android.permission.BIND_VPN_SERVICE"
+            android:process=":RunSoLibV2RayDaemon"
+            tools:ignore="VpnServicePolicy">
+            <intent-filter>
+                <action android:name="android.net.VpnService" />
+            </intent-filter>
+            <meta-data
+                android:name="android.net.VpnService.SUPPORTS_ALWAYS_ON"
+                android:value="true" />
+            <property
+                android:name="android.app.PROPERTY_SPECIAL_USE_FGS_SUBTYPE"
+                android:value="vpn" />
+        </service>
+
+        <service
+            android:name=".service.CoreProxyOnlyService"
+            android:exported="false"
+            android:foregroundServiceType="specialUse"
+            android:label="@string/app_name"
+            android:process=":RunSoLibV2RayDaemon">
+            <property
+                android:name="android.app.PROPERTY_SPECIAL_USE_FGS_SUBTYPE"
+                android:value="proxy" />
+        </service>
+
+        <service
+            android:name=".service.CoreTestService"
+            android:exported="false"
+            android:foregroundServiceType="specialUse"
+            android:process=":RunSoLibV2RayDaemon">
+            <property
+                android:name="android.app.PROPERTY_SPECIAL_USE_FGS_SUBTYPE"
+                android:value="test" />
+        </service>
+
+        <receiver
+            android:name=".receiver.WidgetProvider"
+            android:exported="true"
+            android:process=":RunSoLibV2RayDaemon">
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/app_widget_provider" />
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+                <action android:name="${applicationId}.action.widget.click" />
+                <action android:name="${applicationId}.action.activity" />
+            </intent-filter>
+        </receiver>
+        <receiver
+            android:name=".receiver.BootReceiver"
+            android:exported="true"
+            android:label="BootReceiver">
+            <intent-filter>
+                <action android:name="android.intent.action.BOOT_COMPLETED" />
+            </intent-filter>
+        </receiver>
+
+        <service
+            android:name=".service.QSTileService"
+            android:exported="true"
+            android:foregroundServiceType="specialUse"
+            android:icon="@drawable/ic_stat_name"
+            android:label="@string/app_tile_name"
+            android:permission="android.permission.BIND_QUICK_SETTINGS_TILE"
+            android:process=":RunSoLibV2RayDaemon">
+            <intent-filter>
+                <action android:name="android.service.quicksettings.action.QS_TILE" />
+            </intent-filter>
+            <property
+                android:name="android.app.PROPERTY_SPECIAL_USE_FGS_SUBTYPE"
+                android:value="tile" />
+        </service>
+        <!-- =====================Tasker===================== -->
+        <activity
+            android:name=".ui.TaskerActivity"
+            android:exported="true"
+            android:icon="@mipmap/ic_launcher">
+            <intent-filter>
+                <action android:name="com.twofortyfouram.locale.intent.action.EDIT_SETTING" />
+            </intent-filter>
+        </activity>
+
+        <receiver
+            android:name=".receiver.TaskerReceiver"
+            android:exported="true"
+            android:process=":RunSoLibV2RayDaemon"
+            tools:ignore="ExportedReceiver">
+            <intent-filter>
+                <action android:name="com.twofortyfouram.locale.intent.action.FIRE_SETTING" />
+            </intent-filter>
+        </receiver>
+        <!-- =====================Tasker===================== -->
+        <provider
+            android:name="androidx.startup.InitializationProvider"
+            android:authorities="${applicationId}.androidx-startup"
+            android:exported="false"
+            tools:node="merge">
+
+            <meta-data
+                android:name="androidx.work.WorkManagerInitializer"
+                android:value="androidx.startup"
+                tools:node="remove" />
+
+        </provider>
+
+        <service
+            android:name="androidx.work.multiprocess.RemoteWorkManagerService"
+            android:exported="false"
+            android:process=":bg" />
+
+        <provider
+            android:name="androidx.core.content.FileProvider"
+            android:authorities="${applicationId}.cache"
+            android:exported="false"
+            android:grantUriPermissions="true">
+            <meta-data
+                android:name="android.support.FILE_PROVIDER_PATHS"
+                android:resource="@xml/cache_paths" />
+        </provider>
+
+    </application>
+
+</manifest>

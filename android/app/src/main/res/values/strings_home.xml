@@ -1,0 +1,159 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- ===================================================================== -->
+    <string name="home_status_connecting">Подключение…</string>
+    <string name="home_status_connected">Подключено</string>
+    <string name="home_status_disconnecting">Отключение…</string>
+    <string name="home_status_no_server">Сервер не выбран</string>
+    <string name="home_status_no_servers">Нет серверов</string>
+    <string name="home_status_no_subscription">Подписки нет</string>
+    <string name="home_status_expired">Подписка истекла</string>
+    <string name="home_detail_retry">Нажмите, чтобы повторить</string>
+    <!-- The list is on this screen now, so the hint points at it and not at a
+         destination the owner removed. -->
+    <string name="home_detail_pick_server">Выберите сервер в списке ниже</string>
+
+    <!-- ===================================================================== -->
+    <string name="home_strip_up_arrow" translatable="false">↑</string>
+    <string name="home_strip_down_arrow" translatable="false">↓</string>
+    <string name="home_strip_up_label">Отдача</string>
+    <string name="home_strip_down_label">Приём</string>
+    <!-- Тот же вид, что у Long.toSpeedString для нуля: неразрывный пробел и русские единицы. -->
+    <string name="home_speed_zero">0\u00A0КБ/с</string>
+    <string name="home_uptime_zero" translatable="false">00:00:00</string>
+    <string name="home_uptime_format" translatable="false">%1$02d:%2$02d:%3$02d</string>
+
+    <!-- The add action, top right. B1: he calls this thing a подписка. -->
+    <string name="home_add_subscription">Добавить подписку</string>
+
+    <!-- ===================================================================== -->
+    <string name="home_account_title">Аккаунт</string>
+    <string name="home_account_subtitle">Вход, подписка, устройства</string>
+    <string name="home_account_manage">Управление аккаунтом</string>
+
+    <!--
+      THE HEADING, RESTORED. The onboarding card this block replaced opened with a
+      title and a supporting line under it (@string/home_empty_title +
+      @string/home_empty_subtitle at 5e8cd54, the last design the owner approved);
+      the rebuild kept only the supporting line, so the first screen of a fresh
+      install had no heading at all and read as a stray sentence over a button.
+      One heading per gate shape, sentence-case, in the screen's own voice — the
+      caption under it stays exactly as it was and still carries the reason.
+    -->
+    <string name="home_gate_signin_title">Добро пожаловать</string>
+    <string name="home_gate_subscription_title">Начнём с подписки</string>
+    <string name="home_gate_buy_title">Почти готово</string>
+    <string name="home_gate_sync_title">Подписка активна</string>
+    <string name="home_gate_sync_failed_title">Не получилось</string>
+
+    <string name="home_gate_signin_caption">Войдите, чтобы получить серверы departament.</string>
+    <string name="home_gate_signin">Войти</string>
+    <string name="home_gate_add_subscription">Добавить подписку</string>
+    <!-- The build with no backend configured: signing in is meaningless there, so
+         adding a подписка is the primary and there is no secondary. -->
+    <string name="home_gate_subscription_caption">Добавьте подписку, чтобы получить серверы.</string>
+    <string name="home_gate_buy_caption">Осталось выбрать тариф.</string>
+    <string name="home_gate_buy">Купить подписку</string>
+    <!-- Offered under the buy CTA while the account has no Telegram attached. It
+         is the only live entry point to linking Telegram on this screen, and it
+         went missing when the onboarding card was replaced; it is back. -->
+    <string name="home_gate_link_telegram">Привязать Telegram</string>
+    <string name="home_gate_sync_caption">Подписка активна, серверы ещё не загружены.</string>
+    <string name="home_gate_sync">Загрузить серверы</string>
+    <string name="home_gate_sync_failed_caption">Не удалось загрузить серверы. Проверьте соединение.</string>
+    <string name="home_gate_retry">Повторить</string>
+
+    <!-- ===================================================================== -->
+    <string name="home_condition_expired">Подписка истекла. Продлите её, чтобы подключаться.</string>
+    <string name="home_condition_expiring">Подписка заканчивается %1$s.</string>
+    <string name="home_condition_offline">Нет сети. Показаны последние данные.</string>
+    <string name="home_condition_silent">Сервер не отвечает. Выберите другой в списке ниже.</string>
+    <string name="home_condition_loading">Обновляем данные…</string>
+    <string name="home_stale_hint">Данные могли устареть</string>
+
+    <string name="home_action_renew">Продлить</string>
+    <string name="home_action_retry">Повторить</string>
+
+    <!-- ===================================================================== -->
+    <string name="home_cd_connect">Отключено. Нажмите, чтобы подключить</string>
+    <string name="home_cd_cancel">Подключение. Нажмите, чтобы отменить</string>
+    <string name="home_cd_disconnect">Подключено. Нажмите, чтобы отключить</string>
+    <!-- The gated object. The gate's one test is "there is not a server to connect to", and it
+         holds in all five of its shapes — «нет подписки» named only one of them. -->
+    <string name="home_cd_locked">Недоступно. Нет серверов</string>
+
+    <!-- Last resort only: the account nickname, then the provider's own title,
+         then the subscription's remark all come first. -->
+    <string name="home_sub_untitled">Подписка</string>
+    <!-- «10.07.2026 10:56 · 1 ч» — the refresh cadence is the VALUE, with no word in
+         front of it: «надо этот текст убрать и просто оставить отображение значения
+         типа 1ч 3ч и тд, без слова». -->
+    <string name="home_sub_meta">%1$s · %2$s</string>
+    <string name="home_sub_updated_never">Ещё не обновлялась</string>
+    <!-- No auto-update: the only case with no period to print, so the value is a word. -->
+    <string name="home_sub_auto_update_off">вручную</string>
+    <string name="home_sub_interval_hours">%1$d ч</string>
+    <string name="home_sub_interval_minutes">%1$d мин</string>
+    <string name="home_sub_traffic_used" translatable="false">%1$s / %2$s</string>
+    <string name="home_sub_traffic_unlimited" translatable="false">%1$s / ∞</string>
+    <string name="home_sub_infinity" translatable="false">∞</string>
+    <!-- No reader since the traffic readout began counting the term in days
+         (home_sub_days_left). Kept, not deleted: it is the one phrasing for an
+         absolute expiry the продукт has, and the next screen that needs one should
+         find it rather than write a second. -->
+    <string name="home_sub_expired">истекла</string>
+    <!-- §4 puts the REMAINING TERM at the right end of the traffic readout, not an
+         absolute date: «справа остаток срока («12 дн.»)», and the prototype's own
+         demo state prints exactly «12 дн.». The wording is not invented for this
+         line — «%1$d дн.» is already the product's way of saying a term in
+         account_option_duration and buy_option_duration, so the readout, the price
+         option and the renewal row all count days the same way.
+
+         Why days and not the date the row used to print: this line is a readout that
+         sits beside «4 ГБ / 10 ГБ» and answers the same question that pair does —
+         how much is left — and a date makes the reader do the subtraction. The date
+         still exists on the Аккаунт screen («Действует до …»), where the question is
+         when the subscription ends rather than how much of it is left. -->
+    <string name="home_sub_days_left">%1$d дн.</string>
+
+    <string name="home_sub_cd_expand">Показать серверы</string>
+    <string name="home_sub_cd_collapse">Скрыть серверы</string>
+    <string name="home_sub_cd_ping">Проверить задержку серверов</string>
+    <string name="home_sub_cd_refresh">Обновить подписку</string>
+    <string name="home_sub_cd_pin">Закрепить подписку</string>
+    <string name="home_sub_cd_unpin">Открепить подписку</string>
+    <string name="home_sub_cd_support">Поддержка</string>
+    <string name="home_sub_cd_telegram">Открыть Telegram</string>
+
+    <string name="home_sub_delete_title">Удалить подписку?</string>
+    <string name="home_sub_delete_message">Подписка и её серверы будут удалены с этого устройства.</string>
+    <string name="home_sub_delete_confirm">Удалить</string>
+    <string name="home_sub_deleted">Подписка удалена</string>
+    <!-- The card's support / Telegram links, when the device has no app that can open one.
+         It says what actually failed: the old copy here reported a failed REFRESH for a link
+         that was never opened. -->
+    <string name="home_sub_link_failed">Не удалось открыть ссылку</string>
+
+    <!-- What the status strip says when a refresh failed and the screen keeps its
+         last values rather than emptying. -->
+    <string name="home_sub_stale">Не удалось обновить</string>
+
+    <!-- ===================================================================== -->
+    <string name="home_date_short">%1$d %2$s</string>
+    <string name="home_date_full">%1$d %2$s %3$d</string>
+    <string name="home_date_numeric_time" translatable="false">dd.MM.yyyy HH:mm</string>
+    <string-array name="home_months_genitive">
+        <item>января</item>
+        <item>февраля</item>
+        <item>марта</item>
+        <item>апреля</item>
+        <item>мая</item>
+        <item>июня</item>
+        <item>июля</item>
+        <item>августа</item>
+        <item>сентября</item>
+        <item>октября</item>
+        <item>ноября</item>
+        <item>декабря</item>
+    </string-array>
+</resources>

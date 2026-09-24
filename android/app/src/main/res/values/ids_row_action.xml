@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  One more view tag declared as a real id resource, for the same reason values/ids.xml
+  gives: setTag(Object) with no key clobbers whatever else stored a tag on that view,
+  and an id resource is the only key aapt guarantees is unique. It lives in its own
+  file rather than in ids.xml because it belongs to view_row.xml's trailing slot, the
+  way values/tokens_row_action.xml's dimens do.
+-->
+<resources>
+    <!-- WHICH GLYPH @id/row_icon_action's TouchDelegate WAS MEASURED FOR, or absent
+         when it has none yet.
+
+         RowBinder shrinks that button to @dimen/row_action_size so its ink can reach
+         the gutter, and gives the 48dp back with View.expandTouchTarget. That helper
+         registers a delegate on the PARENT and is documented «call it ONCE per view —
+         from onCreateViewHolder, never onBindViewHolder»: a View holds one delegate,
+         the composite that shares it only ever grows, and RowBinder.bind runs on every
+         bind of a row five adapters recycle. Without a stamp on the view itself, a
+         list scrolled for a minute would carry a thousand identical delegates and
+         offer the touch to each one.
+
+         It stores the ICON and not a flag because the two glyphs park the box 6.25dp
+         apart, so a row recycled from «копировать» to «⋮» has earned a second rect.
+         Both point at the same button, so the stale one only ever widens its target. -->
+    <item name="tag_row_action_touch" type="id" />
+</resources>

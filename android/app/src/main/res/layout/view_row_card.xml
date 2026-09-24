@@ -1,0 +1,80 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  ============================================================================
+  THE UNIVERSAL ROW, AS A LIST CARD.
+  Owner decision, 2026-08-02: the content of a sub-screen goes back to the
+  grouped-card composition it had at 5e8cd54.
+  ============================================================================
+
+  There are two grouped-card shapes, and which one a screen uses is decided by
+  whether its content is a fixed set of rows or a list:
+
+    · A FIXED SET of rows  -> one @style/Widget.Departament.CardSection holding
+      them all, under a sentence-case section header. The rows inside are rows.
+    · A LIST                -> ONE CARD PER ITEM, which is this file. That is what
+      5e8cd54 did on every list screen it had — item_recycler_sub_setting.xml,
+      item_recycler_routing_setting.xml, item_recycler_user_asset.xml and
+      item_recycler_bypass_list.xml were each a MaterialCardView per row — and it
+      is what item_recycler_main.xml still does for the server list on Главная,
+      which is the list he looks at every day.
+
+  It wraps @layout/view_row rather than restating it: the row keeps its one
+  definition, its five archetypes and every slot, and gains only the surface it
+  sits on. Callers bind through the same RowBinder as before, on `binding.row.root`.
+
+  NO NESTED CARDS: this is the card, so nothing inside it is one.
+-->
+<com.google.android.material.card.MaterialCardView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/row_card"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:layout_marginStart="@dimen/screen_gutter"
+    android:layout_marginTop="@dimen/space_4"
+    android:layout_marginEnd="@dimen/screen_gutter"
+    android:layout_marginBottom="@dimen/space_4"
+    app:cardBackgroundColor="?attr/colorSurface"
+    app:cardCornerRadius="@dimen/radius_card"
+    app:cardElevation="0dp"
+    app:strokeColor="?attr/colorOutlineVariant"
+    app:strokeWidth="@dimen/stroke_hairline">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:baselineAligned="false"
+        android:gravity="center_vertical"
+        android:orientation="horizontal">
+
+        <include
+            android:id="@+id/row"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            layout="@layout/view_row" />
+
+        <!--
+          THE CARD'S OWN TRAILING SWITCH. Ships GONE; only a list whose items were a
+          card with an INLINE toggle at 5e8cd54 turns it on — today that is the routing
+          rules list alone (item_recycler_routing_setting.xml's chk_enable).
+
+          It sits on the CARD, beside the row, and not in the row's own trailing slot,
+          because the row's slot holds one element and here it holds the chevron that
+          opens the rule. That is deliberate and it is the anchor's own shape: the card
+          carried a target that opened the editor AND a switch that enabled the rule.
+          The alternative — RowBinder's Trailing.Toggle — makes the whole row toggle the
+          switch and would take the tap-to-edit route away, which is a removal.
+        -->
+        <com.google.android.material.materialswitch.MaterialSwitch
+            android:id="@+id/row_card_switch"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginEnd="@dimen/space_12"
+            android:minWidth="@dimen/view_height_dp48"
+            android:minHeight="@dimen/view_height_dp48"
+            android:visibility="gone"
+            tools:visibility="visible" />
+    </LinearLayout>
+
+</com.google.android.material.card.MaterialCardView>

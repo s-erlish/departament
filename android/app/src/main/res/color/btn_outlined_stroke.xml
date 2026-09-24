@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  RETIREMENT SHIM, not a component. The five ratified button variants are Primary /
+  Secondary / Tertiary / Destructive / Icon (22-components.md R15); "Outlined" is not
+  among them and no new work may use it. This list exists only so the legacy
+  @style/Widget.App.Button.Outlined alias keeps drawing a legal boundary until its
+  last call site migrates to Secondary.
+
+  The rest boundary is @color/md_theme_outlineControl (D-9: 3.43:1 dark, 3.45:1
+  light — colorOutline measures 1.45:1 and may never draw a control boundary), and
+  focus flips the same stroke to the accent so R7 still holds.
+-->
+<selector xmlns:android="http://schemas.android.com/apk/res/android">
+    <item android:color="?attr/colorPrimary" android:state_focused="true" />
+    <item
+        android:alpha="0.38"
+        android:color="?attr/colorOutlineControl"
+        android:state_enabled="false" />
+    <item android:color="?attr/colorOutlineControl" />
+</selector>

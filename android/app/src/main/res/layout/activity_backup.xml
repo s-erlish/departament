@@ -1,0 +1,136 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  ============================================================================
+  A-29  settings/data - Данные и резервные копии.  H3 · R1.
+  24-tab-conformance.md A-29.
+  ============================================================================
+
+  Four hand-rolled card rows, two of which opened an untranslated
+  `AlertDialog.setItems` («Local» / «WebDAV») to ask WHERE - a two-item picker dialog
+  §7.4 bans, and the only English left on a Russian screen.
+
+  The destination is the row now: «Создать копию на устройстве» and «Выгрузить в
+  облако» are separate, named, and each says what it does. That also lets the cloud
+  group state its own precondition - a row that cannot work yet is drawn disabled at
+  0.38 with the reason in its subtitle (R6), instead of failing with a toast after
+  the user taps it.
+
+  2026-08 REDESIGN (handoff README §7): the header is the sub-page lekalo,
+  @layout/view_sub_header. The rest of the screen already WAS the lekalo - two
+  labelled groups of card rows - so nothing else moves.
+
+  NO NOTE UNDER THE TITLE. §7 gives this screen «Файл с серверами и настройками»,
+  and res/values carries no such string; the handoff's demo copy is not a resource
+  and strings are not invented here (owner's rule). @id/toolbar_note stays gone
+  until the owner names one.
+-->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="?android:attr/colorBackground"
+    android:fitsSystemWindows="true"
+    android:orientation="vertical"
+    tools:context=".ui.BackupActivity">
+
+    <include
+        android:id="@+id/toolbar"
+        layout="@layout/view_sub_header" />
+
+    <androidx.core.widget.NestedScrollView
+        android:id="@+id/main_content"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:clipToPadding="false"
+        android:paddingBottom="@dimen/space_32"
+        android:scrollbars="none">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical">
+
+            <TextView
+                style="@style/SettingsSectionLabel"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="@string/backup_grp_device" />
+
+            <com.google.android.material.card.MaterialCardView style="@style/Widget.Departament.CardSection">
+
+                <LinearLayout style="@style/Widget.Departament.CardSection.Body">
+
+                    <include
+                        android:id="@+id/row_backup_local"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        layout="@layout/view_row" />
+
+                    <com.google.android.material.divider.MaterialDivider
+                        style="@style/Widget.Departament.Divider.Full"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content" />
+
+                    <include
+                        android:id="@+id/row_share"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        layout="@layout/view_row" />
+
+                    <com.google.android.material.divider.MaterialDivider
+                        style="@style/Widget.Departament.Divider.Full"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content" />
+
+                    <include
+                        android:id="@+id/row_restore_local"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        layout="@layout/view_row" />
+                </LinearLayout>
+            </com.google.android.material.card.MaterialCardView>
+
+            <TextView
+                style="@style/SettingsSectionLabel"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="@string/backup_grp_cloud" />
+
+            <com.google.android.material.card.MaterialCardView style="@style/Widget.Departament.CardSection">
+
+                <LinearLayout style="@style/Widget.Departament.CardSection.Body">
+
+                    <include
+                        android:id="@+id/row_webdav_settings"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        layout="@layout/view_row" />
+
+                    <com.google.android.material.divider.MaterialDivider
+                        style="@style/Widget.Departament.Divider.Full"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content" />
+
+                    <include
+                        android:id="@+id/row_backup_webdav"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        layout="@layout/view_row" />
+
+                    <com.google.android.material.divider.MaterialDivider
+                        style="@style/Widget.Departament.Divider.Full"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content" />
+
+                    <include
+                        android:id="@+id/row_restore_webdav"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        layout="@layout/view_row" />
+                </LinearLayout>
+            </com.google.android.material.card.MaterialCardView>
+
+</LinearLayout>
+    </androidx.core.widget.NestedScrollView>
+</LinearLayout>

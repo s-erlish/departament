@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- The protocol chip on a server row: VLESS, VMESS, TROJAN.
+
+     THE FILL IS A PLATE ROLE AND NOT THE ACCENT CONTAINER, and that is the mono fix.
+     `?attr/colorPrimaryContainer` is #D8E4FF in the blue light theme — 1.19:1 against
+     the card, an object the eye reads by its HUE and not by its luminance. The mono
+     overlay's whole contract is to remove the hue, so under it the same token became
+     #E6E6E8 at 1.25:1 and the chip stopped having a fill at all: «VLESS» and «JSON»
+     read as bare grey words on the row. Mono's contract is no accent hue, not no
+     contrast.
+
+     `colorPlateContainer` aliases colorPrimaryContainer in BOTH blue themes and
+     `colorPlateOutline` is transparent there, so blue renders bit-identically; mono
+     steps the fill down and puts a real 3.44:1 boundary under it, which is what a
+     plate needs once chroma is not carrying it. attrs.xml holds the reasoning and
+     colors.xml the measurements. -->
+<shape xmlns:android="http://schemas.android.com/apk/res/android"
+    android:shape="rectangle">
+    <solid android:color="?attr/colorPlateContainer" />
+    <stroke
+        android:width="@dimen/stroke_hairline"
+        android:color="?attr/colorPlateOutline" />
+    <corners android:radius="@dimen/radius_chip" />
+</shape>

@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    Reusable payment-method chooser bottom sheet (Incy dark + blue style).
+    Rounded dark top surface + grab handle + bold title, then a runtime-populated
+    column of item_payment_method.xml rows. Rows are inflated in PaymentMethodSheet.kt.
+-->
+<androidx.core.widget.NestedScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/sheet_pay_root"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:background="@drawable/bg_sheet_top"
+    android:fillViewport="true">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:paddingBottom="@dimen/space_16">
+
+        <!-- Grab handle -->
+        <View
+            android:layout_width="36dp"
+            android:layout_height="4dp"
+            android:layout_gravity="center_horizontal"
+            android:layout_marginTop="@dimen/space_8"
+            android:background="@drawable/bg_sheet_handle" />
+
+        <!-- Sheet title -->
+        <TextView
+            android:id="@+id/tv_pay_title"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/space_12"
+            android:ellipsize="end"
+            android:maxLines="1"
+            android:paddingHorizontal="@dimen/space_16"
+            android:paddingBottom="@dimen/space_4"
+            android:textAppearance="@style/TextAppearance.App.Title"
+            tools:text="Способ оплаты" />
+
+        <!-- Runtime-populated rows (item_payment_method.xml) -->
+        <LinearLayout
+            android:id="@+id/ll_pay_methods"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:paddingBottom="@dimen/space_4" />
+    </LinearLayout>
+</androidx.core.widget.NestedScrollView>

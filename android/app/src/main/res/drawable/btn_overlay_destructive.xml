@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  UNREFERENCED BY OWNER INSTRUCTION (2026-08-02). «кнопки… они блестят почему-то и не
+  доделаны, надо вернуть прежний дизайн». The gradient instruction of OWNER-FEEDBACK D1
+  is scoped to THE PRIMARY ACTION BUTTON; everywhere else the ban on decorative
+  gradients holds. The style that used to name this file no longer does.
+
+  The file is kept, not deleted: it is the finished article, it costs nothing while
+  unreferenced (aapt keeps it, R8 does not run on resources this app ships), and if the
+  scope ever widens again re-attaching it is one line. Do NOT re-attach it without him
+  asking.
+-->
+<!--
+  THE DESTRUCTIVE BUTTON'S FOREGROUND. The bevel is pure luminance, so the red
+  fill keeps its exact hue and its 3.71:1 white label - the lift and the settle
+  both clear the label band.
+
+  Same contract as @drawable/btn_overlay_primary — read the reasoning there:
+  foreground because MaterialButton owns its background, cross-faded on the
+  press clock, and ordered disabled > loading > pressed > rest because a
+  StateListDrawable takes the first item whose states the view satisfies.
+-->
+<selector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:enterFadeDuration="@integer/motion_press_in"
+    android:exitFadeDuration="@integer/motion_press_out">
+
+    <item android:drawable="@android:color/transparent" android:state_enabled="false" />
+    <!-- LOADING holds the RESTING bevel, and holds it ahead of the pressed row so a
+         control that is already working can never be pushed into a press look. R8:
+         opacity stays 1.0 while it works — a faded button reads as broken, not as
+         busy. What changes is the label, which the content ColorStateList takes to
+         alpha 0 on this same state so it is still measured and the button cannot
+         resize; the arc over it is the design system's own
+         @style/Widget.Departament.Progress.Circular.Inline.*, centred by the screen,
+         not a second spinner invented here. -->
+    <item android:drawable="@drawable/btn_gloss_rest" android:state_activated="true" />
+    <item android:drawable="@drawable/btn_gloss_press" android:state_pressed="true" />
+    <item android:drawable="@drawable/btn_gloss_rest" />
+
+</selector>

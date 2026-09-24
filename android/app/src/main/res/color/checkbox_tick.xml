@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  The tick inside @drawable/bg_checkbox. It exists only when the box is filled, so
+  the unchecked state resolves to transparent rather than the tick being hidden in
+  code: one source of truth for «есть галочка», and a recycled row cannot keep the
+  previous item's tick.
+
+  ?attr/colorOnPrimary is #00183A on dark, #FFFFFF on light and #111214 in mono —
+  exactly the three values the prototype uses («tick: m ? '#111214' : '#00183A'»).
+-->
+<selector xmlns:android="http://schemas.android.com/apk/res/android">
+    <item
+        android:color="?attr/colorOnPrimary"
+        android:state_activated="true" />
+    <item android:color="@android:color/transparent" />
+</selector>

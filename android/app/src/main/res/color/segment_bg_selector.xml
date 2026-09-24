@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  ALIAS of @color/segment_container. 10-design-system.md 4.6 spells it
+  segment_bg_selector, 22-components.md 6.3 spells it segment_container. Both
+  resolve so neither spelling can break a build. Prefer segment_container.
+-->
+<selector xmlns:android="http://schemas.android.com/apk/res/android">
+    <item
+        android:alpha="0.38"
+        android:color="?attr/colorPrimaryContainer"
+        android:state_checked="true"
+        android:state_enabled="false" />
+    <item android:color="?attr/colorPrimaryContainer" android:state_checked="true" />
+    <item android:color="@android:color/transparent" />
+</selector>

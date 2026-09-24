@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  ФОН И ЗНАК — РАЗНЫЕ СЛОИ, И ССЫЛАТЬСЯ ОНИ ДОЛЖНЫ ТУДА, ГДЕ ЗНАК ЛЕЖИТ.
+
+  Здесь стояло @drawable/ic_launcher_foreground, а растры знака лежат в mipmap-*/.
+  Имя совпадало, папка — нет, поэтому побеждал одноимённый ВЕКТОР из drawable/ —
+  старый глобус-заглушка. Иконка собиралась из нового кремового фона и старого
+  знака, и владелец увидел ровно это: «у него лого не поставился». Никакой ошибки
+  сборки при этом не бывает — обе ссылки разрешаются, просто в разные ресурсы.
+
+  Вектор удалён вместе с этой правкой, чтобы имя не могло выиграть снова.
+-->
+<adaptive-icon xmlns:android="http://schemas.android.com/apk/res/android">
+    <background android:drawable="@color/ic_launcher_background" />
+    <foreground android:drawable="@mipmap/ic_launcher_foreground" />
+    <monochrome android:drawable="@mipmap/ic_launcher_foreground" />
+</adaptive-icon>

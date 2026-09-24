@@ -1,0 +1,203 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  ============================================================================
+  THE SEAMLESS SUB-PAGE TOOLBAR (owner request 0.4.6).
+  00-rules.md 4.8, 22-components.md 12.1, 32-master-plan-android.md 8.6.
+  ============================================================================
+
+  The header is not a bar, it is the top of the page. Same background as the page,
+  no elevation, no divider, no shadow, no scrim, no AppBarLayout tint, no
+  liftOnScroll. This one file is the fix for every peripheral screen at once — the
+  most repeated defect in the app is a sub-page whose Russian title is drawn in the
+  20sp Latin wordmark face, which has no Cyrillic at all (D-11).
+
+      [ 12 ][ back, 24 glyph ][ 16 ][ Title 16/700 ][ flex ][ action (0-1) ][ 14 ]
+
+  THE GUTTER ARITHMETIC, because it is the part that gets rebuilt wrong — and it was,
+  three times. Both controls are an EXACT 48dp box (14.2) holding a 24dp glyph, and what
+  places that glyph is neither a padding nor a margin: MaterialButton's iconGravity is
+  textStart, so the library CENTRES the icon and then shifts it by half the difference
+  between the two paddings. With a symmetric padding — which is now the style's, for both
+  slots — the glyph sits at the box's centre and the press plate, which is the box less
+  its insets, sits concentric with it. The insets are then split per slot to carry glyph
+  and plate together to the gutter each one has to reach.
+
+  THE BOXES USED TO BE wrap_content, and that is what made every number in this file
+  fiction: a MaterialButton with no text still measures a line box, so the back control
+  was laid out 68 × 64 and the action 80 × 64, the «28dp disc» was a 48×44 and a 54×44
+  stadium, and the title started at 72 rather than the 52 below. An icon-only control has
+  no text to grow with the font scale, so an exact 48 costs nothing here.
+
+  Owner reports 0.4.9 and «кнопка назад опять съехала, надо ее левее»: the control sits
+  FLUSH with the screen edge, and @dimen/toolbar_back_plate_inset_lead splits its 20dp of
+  inset 6/14 so the glyph sits at 8 and its INK starts on 16 — §7's nominal gutter, the
+  line the page title starts on, and the same 16 the trailing action stops on. The box
+  does not move to do it, so all 48dp of the target stay on screen and the screen edge is
+  still part of it. The invariant downstream holds: the glyph box ends at 32 and the
+  title's marginStart space_4 lands the title at 52.
+
+  THE TRAILING ACTION IS ON THE GUTTER NOW, and its box no longer leaves the screen to
+  get there. @dimen/toolbar_plate_inset_lead splits the slot's 20dp of inset 16/4, which
+  moves glyph and plate 6dp toward the trailing edge inside a box that stays 48 wide;
+  ToolbarBinder then holds the box off the edge by whatever the glyph's own air leaves
+  (0 for «⋮», 5 for «+»). Both inks end on 16 — where the title starts, where every row's
+  trailing glyph stops, the one gutter the design rules give the product — with all 48dp of the
+  target on screen and the press disc 4dp clear of the window. «вот нашел что плюсик
+  сверху он левее, надо правее опять сделать».
+
+  THE HEADER IS SYMMETRIC NOW: 16 on the leading side, 16 on the trailing one, and a
+  48dp target on each. It was 4dp out for one round, deliberately, on the argument that
+  16 could not be reached without pushing part of the back control off the screen — read
+  the note on @id/toolbar_back for why that argument was answerable and how.
+
+  56 IS A MINIMUM, NEVER A HEIGHT. At font scale 200% a 16sp title needs ~34dp of
+  line box and this bar grows to hold it. android:layout_height="56dp" on anything
+  containing text is a P1 accessibility defect (14.5).
+
+  ON A TAB SCREEN there is no back affordance and the title starts at the gutter:
+      toolbarBack.isVisible = false
+      toolbarLeadingGap.isVisible = true      <- 12 + the title's 4 = the 16 gutter
+  Home is the ONE screen that keeps the wordmark: it applies
+  @style/ToolbarBrandTitle to @id/toolbar_title and nothing else in the app may.
+
+  THE HAIRLINE IS THE ONLY PERMITTED BOUNDARY and it ships at alpha 0. If a screen
+  genuinely needs a boundary once its content is scrolled, it fades the hairline in
+  over motion_state 220ms at scrollY > 0 and back out at the top. It never appears
+  at rest, and nothing else about this bar changes on scroll — no colour, no
+  elevation, no shadow.
+-->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/toolbar"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:background="?android:attr/colorBackground"
+    android:elevation="0dp"
+    android:orientation="vertical">
+
+    <LinearLayout
+        android:id="@+id/toolbar_bar"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:baselineAligned="false"
+        android:gravity="center_vertical"
+        android:minHeight="@dimen/toolbar_height"
+        android:orientation="horizontal">
+
+        <!-- ICON GAP CLOSED: @drawable/ic_chevron_left is a real left-pointing glyph now.
+             It used to be ic_chevron_right under android:scaleX="-1", and that mirror
+             never reached the screen — @anim/press_icon, which this style carries, has a
+             DEFAULT item that animates scaleX to 1.0 and it fires on attach, so the
+             arrow shipped pointing right. Do not reintroduce a scaleX mirror here; the
+             new drawable is android:autoMirrored, which is what RTL needs anyway.
+             STRING GAP CLOSED (M-44): this was the tree's one hardcoded
+             android:contentDescription. It is now @string/cd_back, defined in
+             res/values/strings_ui_polish.xml — the toolbar belongs to no single screen,
+             so its one string lives in the cross-cutting file rather than a screen's.
+
+             ITS INK IS ON 16 NOW, and the objection the last round raised against that
+             is answered rather than overruled. «кнопка назад опять съехала, надо ее
+             левее» — the third ask on this one control.
+
+             The refusal was: the box is FLUSH with the screen edge, so all 48dp of the
+             target is on screen and the edge itself is part of it (a Fitts's-law gain
+             the trailing action cannot have), whereas ink on 16 needs the box at −4 and
+             leaves 44dp touchable — a 14.2 regression on the one control every sub-page
+             must always answer. That was sound about a box dragged by its MARGIN, and it
+             is the only tool the argument considered.
+
+             The box does not have to move. @dimen/toolbar_back_plate_inset_lead splits
+             the slot's 20dp of inset 6/14, and an inset split moves the GLYPH and its
+             press disc together inside a box that stays exactly where it is:
+
+                 glyph centre = 24 + (6 − 14) / 2 = 20 from the box's leading edge
+                 ink          = 20 − 12 + 8 = 16      (ic_chevron_left's ink is x 8…16.8 of 24)
+                 plate        = 6…34, six dp of clearance, concentric with the glyph
+
+             So the ink lands on the gutter AND the box is still 0…48 against the screen
+             edge: the whole target, the Fitts's-law gain, and no TouchDelegate. Point 2
+             of the old note — that the arrow is being levelled with TEXT, whose box is
+             on 16 but whose ink starts a dp inside — stands as an observation and is
+             overruled by the owner asking twice; §7's own лекало puts this glyph on 16.
+
+             WHAT ALSO CHANGED is the box and the press plate. The box is an EXACT
+             48 now instead of wrap_content: a MaterialButton with no text still measures
+             a line box, so this control was laid out 68 wide and 64 tall, its «28dp disc»
+             was really a 48×44 stadium, and the title beside it started at 72 rather than
+             the 52 this file promises. An icon-only control has nothing to grow, so an
+             exact 48 is free and every number here becomes deterministic.
+
+             ITS PADDING IS THE STYLE'S NOW. The 12 written here was doing nothing the
+             comment above claimed: iconGravity is textStart, so the glyph is CENTRED by
+             the library and only the difference between the two paddings moves it. Equal
+             is all that is required, and equal is what keeps the press disc concentric
+             with the glyph. -->
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/toolbar_back"
+            style="@style/Widget.Departament.Button.Icon.Toolbar"
+            android:layout_width="@dimen/view_height_dp48"
+            android:layout_height="@dimen/view_height_dp48"
+            android:contentDescription="@string/cd_back"
+            android:insetLeft="@dimen/toolbar_back_plate_inset_lead"
+            android:insetRight="@dimen/toolbar_back_plate_inset_trail"
+            app:icon="@drawable/ic_chevron_left" />
+
+        <!-- Shown ONLY when the back control is hidden, so a tab screen's title still
+             starts at the 16dp gutter (12 here + the title's 4). -->
+        <Space
+            android:id="@+id/toolbar_leading_gap"
+            android:layout_width="@dimen/space_12"
+            android:layout_height="0dp"
+            android:visibility="gone" />
+
+        <TextView
+            android:id="@+id/toolbar_title"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="@dimen/space_4"
+            android:layout_marginEnd="@dimen/space_12"
+            android:layout_weight="1"
+            android:ellipsize="end"
+            android:maxLines="1"
+            android:textAppearance="@style/TextAppearance.App.Title"
+            tools:text="Маршрутизация" />
+
+        <!-- AT MOST ONE. A second action becomes an overflow whose glyph is
+             ic_more_vert_24dp. The caller sets app:icon AND
+             android:contentDescription, which states the action and not the object.
+
+             WHAT MOVES ITS GLYPH IS THE INSET SPLIT, NOT A PADDING PAIR, and that is the
+             correction this round makes. The 18/12 padding written here was measured for
+             a glyph parked at paddingLeft; iconGravity is textStart, so the glyph is
+             centred and an asymmetric padding only shifts it by half the difference —
+             3dp off the press disc it sits on, «фон не по центру, неровный фон». The
+             padding is symmetric (the style's) and the 20dp of inset is split 16/4
+             instead: box and disc both stay 48 and 28, and the pair carries glyph AND
+             plate 6dp toward the trailing edge together. See
+             @dimen/toolbar_plate_inset_lead.
+
+             AND NO 4dp MARGIN. It had one, and ToolbarBinder overwrites marginEnd on
+             every bind, so the 4 only ever applied to a glyph the binder does not know.
+             The binder's own margin is non-negative now, so the whole 48dp box is on
+             screen for both glyphs. -->
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/toolbar_action"
+            style="@style/Widget.Departament.Button.Icon.Toolbar"
+            android:layout_width="@dimen/view_height_dp48"
+            android:layout_height="@dimen/view_height_dp48"
+            android:insetLeft="@dimen/toolbar_plate_inset_lead"
+            android:insetRight="@dimen/toolbar_plate_inset_trail"
+            android:visibility="gone"
+            app:icon="@drawable/ic_more_vert_24dp"
+            tools:ignore="ContentDescription"
+            tools:visibility="visible" />
+    </LinearLayout>
+
+    <View
+        android:id="@+id/toolbar_hairline"
+        android:layout_width="match_parent"
+        android:layout_height="@dimen/stroke_hairline"
+        android:alpha="0"
+        android:background="?attr/colorOutlineVariant" />
+</LinearLayout>

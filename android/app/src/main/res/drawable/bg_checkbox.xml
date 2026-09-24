@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  THE MULTI-SELECT BOX of a row — handoff README §7, «список приложений с
+  чекбоксами», measured off the prototype's «Прокси по приложениям».
+
+      22 × 22, radius 7, border 2dp
+      снято  — заливки нет, обводка ?attr/colorOutline (#2A2E36)
+      выбрано — заливка и обводка ?attr/colorPrimary
+
+  A CHECKBOX AND NOT A SWITCH, and the difference is a promise, not a taste: a
+  switch turns something on NOW, a checkbox marks a member of a set that some
+  other control will act on. «Прокси по приложениям» is a set of 128 apps, so a
+  column of switches down its right edge says 128 things are being turned on one
+  at a time. The prototype draws boxes; this is that box.
+
+  state_activated and not state_checked: the slot is an ImageView driven by
+  RowBinder, not a CompoundButton, because the ROW owns the tap (the box is not
+  separately focusable) and a Material checkbox would bring its own 48dp touch
+  target and its own ripple back with it.
+
+  Colours are ATTRIBUTES, never @color: the mono overlay redefines attributes and
+  cannot reach a colour resource — the trap that left 22 tiles blue on a
+  black-and-white screen.
+-->
+<selector xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <item android:state_activated="true">
+        <shape android:shape="rectangle">
+            <solid android:color="?attr/colorPrimary" />
+            <stroke
+                android:width="@dimen/stroke_focus"
+                android:color="?attr/colorPrimary" />
+            <corners android:radius="@dimen/radius_checkbox" />
+        </shape>
+    </item>
+
+    <item>
+        <shape android:shape="rectangle">
+            <solid android:color="@android:color/transparent" />
+            <stroke
+                android:width="@dimen/stroke_focus"
+                android:color="?attr/colorOutline" />
+            <corners android:radius="@dimen/radius_checkbox" />
+        </shape>
+    </item>
+</selector>

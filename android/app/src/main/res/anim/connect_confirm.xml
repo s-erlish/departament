@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- ЭТОТ ФАЙЛ БОЛЬШЕ НЕ ПРОИГРЫВАЕТСЯ, И ЭТО НАМЕРЕННО.
+     Сонар подтверждения перешёл на property-аниматоры: движением теперь владеет само
+     кольцо (его RenderNode), а не коробка @id/connect_frame, внутри которой оно летает —
+     см. HomeFragment.emitConfirmRings и причину там же. Числа отсюда перенесены туда
+     слово в слово (1.6 / 1.5 / 0.5, motion_emphasis, ease_out_quint, motion_press_in);
+     файл оставлен как письменная запись их происхождения. Не подключайте его обратно
+     через View.startAnimation: именно этот путь и был дефектом. -->
+<!-- THE CONFIRM RING — «При подтверждении — один сонар» (handoff §4), emitted at the
+     instant the tunnel confirms and by no other event in the product. Fires ONCE and
+     never loops.
+
+     EVERY NUMBER IS THE PROTOTYPE'S OWN:
+
+         <div style="position:absolute;inset:22px;border-radius:50%;border:2px solid acc;
+                     animation:sonar 600ms cubic-bezier(.22,1,.36,1) both">
+         @keyframes sonar{from{transform:scale(1);opacity:1}to{transform:scale(1.6);opacity:0}}
+
+     i.e. 1.0 -> 1.6 and opacity 1 -> 0 over @integer/motion_emphasis (600) on
+     @interpolator/ease_out_quint, which IS cubic-bezier(.22,1,.36,1). §8's timing table
+     agrees to the millisecond: «Сонар 600 мс cubic-bezier(.22, 1, .36, 1)».
+
+     IT USED TO TRAVEL 1.35 FROM 0.6, AND THAT WAS A GEOMETRY BUG WEARING A RATIONALE.
+     The view was a child of the 150dp disc, so 1.6 would have thrown it 240dp wide and
+     the file lowered the travel instead. But `inset:22px` is not the disc — it is the
+     ACTIVE RING, 170dp — and 1.6 of that is 272dp, which is what the prototype's frame at
+     2230ms actually shows: the ring already outside all three rings of the object. The
+     view now carries @dimen/connect_sweep (fragment_home.xml), so the design's own figure
+     fits, and with it the design's own opacity: this ring starts OPAQUE. Starting at 0.6
+     was compensating for a ring that never got clear of the object it was confirming.
+
+     HomeFragment hides the view on end. Reduced motion skips loading this entirely — the
+     ring is not emitted at all — while the confirm haptic still fires. -->
+<set xmlns:android="http://schemas.android.com/apk/res/android"
+    android:duration="@integer/motion_emphasis"
+    android:fillAfter="false"
+    android:interpolator="@interpolator/ease_out_quint">
+
+    <scale
+        android:fromXScale="1.0"
+        android:fromYScale="1.0"
+        android:pivotX="50%"
+        android:pivotY="50%"
+        android:toXScale="1.6"
+        android:toYScale="1.6" />
+
+    <alpha
+        android:fromAlpha="1.0"
+        android:toAlpha="0.0" />
+
+</set>

@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  SUB-PAGE ENTER. The whole entrance vocabulary a sub-screen is allowed
+  (00-rules.md 8.9: "A screen appears; it does not perform").
+
+  Reveal: translationX @dimen/space_16 -> 0 and alpha 0 -> 1, together, over
+  @integer/motion_subpage_enter 260ms on @interpolator/ease_out_quint. That is the
+  32-master-plan-android.md 7.3 choreography row "Sub-page enter" verbatim, and
+  it is the only motion permitted when a sub-page opens: no slide from the screen
+  edge, no scale, no shared-element choreography, no scrim wipe, no stagger of
+  the content behind it.
+
+  Only transform and alpha move (00-rules.md 8.7 forbids animating layout
+  properties for effect), so nothing here triggers a measure or a layout pass and
+  the entrance costs one composited frame's worth of work.
+
+  Tokens, not literals: 260 is @integer/motion_subpage_enter and 16dp is @dimen/space_16
+  from the one spacing scale. Its reverse lives in subpage_exit.xml at
+  @integer/motion_subpage_exit 195 = 75% of enter (00-rules.md 3.7, 8.5); the two
+  files are a pair and neither is retimed without the other.
+
+  Reduced motion is a contract (00-rules.md 8.8): DO NOT pass this resource
+  directly to overridePendingTransition. Go through ui/component/SubPage.kt,
+  which checks MotionUtils.animationsEnabled() and substitutes a 0ms no-op so the
+  page snaps to its end state. An animation that skips that check is a P1
+  accessibility defect.
+
+  API floor on the slide: the platform only learned to read a TYPE_DIMENSION out
+  of fromXDelta in API 29 (Animation.Description.parseValue). This app's minSdk
+  is 24, so on API 24-28 the delta resolves to 0 and the entrance degrades to the
+  260ms fade alone - the correct tempo and curve, one channel short. It degrades,
+  it never breaks, and the alternative (a percentage of the view's own width)
+  would be an off-scale distance that grows with the screen.
+-->
+<set xmlns:android="http://schemas.android.com/apk/res/android"
+    android:duration="@integer/motion_subpage_enter"
+    android:fillAfter="false"
+    android:interpolator="@interpolator/ease_out_quint"
+    android:shareInterpolator="true">
+
+    <translate
+        android:fromXDelta="@dimen/space_16"
+        android:toXDelta="0" />
+
+    <alpha
+        android:fromAlpha="0.0"
+        android:toAlpha="1.0" />
+
+</set>

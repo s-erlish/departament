@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  THE FIRST ROW OF A SECTION CARD. @drawable/bg_row with the two TOP corners
+  rounded to @dimen/radius_row_edge 19.
+
+  Why a row has to round itself at all (handoff README §6, §11 grabl 4): a
+  section card that hosts a select popup cannot clip its children — if it did,
+  a popup opened on the last row would be sliced off at the card's bottom edge.
+  With clipChildren and clipToPadding off, the card stops trimming its first and
+  last rows to its own 20dp corner, so those two rows carry the corner
+  themselves. 19 and not 20 because the card paints a 1dp stroke inside its
+  radius, and the fill this row has to line up with is that one pixel tighter.
+
+  A row in the MIDDLE of a card keeps @drawable/bg_row. A card with exactly one
+  row uses neither of these — it uses @drawable/bg_row_only.
+-->
+<selector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:enterFadeDuration="@integer/motion_press_in"
+    android:exitFadeDuration="@integer/motion_press_out">
+    <item android:state_pressed="true">
+        <shape android:shape="rectangle">
+            <solid android:color="?attr/colorPressBg" />
+            <corners
+                android:topLeftRadius="@dimen/radius_row_edge"
+                android:topRightRadius="@dimen/radius_row_edge" />
+        </shape>
+    </item>
+    <item android:state_focused="true">
+        <shape android:shape="rectangle">
+            <solid android:color="@android:color/transparent" />
+            <stroke
+                android:width="@dimen/stroke_focus"
+                android:color="?attr/colorPrimary" />
+            <corners
+                android:topLeftRadius="@dimen/radius_row_edge"
+                android:topRightRadius="@dimen/radius_row_edge" />
+        </shape>
+    </item>
+    <item android:state_activated="true">
+        <shape android:shape="rectangle">
+            <solid android:color="?attr/colorAccentFill" />
+            <corners
+                android:topLeftRadius="@dimen/radius_row_edge"
+                android:topRightRadius="@dimen/radius_row_edge" />
+        </shape>
+    </item>
+    <item>
+        <shape android:shape="rectangle">
+            <solid android:color="@android:color/transparent" />
+        </shape>
+    </item>
+</selector>

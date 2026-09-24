@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  The in-group hairline: 1dp colorOutlineVariant, inset 68dp from the leading edge
+  so it starts exactly where the row's text starts (gutter 16 + tile 40 + gap 12).
+  Three origins exist in the shipped app (64, 68, 72); this is the one.
+
+  1.16:1 on the dark ground, deliberately. This is structural decoration, not a
+  control boundary, so WCAG 1.4.11 does not apply to it — the control boundary is
+  @color/md_theme_outlineControl and lives in field_stroke_selector (D-9).
+
+  Applied by the group container (android:divider + showDividers="middle"), never
+  by the row: a divider above the first row or below the last one is the "boxed
+  list" tell that 00-rules.md 4.6 bans.
+-->
+<inset xmlns:android="http://schemas.android.com/apk/res/android"
+    android:insetLeft="@dimen/divider_inset_start"
+    android:insetRight="0dp">
+    <shape android:shape="rectangle">
+        <size android:height="@dimen/stroke_hairline" />
+        <solid android:color="?attr/colorOutlineVariant" />
+    </shape>
+</inset>

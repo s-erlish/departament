@@ -1,0 +1,70 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  ============================================================================
+  H4 - THE SHEET HEADER, and a container the caller fills with Row.Action rows.
+  24-tab-conformance.md 0.2 H4, 22-components.md 8.4, 00-rules.md 7.6.
+  ============================================================================
+
+      [ 36x4 drag handle, space_8 from the top ]
+      [ 12 ][ title, Title 16/700, at the 16 gutter ][ 8 ]
+      [ rows at 0, hairline between them only ]
+      [ 16 ]
+
+  No back arrow, no close button, no «Отмена» row: dismiss is the scrim, the system
+  Back, or a drag, which is the platform contract and needs no chrome of its own.
+
+  This replaces the single-choice AlertDialog that these screens used for «Импорт /
+  Экспорт / Готовые наборы» and the toolbar overflow menus that no finger could
+  reach once the sub-page toolbar stopped being an ActionBar. The rows themselves are
+  view_row.xml bound through RowBinder, so a sheet row and a settings row are the same
+  object - the caller inflates them into @id/sheet_rows.
+-->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/sheet_root"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:paddingBottom="@dimen/space_16">
+
+    <View
+        android:layout_width="@dimen/sheet_handle_w"
+        android:layout_height="@dimen/sheet_handle_h"
+        android:layout_gravity="center_horizontal"
+        android:layout_marginTop="@dimen/space_8"
+        android:background="@drawable/bg_sheet_handle"
+        android:importantForAccessibility="no" />
+
+    <TextView
+        android:id="@+id/sheet_title"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="@dimen/space_12"
+        android:layout_marginBottom="@dimen/space_8"
+        android:paddingStart="@dimen/screen_gutter"
+        android:paddingEnd="@dimen/screen_gutter"
+        android:textAppearance="@style/TextAppearance.App.Title"
+        tools:text="Действия" />
+
+    <!--
+        THE ROWS SCROLL. Four of the five callers fill this sheet from a list whose length
+        is the user's data, not a constant: every stored profile remark (the chain step, the
+        subscription's prev/next profile, the routing rule's outbound tag) and every
+        subscription group. Past ~8 rows that list is taller than the sheet, and a plain
+        LinearLayout in a BottomSheetDialog does not scroll - the rows below the fold are
+        simply unreachable. A NestedScrollView is what makes the sheet draggable AND
+        scrollable, and it costs nothing on a three-row sheet: wrap_content up to the
+        height the sheet is allowed, then scroll.
+    -->
+    <androidx.core.widget.NestedScrollView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:scrollbars="none">
+
+        <LinearLayout
+            android:id="@+id/sheet_rows"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical" />
+    </androidx.core.widget.NestedScrollView>
+</LinearLayout>

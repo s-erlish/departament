@@ -1,0 +1,11 @@
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="24dp"
+    android:height="24dp"
+    android:viewportWidth="24"
+    android:viewportHeight="24">
+    <!-- Solid shield: the SAME outer silhouette as ic_shield_outline, filled (no inner
+         cut-out) so it can crossfade in over the outline as the tunnel confirms. -->
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M12,2.2 L19.6,5.2 L19.6,11.4 C19.6,16.1 15.9,19.9 12,21.8 C8.1,19.9 4.4,16.1 4.4,11.4 L4.4,5.2 Z" />
+</vector>

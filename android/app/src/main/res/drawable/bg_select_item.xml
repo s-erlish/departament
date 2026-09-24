@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  ONE OPTION inside a select popup (handoff README §6).
+
+  Three states and no ripple, the same grammar as @drawable/bg_row:
+
+    pressed    ?attr/colorPressBg — the step DOWN, paired with @anim/press_button
+               0.965 on the option itself (§1 puts a select option on the button
+               rung of the ladder, not the row rung).
+    selected   @color/select_item_selected — «фон на шаг выше», a 6-8% ink wash
+               over the popup body, because the body already sits on the TOP rung
+               of the surface ramp and there is no higher named plane to move to.
+               It is never the only signal: a 16dp check sits beside it.
+    rest       transparent, so the body's own fill shows through.
+
+  radius @dimen/radius_select_item 11, which is concentric with the body: a 16dp
+  corner minus the 6dp the body pads by lands at 10-11.
+
+  Fades on the press clock, like every other pressable surface here.
+-->
+<selector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:enterFadeDuration="@integer/motion_press_in"
+    android:exitFadeDuration="@integer/motion_press_out">
+    <item android:state_pressed="true">
+        <shape android:shape="rectangle">
+            <solid android:color="?attr/colorPressBg" />
+            <corners android:radius="@dimen/radius_select_item" />
+        </shape>
+    </item>
+    <item android:state_activated="true">
+        <shape android:shape="rectangle">
+            <solid android:color="@color/select_item_selected" />
+            <corners android:radius="@dimen/radius_select_item" />
+        </shape>
+    </item>
+    <item>
+        <shape android:shape="rectangle">
+            <solid android:color="@android:color/transparent" />
+            <corners android:radius="@dimen/radius_select_item" />
+        </shape>
+    </item>
+</selector>

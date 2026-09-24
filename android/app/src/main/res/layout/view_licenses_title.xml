@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  ============================================================================
+  The title of the «Лицензии открытого ПО» dialog (A-33 settings/about).
+  ============================================================================
+
+  A dialog normally lets the platform draw its title, and every other dialog in
+  this product still does. This one cannot, and the reason is geometry rather
+  than taste.
+
+  `?attr/materialAlertDialogTitlePanelStyle` starts the title
+  @dimen/abc_dialog_padding_top_material — 18dp — below the top of the window,
+  and @drawable/bg_dialog rounds that window by @dimen/radius_card, 20. The
+  panel was measured for a square-cornered window: 18 is less than 20, so the
+  first line of the title is laid out inside the vertical band the corner arc
+  is still cutting away, and «Лицензии открытого ПО» is trimmed along its top.
+  The same panel then hides the 16dp @id/titleDividerNoCustom spacer under the
+  title whenever the dialog carries a custom view — which this one does, the
+  WebView — so the title also sits flush against the licence text.
+
+  Both are answered here by owning the box: @dimen/space_24 above (past the
+  corner, and the dialog's own gutter to the sides, matching the button bar
+  below) and @dimen/space_16 under it. The title is NOT single-line and NOT
+  ellipsised, unlike @id/alertTitle, because a Russian title is longer than the
+  English one the platform's one-line assumption was written for.
+-->
+<TextView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/licenses_title"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:paddingStart="@dimen/space_24"
+    android:paddingTop="@dimen/space_24"
+    android:paddingEnd="@dimen/space_24"
+    android:paddingBottom="@dimen/space_16"
+    android:textAppearance="@style/TextAppearance.App.Title"
+    tools:text="Лицензии открытого ПО" />

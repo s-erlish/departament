@@ -1,0 +1,126 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  ============================================================================
+  ONE DEVICE — handoff README §7, «Устройства».
+  ============================================================================
+
+      плитка 40dp → 16dp → имя 14sp + «Активно: … · ID: …» 12.5sp
+      → справа «Это устройство» акцентом ИЛИ «Удалить» красным
+
+  It was a MaterialCardView with an 8dp gap under it, i.e. one card per device in a
+  vertical grid. §7 draws the devices as ROWS inside ONE card, and the design rules' «no
+  nested cards» said the same thing from the other direction — the card now belongs
+  to @id/rv_devices in activity_devices.xml, and this file is a row again.
+
+  THE DELETE AFFORDANCE IS A NAMED ACTION, not a trash glyph. §7 writes «Удалить»
+  in the destructive tone on the right of the row, which is what the prototype
+  draws; @id/btn_device_delete keeps its id and stays a MaterialButton, so
+  DeviceAdapter's `b.btnDeviceDelete.setOnClickListener` is untouched. It is also
+  still the ONLY target on the row, at the 48dp minimum, because what it does is
+  irreversible.
+
+  THE HAIRLINE IS PART OF THE ROW. A card of rows needs a rule between them and
+  the card cannot draw one; every row carries it on TOP and the adapter hides it on
+  position 0 (DeviceAdapter). Full-bleed, as §6's rows are.
+-->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical">
+
+    <com.google.android.material.divider.MaterialDivider
+        android:id="@+id/device_divider"
+        style="@style/Widget.Departament.Divider.Full"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content" />
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:baselineAligned="false"
+        android:gravity="center_vertical"
+        android:minHeight="@dimen/row_min_height"
+        android:orientation="horizontal"
+        android:paddingStart="@dimen/screen_gutter"
+        android:paddingTop="@dimen/space_12"
+        android:paddingEnd="@dimen/space_8"
+        android:paddingBottom="@dimen/space_12">
+
+        <!-- Neutral, and both halves of it come from ATTRIBUTES: Widget.Departament.Tile
+             fills from @color/icon_tile_neutral and tints its glyph from
+             @color/icon_glyph_neutral, and ThemeOverlay.Mono can restate neither, so the
+             tile and the glyph both stayed faintly blue there. Identical pixels in the two
+             themes that already worked — icon_tile_neutral is #E3EAF4 / #20242B against
+             surfaceContainerHighest #E3EAF4 / #20242B, the glyph pair #54607A / #9BA1AD
+             both sides. -->
+        <ImageView
+            style="@style/Widget.Departament.Tile"
+            android:layout_marginEnd="@dimen/space_16"
+            android:backgroundTint="?attr/colorSurfaceContainerHighest"
+            android:importantForAccessibility="no"
+            android:tint="?attr/colorOnSurfaceVariant"
+            app:srcCompat="@drawable/ic_acc_devices" />
+
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginEnd="@dimen/space_12"
+            android:layout_weight="1"
+            android:orientation="vertical">
+
+            <TextView
+                android:id="@+id/tv_device_name"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:ellipsize="end"
+                android:maxLines="1"
+                android:textAppearance="@style/TextAppearance.App.Body"
+                tools:text="Google Pixel 8" />
+
+            <!-- ONE subtitle, «Активно: … · ID: …», wrapping to two lines — the prototype's
+                 own composition, and §11 grabl 9's limit. It was two stacked TextViews, which
+                 gave a three-line row where the design draws two and left the ID sitting on a
+                 line of its own. The adapter joins them; nothing about the ID is lost.
+                 It is also what the deleted row's «Отключено от подписки» replaces. -->
+            <TextView
+                android:id="@+id/tv_device_meta"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/space_4"
+                android:ellipsize="end"
+                android:maxLines="2"
+                android:textAppearance="@style/TextAppearance.App.Caption"
+                tools:text="Активно: 09.07.2026 · ID: a1b2c3d4e5f6" />
+        </LinearLayout>
+
+        <!--
+          THE TRAILING SLOT HOLDS EXACTLY ONE OF THESE TWO, and which one is not a
+          decoration but the row's whole contract (§7): the device you are holding is
+          marked «Это устройство» in the accent and CANNOT be removed — a row that
+          offered «Удалить» there would log you out of your own subscription — and every
+          other device offers the named destructive action.
+
+          The badge is a TextView and not a disabled button on purpose: it is a fact
+          about the row, not an affordance that happens to be off.
+        -->
+        <TextView
+            android:id="@+id/tv_device_badge"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/devices_this_device"
+            android:textAppearance="@style/TextAppearance.App.Body"
+            android:textColor="?attr/colorPrimary"
+            android:visibility="gone"
+            tools:visibility="visible" />
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btn_device_delete"
+            style="@style/Widget.Departament.Button.Tertiary.Destructive"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:contentDescription="@string/devices_delete_cd"
+            android:text="@string/devices_delete_confirm" />
+    </LinearLayout>
+</LinearLayout>

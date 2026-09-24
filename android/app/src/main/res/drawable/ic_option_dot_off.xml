@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  THE UNCHOSEN TERM, in «Купить подписку». A hollow ring, 1.5dp on the outline —
+  the same hairline weight every unselected boundary in the product carries.
+
+  A vector and not a RadioButton: the row is the target, and a real radio inside it
+  would be a second focusable control that can disagree with the row it sits in
+  (view_row.xml says the same thing about its switch). The row announces the choice
+  to TalkBack; this only draws it.
+-->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="22dp"
+    android:height="22dp"
+    android:viewportWidth="24"
+    android:viewportHeight="24">
+    <path
+        android:fillColor="@android:color/transparent"
+        android:pathData="M12,3.25a8.75,8.75 0 1,0 0,17.5a8.75,8.75 0 1,0 0,-17.5z"
+        android:strokeColor="?attr/colorOutline"
+        android:strokeWidth="1.5" />
+</vector>

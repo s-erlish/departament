@@ -1,0 +1,15 @@
+<!--
+  Sign-out glyph for the «Выйти» row's leading tile (23-account-rework.md 6.1 names it
+  ic_acc_logout). Same family as ic_acc_devices / ic_acc_history: filled Material, 24dp
+  viewport, single path, colour applied by the call site's tint (00-rules.md 1.4.12 —
+  one icon set, no second family).
+-->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="24dp"
+    android:height="24dp"
+    android:viewportWidth="24.0"
+    android:viewportHeight="24.0">
+    <path
+        android:fillColor="#FF000000"
+        android:pathData="M17,7l-1.41,1.41L18.17,11H8v2h10.17l-2.58,2.58L17,17l5,-5zM4,5h8V3H4c-1.1,0 -2,0.9 -2,2v14c0,1.1 0.9,2 2,2h8v-2H4V5z" />
+</vector>

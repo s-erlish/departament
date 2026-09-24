@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  THE ROW BACKGROUND, and the second channel of the one press response
+  (handoff README §1). Used by all five row archetypes and by every row that
+  previously carried ?attr/selectableItemBackground.
+
+  IT IS NOT A RIPPLE ANY MORE, and that is the point. §1: «Никакой подсветки
+  вокруг кнопки и никакого ripple» — a ripple is a radial splash that expands
+  from the touch point and is already fading when the finger lifts, which reads
+  as light coming OFF the surface. The handoff wants the opposite: the object is
+  pushed IN. So the press is a scale (@anim/press_row, 0.975) plus a background
+  step DOWN the ramp to ?attr/colorPressBg — #0D1017 on dark, one rung below
+  colorSurface #141619. The shipped version stepped UP to
+  colorSurfaceContainerHigh, which is the same gesture pointing the wrong way.
+
+  A plain <selector> of colours, not a ColorStateList resource: §1 asks for "a
+  ColorStateList with state_pressed", and this is that — expressed as a
+  StateListDrawable because android:background="@color/some_selector" only
+  resolves to a ColorStateListDrawable from API 29, and minSdk here is 24.
+
+  The fades are the press clock: enter @integer/motion_press_in 70, exit
+  @integer/motion_press_out 200, so the fill and the scale move together instead
+  of the colour snapping while the shape eases.
+
+  Focus (R7) is still an inset 2dp accent ring, because a row has no
+  MaterialButton stroke to borrow. Selected is still the 12% accent fill.
+
+  EDGE ROWS: the first and last row of a section card round themselves — see
+  @drawable/bg_row_top and @drawable/bg_row_bottom, and the note on
+  @dimen/radius_row_edge for why the card can no longer do it for them.
+-->
+<selector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:enterFadeDuration="@integer/motion_press_in"
+    android:exitFadeDuration="@integer/motion_press_out">
+    <!-- Pressed: the surface step DOWN. Never a scale here — the scale is the
+         stateListAnimator's job — and never a ripple. -->
+    <item android:state_pressed="true">
+        <shape android:shape="rectangle">
+            <solid android:color="?attr/colorPressBg" />
+        </shape>
+    </item>
+    <!-- Focused: the ring every focusable control owes the user. -->
+    <item android:state_focused="true">
+        <shape android:shape="rectangle">
+            <solid android:color="@android:color/transparent" />
+            <stroke
+                android:width="@dimen/stroke_focus"
+                android:color="?attr/colorPrimary" />
+            <corners android:radius="@dimen/radius_tile" />
+        </shape>
+    </item>
+    <!-- Selected: 12% accent fill. onSurface over it measures 15.68:1. -->
+    <item android:state_activated="true">
+        <shape android:shape="rectangle">
+            <solid android:color="?attr/colorAccentFill" />
+        </shape>
+    </item>
+    <item>
+        <shape android:shape="rectangle">
+            <solid android:color="@android:color/transparent" />
+        </shape>
+    </item>
+</selector>

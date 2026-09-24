@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    THE SELECT POPUP — the flyout that replaces every single-choice AlertDialog
+    (handoff README §6, «Выбор из списка»). Inflated and driven by
+    com.v2ray.ang.ui.component.SelectPopup; a screen never inflates it directly.
+
+    Applies to: Режим · DNS · Пинг · Оформление · Язык · Автообновление подписки ·
+    Доменная стратегия · Интервал · Сортировка.
+
+    The body is a plain LinearLayout and NOT a MaterialCardView, for one reason
+    that matters: a MaterialCardView clips its children to its own outline, and
+    §11 grabl 4 is precisely a flyout being clipped by the surface it lives on.
+    A shape background plus elevation gives the same fill, corner, stroke and
+    shadow with nothing that can trim the content.
+
+    Geometry, every number from §6 and each one confirmed against the prototype:
+      body     padding @dimen/select_popup_padding 6, radius 16, 1dp colorOutline,
+               solid colorSurfaceContainerHighest, elevation 20 (the «тень 20×44»)
+      width    set by SelectPopup from @dimen/select_popup_w_* — sized to the
+               LONGEST option so the body never reflows when the choice changes
+      position top 48 / right 8 from the anchor row's top-right corner
+
+    The reveal is a CLIP from top to bottom over @integer/motion_popup 260 plus
+    opacity over @integer/motion_popup_fade 180 — never a scale, which
+    re-rasterises the option labels and makes them judder (§6).
+-->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/select_popup"
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content"
+    android:background="@drawable/bg_select_popup"
+    android:clipChildren="false"
+    android:clipToPadding="false"
+    android:elevation="@dimen/select_popup_elevation"
+    android:orientation="vertical"
+    android:padding="@dimen/select_popup_padding" />

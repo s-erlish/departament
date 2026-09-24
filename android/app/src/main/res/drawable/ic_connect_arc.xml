@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  THE NEGOTIATING ARC of the connect object (handoff §4, «Подключаемся — одна дуга по
+  кругу, 1100 мс»), ported from the prototype's own SVG:
+
+      <svg viewBox="0 0 214 214" style="animation:spin 1100ms linear infinite">
+        <circle cx="107" cy="107" r="85" stroke-width="2" stroke-linecap="round"
+                stroke-dasharray="104 430" />
+
+  The viewport is 214, i.e. @dimen/connect_object, so one viewport unit is one dp and
+  the arc rides the ACTIVE ring without this file having to know where the ring is.
+
+  RADIUS 84 AND NOT THE PROTOTYPE'S 85, and this is the owner's «он не ровно по линии
+  вокруг кнопки крутится, а чуть выше».
+
+  The prototype draws the ring it rides as a CSS border — `inset:22px; border:2px solid`
+  — and a CSS border is drawn INSIDE the box, so its centre line is at 85 - 1 = 84. Its
+  arc is an SVG stroke at r=85, which is centred ON the path. The two disagree by half a
+  stroke, and at 214 CSS pixels on a desktop that is invisible; at 3x on a phone it is
+  3px of a 6px line, i.e. the arc plainly riding outside its own track.
+
+  The port inherits the same geometry from the other side: HomeFragment.buildConnectObject
+  strokes the inner ring with a GradientDrawable, which insets the oval by half the stroke
+  exactly as CSS does, so the ring's centre line is 84 here too. So the arc is 84. Nothing
+  else moves — inset 22 in a 214 box and a 2dp stroke are still §4's numbers, and this is
+  what they arithmetically mean.
+
+  trimPathEnd is the dash: the circumference at r=84 is 527.79, the prototype shows 104
+  of it, and 104/527.79 = 0.197. ONE arc and never a train of segments (§11 grabl 7).
+
+  It is WHITE and tinted at the ImageView (`app:tint="?attr/colorAccentFigure"`), the
+  same way @drawable/ic_flow_arc is tinted on the прогрузка ring — a vector cannot carry
+  a theme attribute in strokeColor without forking this file per theme.
+
+  IT IS THE BRIGHT HALF OF A PAIR. The prototype's negotiating ring is the accent at 30 %
+  (`rgba(76,141,255,.30)`) with the arc at full strength on top of it; the port used to
+  paint both at full and they cancelled out — «надо цвет чутка темнее сделать чтобы был
+  акцент и видно, что идёт анимация». The contrast is restored on the RING's side, where
+  the design puts it: see HomeFragment.dimRingTrack.
+
+  The revolution is NOT here: it is one infinite ObjectAnimator on ROTATION at
+  @integer/motion_spin, linear, started and stopped by HomeFragment. That is the route
+  FlowOverlay.startArc already takes, and it is what finally lands §4's 1100 exactly —
+  a Material CircularProgressIndicator owns its own clock and cannot be told this number.
+-->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="@dimen/connect_object"
+    android:height="@dimen/connect_object"
+    android:viewportWidth="214"
+    android:viewportHeight="214">
+    <path
+        android:pathData="M107,23 A84,84 0 0,1 107,191 A84,84 0 0,1 107,23"
+        android:strokeColor="#FFFFFF"
+        android:strokeLineCap="round"
+        android:strokeWidth="2"
+        android:trimPathEnd="0.197"
+        android:trimPathStart="0" />
+</vector>

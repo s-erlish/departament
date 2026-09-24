@@ -1,0 +1,87 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  ============================================================================
+  ONE DURATION — handoff README §7, «Купить подписку».
+  ============================================================================
+
+      точка выбора → срок 14sp + «Выгода N ₽» 12.5sp → справа цена
+
+  THE DOT IS THE SELECTION, and it is why this row no longer draws a bordered tile
+  per option: a column of four outlined boxes says «four things», while a column of
+  rows with one filled dot says «one of four», which is what choosing a term is. The
+  row still swaps @drawable/bg_buy_option / _selected underneath, so the chosen term
+  also carries the step of background the prototype gives it.
+
+  **ВЫГОДА ПИШЕТСЯ ПРИГЛУШЁННО-БЕЛЫМ, НЕ ЗЕЛЁНЫМ** (§7, verbatim, and the one
+  instruction the handoff states twice). Green here would be the product's fourth
+  semantic colour and would read as a system status rather than a note about a
+  price, so it is ?attr/colorOnSurfaceVariant — the same tone as every other
+  subtitle in the app, which is what «приглушённо-белым» means in these tokens.
+
+  The saving is computed from the tariff's OWN price options, with the shortest term
+  as the yardstick, so a catalog that stops discounting stops showing a discount.
+  Nothing here is hardcoded (§7: «приходит с сервера, не зашивать»).
+-->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/row_option"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:background="@drawable/bg_buy_option"
+    android:baselineAligned="false"
+    android:clickable="true"
+    android:focusable="true"
+    android:gravity="center_vertical"
+    android:minHeight="@dimen/row_min_height"
+    android:orientation="horizontal"
+    android:paddingStart="@dimen/space_16"
+    android:paddingTop="@dimen/space_8"
+    android:paddingEnd="@dimen/space_16"
+    android:paddingBottom="@dimen/space_8"
+    android:stateListAnimator="@anim/press_row">
+
+    <ImageView
+        android:id="@+id/iv_option_dot"
+        android:layout_width="@dimen/tile_glyph"
+        android:layout_height="@dimen/tile_glyph"
+        android:layout_marginEnd="@dimen/space_16"
+        android:importantForAccessibility="no"
+        app:srcCompat="@drawable/ic_option_dot_off"
+        tools:srcCompat="@drawable/ic_option_dot_on" />
+
+    <LinearLayout
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginEnd="@dimen/space_12"
+        android:layout_weight="1"
+        android:orientation="vertical">
+
+        <TextView
+            android:id="@+id/tv_option_duration"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:maxLines="1"
+            android:textAppearance="@style/TextAppearance.App.Body"
+            tools:text="6 месяцев" />
+
+        <TextView
+            android:id="@+id/tv_option_saving"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/space_2"
+            android:maxLines="1"
+            android:textAppearance="@style/TextAppearance.App.Caption"
+            android:visibility="gone"
+            tools:text="Выгода 210 ₽"
+            tools:visibility="visible" />
+    </LinearLayout>
+
+    <TextView
+        android:id="@+id/tv_option_price"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:maxLines="1"
+        android:textAppearance="@style/TextAppearance.App.Title"
+        tools:text="1 290 ₽" />
+</LinearLayout>

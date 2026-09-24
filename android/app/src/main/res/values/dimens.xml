@@ -1,0 +1,459 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Dimension tokens. Single source of truth for every dp value in the product
+  (00-rules.md 3.1/3.2/3.3, 10-design-system.md 1.3/2.5/2.6/2.7/2.8).
+
+  The closed number set: space 0/4/8/12/16/24/32/40/48/56/64, radius
+  12/16/20/24/100, stroke 1/1.5/2/3, component sizes from the measured list in
+  10-design-system.md 1.3. Anything not declared here is a defect; anything
+  declared here is not "off-scale" even when its number is odd for a gap
+  (00-rules.md 1.4.5 names meter_height, btn_min_width 96 and radius_button
+  explicitly as legal sizes rather than off-scale spacing).
+
+  ADDITIVE: the upstream padding_spacing_*/view_height_* block below is retired
+  by 10-design-system.md 4.3 but still referenced by unmigrated layouts, so it
+  stays until the migration wave clears the references. Do not use it in new work.
+-->
+<resources>
+    <!-- ============================================================= -->
+    <!-- LEGACY (upstream). Retired by 10-design-system.md 4.3.         -->
+    <!-- Kept alive only because layouts still reference them.          -->
+    <!-- New work uses space_* / btn_height / view_height_dp48.          -->
+    <!-- ============================================================= -->
+    <dimen name="padding_spacing_dp4">4dp</dimen>
+    <dimen name="padding_spacing_dp8">8dp</dimen>
+    <dimen name="padding_spacing_dp16">16dp</dimen>
+    <!-- Kept by 4.3, renamed in spirit to size_glyph_nav (24dp nav/toolbar glyph). -->
+    <dimen name="image_size_dp24">24dp</dimen>
+    <!-- Retired as a button height by 22-components.md 20.3 -> btn_height 48. -->
+    <dimen name="view_height_dp36">36dp</dimen>
+    <!-- size_touch_min: the Android 48x48dp minimum touch target (00-rules 7.2). -->
+    <dimen name="view_height_dp48">48dp</dimen>
+    <dimen name="view_height_dp64">64dp</dimen>
+    <dimen name="view_height_dp120">120dp</dimen>
+    <dimen name="view_height_dp160">160dp</dimen>
+
+    <!-- ============================================================= -->
+    <!-- SPACING. The ONLY spacing values in the product.                -->
+    <!--                                                                -->
+    <!-- The handoff README §8 states the scale as                      -->
+    <!--   2 · 4 · 6 · 8 · 10 · 12 · 14 · 16 · 20 · 22 · 24             -->
+    <!-- and the six steps it adds to the old 4/8/12/16/24/32 set are   -->
+    <!-- not decoration: the prototype's own settings row is            -->
+    <!-- padding 10x16, its select popup is padding 6 with 4x10 options,-->
+    <!-- and its section header is 22 above / 8 below. Rounding those   -->
+    <!-- to the nearest old step is what makes a screen look "almost    -->
+    <!-- right"; the numbers below are the ones to reach for.           -->
+    <!--                                                                -->
+    <!-- Rhythm: parts of one object 2-14, objects 16, sections 20-24.  -->
+    <!-- Never one gap value everywhere.                                -->
+    <!-- ============================================================= -->
+    <dimen name="space_2">2dp</dimen>
+    <dimen name="space_4">4dp</dimen>
+    <dimen name="space_6">6dp</dimen>
+    <dimen name="space_8">8dp</dimen>
+    <dimen name="space_10">10dp</dimen>
+    <dimen name="space_12">12dp</dimen>
+    <dimen name="space_14">14dp</dimen>
+    <dimen name="space_16">16dp</dimen>
+    <dimen name="space_20">20dp</dimen>
+    <dimen name="space_22">22dp</dimen>
+    <dimen name="space_24">24dp</dimen>
+    <!-- NOT on §8's scale. Kept because live layouts reference it and nothing
+         in this repo is deleted to make a table tidier; do not reach for it in
+         new work — the largest gap the handoff uses is 24. -->
+    <dimen name="space_32">32dp</dimen>
+    <!-- The one horizontal screen inset. values-sw600dp/ must override to 24dp. -->
+    <dimen name="screen_gutter">16dp</dimen>
+    <!-- Content column cap on tablet / wide window; centred past this (4.1). -->
+    <dimen name="content_max_width">720dp</dimen>
+    <!-- Derived text origin: gutter 16 + tile 40 + gap 12. Every row title and
+         every in-group hairline starts here (2.5). -->
+    <dimen name="divider_inset_start">68dp</dimen>
+
+    <!-- ============================================================= -->
+    <!-- RADIUS — the handoff README §8 ladder, eight rungs:             -->
+    <!--    8  chip / badge          radius_chip                        -->
+    <!--   11  select option         radius_select_item                 -->
+    <!--   12  icon tile             radius_tile                        -->
+    <!--   14  small card            radius_card_small                  -->
+    <!--   16  select popup, input   radius_popup / radius_control      -->
+    <!--   19  edge row in a card    radius_row_edge  (= card 20 - 1dp   -->
+    <!--                             stroke; see the note below)        -->
+    <!--   20  card / object         radius_card                        -->
+    <!--   24  button, sheet lip     radius_button / radius_sheet       -->
+    <!--  100  round                 radius_pill — ONLY where width ==  -->
+    <!--                             height or the shape is a track     -->
+    <!--                                                                -->
+    <!-- Concentricity still holds: inner radius = outer radius minus    -->
+    <!-- the padding between them. A 16 popup with 6dp padding holds an  -->
+    <!-- 11 option (16 - 6 = 10, rounded to the ladder's 11) — which is  -->
+    <!-- exactly what the prototype measures.                            -->
+    <!-- ============================================================= -->
+
+    <!-- §8 «чип 8». Was 12, and the 12 lives on as radius_tile, which is the
+         other thing that value was carrying. A chip is a LABEL — smaller, so a
+         tighter corner; a tile is a 40dp object and keeps its 12. -->
+    <dimen name="radius_chip">8dp</dimen>
+    <!-- §6: one option inside the select popup. -->
+    <dimen name="radius_select_item">11dp</dimen>
+    <!-- The 40dp leading tile on every row, and every other 40dp fitting. -->
+    <dimen name="radius_tile">12dp</dimen>
+    <!-- §8 «мелкая карточка»: a card that is an item in a list rather than a
+         section of a screen — a device, a payment, a price option. -->
+    <dimen name="radius_card_small">14dp</dimen>
+    <!-- §6: the select popup body, and every input/field/search box.
+         radius_control is the name a form reaches for, radius_popup the name the
+         flyout reaches for; both are the same 16 and both are load-bearing, so
+         neither is an alias of the other by accident. -->
+    <dimen name="radius_popup">16dp</dimen>
+    <dimen name="radius_control">16dp</dimen>
+    <!--
+      §6: THE EDGE ROW'S OWN CORNER, and it exists because of README §11 grabl 4.
+
+      A section card cannot clip its children — if it did, a select popup opened
+      on the last row would be sliced off at the card's bottom edge. With
+      clipChildren off, the card stops rounding its first and last rows for them,
+      so those rows have to round themselves. 19 and not 20: the card paints a
+      1dp stroke inside its 20dp corner, so the fill the row has to match is one
+      device pixel tighter. See @drawable/bg_row_top / @drawable/bg_row_bottom.
+    -->
+    <dimen name="radius_row_edge">19dp</dimen>
+    <dimen name="radius_card">20dp</dimen>
+    <!--
+      §8 «кнопка 24–26». Was 16.
+
+      This reverses D-6, and it is the owner's own reversal: the handoff package
+      is his design, assembled by him and handed over on 2026-08-04 with the
+      instruction to reproduce it 1:1, and it draws every labelled button at the
+      top of the 24–26 band. It is still NOT radius_pill — a 48dp button at 24
+      is a stadium, a 52dp CTA at 24 is not, and nothing here clamps to half the
+      height the way radius_pill does.
+
+      What did NOT move with it: inputs, the search field and the segmented
+      track stay at radius_control 16. A 56dp field at 24 reads as a pill with
+      text in it, and §8 says nothing about fields.
+    -->
+    <dimen name="radius_button">24dp</dimen>
+    <!-- Bottom-sheet / drawer top corners only (24,24,0,0). -->
+    <dimen name="radius_sheet">24dp</dimen>
+    <!-- Effective full-round: larger than half of any control height we ship. -->
+    <dimen name="radius_pill">100dp</dimen>
+
+    <!-- ============================================================= -->
+    <!-- STROKE (2.8). Which of the two lines a border is decides        -->
+    <!-- whether WCAG 1.4.11 applies to it.                             -->
+    <!-- ============================================================= -->
+    <!-- Row separators and card borders, in colorOutlineVariant. Structural
+         decoration at 1.16:1 dark / 1.29:1 light: deliberately below 3:1, and
+         1.4.11 does not apply to it. -->
+    <dimen name="stroke_hairline">1dp</dimen>
+    <!-- Input / outlined button / segmented track boundary, in
+         colorOutlineControl. This IS a control boundary, so 1.4.11 applies and
+         the colour clears 3:1 (3.43:1 dark, 3.45:1 light). -->
+    <dimen name="stroke_control">1dp</dimen>
+    <!--
+      THE FRAME WEIGHT. The handoff draws one line at 1.5 and it is always the
+      same kind of line: a frame around an object rather than a divider between
+      two — the server row's box (§4/§11 grabl 2, present in all seven states so
+      selecting a row cannot resize it), the outlined pills of the start screen
+      (§2.5/§2.6) and the connect object's two outer rings (§4).
+
+      It is the one rung the scale was missing, so each of those places minted
+      the number itself: `bg_server_row.xml` wrote `1.5dp` out six times,
+      `HomeFragment.ringStroke()` multiplied it by the display density in Kotlin,
+      and `ob_stroke` declared it a third time for the start screen. One name now,
+      and `ob_stroke` is an alias of it rather than a second number.
+
+      Like stroke_control this IS a control boundary where it carries colour, so
+      1.4.11 applies and the colours it is drawn in (colorPrimary, colorOutline)
+      clear 3:1 in every theme.
+    -->
+    <dimen name="stroke_frame">1.5dp</dimen>
+    <!-- The focus ring (R7). Drawn on every focusable control. -->
+    <dimen name="stroke_focus">2dp</dimen>
+    <!-- Selected indicator; connect ring when connected. -->
+    <dimen name="stroke_emphasis">2dp</dimen>
+    <!-- Connect disc ring. -->
+    <dimen name="stroke_ring">3dp</dimen>
+    <!-- Focus ring offset for the outer case; the ring's radius is the
+         control's radius + this (R7). -->
+    <dimen name="focus_offset">2dp</dimen>
+
+    <!-- ============================================================= -->
+    <!-- SIZES (2.7). Measured object sizes, not a scale to interpolate. -->
+    <!-- Every control height is a MINIMUM: layout_height="wrap_content" -->
+    <!-- + minHeight, never a fixed height (R2). A fixed height clips a  -->
+    <!-- two-line Russian label at font scale 200%, which is a P1 a11y   -->
+    <!-- defect by 00-rules.md 14.5.                                     -->
+    <!-- ============================================================= -->
+    <dimen name="glyph_16">16dp</dimen>
+    <!-- The trailing glyph of a row — handoff §6 «шеврон 18dp». Measured off the
+         prototype: every chevron, caret and state marker inside a card row is an
+         18×18 box flush against the card's 16dp inner gutter. 20 is still the size
+         of a glyph that stands ALONE (a button's icon), which is why both live here. -->
+    <dimen name="glyph_18">18dp</dimen>
+    <dimen name="glyph_20">20dp</dimen>
+    <!-- The checkbox of a multi-select row (§7 «список приложений с чекбоксами»).
+         22dp box, 2dp border, radius 7, a 16dp tick inside it. -->
+    <dimen name="checkbox_size">22dp</dimen>
+    <dimen name="radius_checkbox">7dp</dimen>
+    <!-- The glyph inside the 40dp tile. 22 is a size here and never a gap. -->
+    <dimen name="tile_glyph">22dp</dimen>
+    <!--
+      The waiting ring inside the same 40dp tile, and it is deliberately NOT 40.
+
+      `indicatorSize` on a CircularProgressIndicator is the diameter of the arc's
+      CENTRELINE, not the size of the view: the component draws a `trackThickness`
+      stroke astride that circle and Material reserves `indicatorSize + 2 ×
+      indicatorInset` when it measures itself. Setting indicatorSize to the tile's own
+      40dp and then pinning the view to 40dp too leaves nowhere for the stroke or the
+      inset, so the arc paints over the tile's edge and is clipped by it — «там где
+      кружок идёт он залазит за рамки какие-то».
+
+      28 leaves 2dp of inset and 2dp of stroke inside the 40dp slot with room to spare,
+      and reads as a ring around the 20dp success check that replaces it.
+    -->
+    <dimen name="tile_progress_ring">28dp</dimen>
+    <dimen name="flag_size">28dp</dimen>
+    <dimen name="avatar_chip">36dp</dimen>
+    <!-- The leading icon tile on every settings / account row. -->
+    <dimen name="tile_size">40dp</dimen>
+    <!-- Icon-only button hit box. Round (radius_pill) because width == height. -->
+    <dimen name="icon_button">40dp</dimen>
+    <!-- R2: default button height. Everything in flow. Declared as minHeight,
+         and every Departament button style must also set insetTop/insetBottom
+         to 0dp, because Widget.Material3.Button's 6dp insets are why declared
+         52dp CTAs currently draw at 40dp. -->
+    <dimen name="btn_height">48dp</dimen>
+    <!-- R2: the screen's ONE full-width primary CTA (the .Tall modifier). -->
+    <dimen name="btn_height_tall">52dp</dimen>
+    <!-- Alias of btn_height_tall. 10-design-system.md 2.7 spells this cta_height
+         / Size.CtaTall; R2 spells it btn_height_tall. Same 52dp either way. -->
+    <dimen name="cta_height">@dimen/btn_height_tall</dimen>
+    <!-- R2: minimum button width, so a two-word Russian label never draws a
+         stub. 00-rules.md 1.4.5 names 96 as a legal size, not off-scale spacing. -->
+    <dimen name="btn_min_width">96dp</dimen>
+    <!-- R10: input field height. Deliberately the same number as row_min_height
+         so a form and a list share one rhythm, and so Material's
+         TextInputLayout.OutlinedBox 56dp minimum is not fought. -->
+    <dimen name="field_min_height">56dp</dimen>
+    <!-- Alias of field_min_height. 10-design-system.md 2.7/4.3 spells this
+         field_height and gives it 52; R10 ratifies 56 with the OutlinedBox
+         reason, so this alias carries 56 and both spellings agree. -->
+    <dimen name="field_height">@dimen/field_min_height</dimen>
+    <!-- Minimum height of any list row. With a two-line subtitle the row grows;
+         it never clips. -->
+    <dimen name="row_min_height">56dp</dimen>
+    <!-- Seamless sub-page toolbar (00-rules.md 4.8). Replaces ?attr/actionBarSize:
+         page background, no elevation, no divider, no shadow. -->
+    <dimen name="toolbar_height">56dp</dimen>
+    <dimen name="nav_bar_height">64dp</dimen>
+    <dimen name="empty_icon">64dp</dimen>
+    <!--
+      THE CONNECT OBJECT, re-measured by the 2026-08 handoff §4 and now stated
+      here instead of in fragment_home.xml, which carried the four numbers as raw
+      dp with a note asking for exactly this.
+
+      They are ONE geometry and have to move together: the frame is the touch
+      target, the active ring rides at inset 22 (214 - 2x22 = 170, which is the
+      sweep's indicatorSize), and the disc sits 10dp inboard of that ring. Change
+      one without the others and the arc either laps the disc or is swallowed by
+      it — see the notes in fragment_home.xml and HomeFragment.buildConnectObject.
+    -->
+    <dimen name="connect_object">214dp</dimen>
+    <dimen name="connect_sweep">170dp</dimen>
+    <dimen name="connect_disc">150dp</dimen>
+    <!-- The shield inside the disc. §4: 68, down from the 80 the pre-handoff
+         object carried at 176-in-224. -->
+    <dimen name="shield_glyph">68dp</dimen>
+    <!-- Account hero: subscription carousel card. -->
+    <dimen name="sub_card_height">152dp</dimen>
+    <!-- Determinate progress / traffic meter bar. §4 «под ними полоса 3dp»: at 6
+         the bar read as a container with something in it, at 3 it reads as the
+         fraction itself, which is all it carries. Uses radius_pill, which clamps
+         to half its own height and gives true round ends without a bespoke
+         token. 00-rules.md 1.4.5 names it a legal size, not off-scale spacing. -->
+    <dimen name="meter_height">3dp</dimen>
+    <!-- Carousel page dots. -->
+    <dimen name="dot_size">6dp</dimen>
+    <dimen name="dot_size_active">8dp</dimen>
+    <dimen name="dot_gap">8dp</dimen>
+    <!-- Bottom-sheet drag handle: 36x4, radius_pill. -->
+    <dimen name="sheet_handle_w">36dp</dimen>
+    <dimen name="sheet_handle_h">4dp</dimen>
+
+    <!-- ============================================================= -->
+    <!-- THE SELECT POPUP (README §6, «Выбор из списка»).               -->
+    <!-- Every number here was read off the prototype and matches §6.   -->
+    <!-- Bound by SelectPopup; a screen names a width and nothing else. -->
+    <!-- ============================================================= -->
+
+    <!-- Anchor offset from the row's TOP-RIGHT corner. The popup hangs below
+         the row's own 48dp of height and 8 in from its right edge, so its top
+         edge lands on the divider under the row it belongs to. -->
+    <dimen name="select_popup_offset_top">48dp</dimen>
+    <dimen name="select_popup_offset_right">8dp</dimen>
+    <!-- The body's inset around the option stack. 6, not 8: at 8 the 11dp option
+         corner and the 16dp body corner stop being concentric. -->
+    <dimen name="select_popup_padding">6dp</dimen>
+    <!-- The drop shadow, §6 «тень 20×44dp»: 20 down, 44 of blur. Android spends
+         both on one elevation value; 20 reproduces the offset, and the blur
+         follows from it. This is the ONE shadow in the product — everything else
+         gets its depth from the surface ramp. -->
+    <dimen name="select_popup_elevation">20dp</dimen>
+    <!-- The row that owns an open popup lifts above its neighbours so they
+         cannot draw over the flyout (README §11 grabl 5). Below the popup's own
+         elevation, above everything else in the card. -->
+    <dimen name="select_popup_row_elevation">12dp</dimen>
+    <!-- One option. Height is a MINIMUM: a two-line Russian label grows it. -->
+    <dimen name="select_option_min_height">38dp</dimen>
+    <dimen name="select_option_padding_h">10dp</dimen>
+    <dimen name="select_option_padding_v">4dp</dimen>
+    <!-- The check on the selected option. 16, deliberately smaller than the
+         20dp row marker: this is a mark inside a 38dp option, not beside a
+         56dp row. -->
+    <dimen name="select_option_check">16dp</dimen>
+
+    <!-- CONTENT widths, one per picker, sized to the LONGEST option so the body
+         never reflows when the selection changes (§6). These are the width of
+         the option stack; SelectPopup adds select_popup_padding and the 1dp
+         stroke on each side, which is why the prototype measures 14 more. -->
+    <dimen name="select_popup_w_mode">176dp</dimen>
+    <dimen name="select_popup_w_dns">210dp</dimen>
+    <dimen name="select_popup_w_ping">208dp</dimen>
+    <dimen name="select_popup_w_appearance">186dp</dimen>
+    <dimen name="select_popup_w_language">166dp</dimen>
+    <dimen name="select_popup_w_interval">176dp</dimen>
+    <!-- Not in §6's table. The three remaining pickers §6 names — «Доменная
+         стратегия», «Сортировка», «Автообновление подписки» — have no measured
+         width in the handoff, so they take the default until the owner gives
+         one; SelectPopup falls back to this when a caller passes 0. -->
+    <dimen name="select_popup_w_default">200dp</dimen>
+
+    <!--
+        THE SUB-PAGE'S TRAVEL, BACKWARDS. @dimen/space_16 negated, and it exists because
+        a push and a pop are not the same motion played by the same pair of files.
+
+        A stack slides as ONE sheet: pushing, the arriving page and the page it covers
+        both travel LEFT; popping, the leaving page and the page underneath both travel
+        RIGHT. Two of the four legs therefore start or end at −16 rather than +16, and
+        Android animation XML cannot negate a dimension reference, so the reverse
+        distance has to be its own token rather than a minus sign at the call site.
+
+        It is deliberately NOT part of the spacing scale — nothing may reach for it as a
+        gap. It is one distance, tied to space_16, and it moves only when that does.
+    -->
+    <dimen name="space_16_reverse">-16dp</dimen>
+    <!--
+        THE HEADER SLOTS' PADDING, ON ALL FOUR SIDES OF BOTH OF THEM, and the value is the
+        least interesting thing about it.
+
+        @style/Widget.Departament.Button.Icon.Toolbar writes this once for the back arrow and
+        the action alike, because with an EXACT 48dp box and iconGravity=textStart the padding
+        does not place the glyph at all:
+
+            drawn left = (48 − 24) / 2 + (paddingLeft − paddingRight) / 2
+
+        Only the DIFFERENCE moves anything, and MaterialButtonHelper adds each inset to the
+        matching padding, so a symmetric XML padding is exactly what keeps the press plate
+        concentric with the glyph it sits under. 12 is kept because it is still (48 − 24) / 2
+        — the number a reader expects to find — and because a symmetric value cannot be wrong.
+
+        THE PAIR THAT USED TO LIVE HERE IS WHAT BROKE IT. 18 in front and 12 behind put the
+        glyph 3dp off its own plate, which is the «фон не по центру, неровный фон» the owner
+        photographed on «+». See @dimen/toolbar_action_pad_lead.
+    -->
+    <dimen name="toolbar_action_pad_trail">12dp</dimen>
+
+    <!--
+        RETIRED IN PLACE, and kept only so the mistake is on the record.
+
+        It was the action slot's LEADING padding, 6dp wider than the trailing one, and the 6
+        was meant to grow the box inward so the part that hung off the screen could still be
+        touched. Two things were wrong with it. The box never hung off the screen by 6 — laid
+        out and measured, it was 80dp wide and hung off by 1 to 6 depending on the glyph,
+        because a wrap_content MaterialButton with no text still measures a line box. And an
+        asymmetric padding is precisely what takes the press plate off the glyph's centre,
+        because the glyph moves by (paddingLeft − paddingRight) / 2 and the plate does not.
+
+        The touch target is answered by the box being an exact 48 and by a non-negative end
+        margin, so nothing needs a wider lead any more. @dimen/toolbar_plate_inset_lead moves
+        glyph and plate together instead.
+    -->
+    <dimen name="toolbar_action_pad_lead">18dp</dimen>
+
+    <!--
+        THE HEADER'S PRESS PLATE. Both header slots are an EXACT 48dp box
+        (@style/Widget.Departament.Button.Icon.Toolbar), and the plate is what is left after
+        the insets: 48 − 2 × 10 = 28, the same disc @dimen/row_action_plate_inset leaves in
+        the row, on both axes.
+
+        THIS IS THE VERTICAL PAIR AND THE HORIZONTAL DEFAULT. insetTop and insetBottom are
+        always this, which is what makes the plate a DISC rather than the 44dp-tall stadium
+        it was while the box measured its own line height. Horizontally each slot splits the
+        same 20dp total its own way — see the two pairs below — because the split is what
+        slides glyph and plate together to the gutter each slot has to reach.
+    -->
+    <dimen name="toolbar_plate_inset">10dp</dimen>
+
+    <!--
+        THE TRAILING ACTION'S SPLIT: 16 in front, 4 behind, summing to the 20 that keeps the
+        box at 48 and the disc at 28.
+
+        Both move the glyph and the plate together by (insetLeft − insetRight) / 2 = 6, so the
+        24dp glyph sits 18dp from the box's trailing edge and the disc 4dp from it. With
+        ToolbarBinder's per-glyph margin adding the rest, «⋮» stops its ink on 16 with the box
+        flush to the screen — a whole 48dp target on screen, no TouchDelegate — and the disc
+        4dp clear of the edge it used to be tangent to.
+    -->
+    <dimen name="toolbar_plate_inset_lead">16dp</dimen>
+    <dimen name="toolbar_plate_inset_trail">4dp</dimen>
+
+    <!--
+        THE BACK ARROW'S SPLIT: 6 in front, 14 behind, the same 20 the other way round.
+
+        «кнопка назад опять съехала, надо ее левее» — the third time this control has been
+        asked to move, and the round before this one refused on the grounds that its ink
+        could not reach 16 without pushing 4dp of a 48dp target off the screen. That was
+        true of a box being dragged by its MARGIN. It is not true of a box that stays put
+        while the inset split carries the glyph inside it: the box is still flush with the
+        screen edge and still an exact 48, so every dp of the target is reachable and the
+        screen edge itself is still part of it.
+
+            glyph centre  = 24 + (insetLeft − insetRight) / 2 = 24 − 4 = 20 from the box's edge
+            ink           = 20 − 12 + 8 = 16     (ic_chevron_left's ink is x 8…16.8 of 24)
+            plate         = 20 ± 14 = 6…34,       so 6dp of clearance and concentric with the glyph
+
+        SIXTEEN IS NOW BOTH SIDES. The trailing action's ink stops 16 from the other edge,
+        so the header is symmetric for the first time, and the arrow starts on the same
+        line as the page title under it (@dimen/screen_gutter on @id/toolbar_title), which
+        is what the owner has been pointing at.
+    -->
+    <dimen name="toolbar_back_plate_inset_lead">6dp</dimen>
+    <dimen name="toolbar_back_plate_inset_trail">14dp</dimen>
+
+    <!--
+        THE TOOLBAR ACTION'S OPTICAL NUDGE, per glyph. Read ToolbarBinder.alignInkToGutter for
+        the arithmetic; these are its two results.
+
+        The box is an exact 48 and @dimen/toolbar_plate_inset_lead puts the glyph 18dp from
+        its trailing edge, so the ink of a glyph with A units of trailing air inside its
+        24-unit viewport stops 18 − 12 + A = 6 + A from the box's trailing edge. Both glyphs
+        then need the box held off the screen edge by whatever is left of the gutter:
+
+            ic_add_24dp        ink 5…19 of 24, A = 5   ->  ink at 11, margin 16 − 11 = 5
+            ic_more_vert_24dp  ink 10…14 of 24, A = 10 ->  ink at 16, margin 16 − 16 = 0
+
+        POSITIVE NOW, WHICH IS THE POINT. The pair used to be −1 and −6: the box was pulled
+        PAST the screen edge to drag the ink back to the gutter, so 1 to 6dp of a 48dp target
+        was off screen and the disc that had to fit inside it was tangent to the window. With
+        the glyph carried by the inset split instead, the box stays wholly on screen, the
+        target is a full 48 with no delegate, and the plate keeps 4dp of clearance.
+
+        Per GLYPH and not per slot on purpose — one shared value big enough for «⋮» would
+        shove «+» 5dp past the gutter.
+    -->
+    <dimen name="toolbar_action_nudge_wide">5dp</dimen>
+    <dimen name="toolbar_action_nudge_overflow">0dp</dimen>
+</resources>

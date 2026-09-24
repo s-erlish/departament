@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  MaterialSwitch thumb. Off = onSurfaceVariant #9BA1AD, which measures 6.00:1 on the
+  off track; M3's default thumb is colorOutline, which on this ramp is 1.45:1 and
+  effectively invisible — that substitution is the whole reason this file exists.
+  On = onPrimary #00183A, which reads as an ink dot on the accent track.
+-->
+<selector xmlns:android="http://schemas.android.com/apk/res/android">
+    <item
+        android:alpha="0.38"
+        android:color="?attr/colorOnPrimary"
+        android:state_checked="true"
+        android:state_enabled="false" />
+    <item
+        android:alpha="0.38"
+        android:color="?attr/colorOnSurfaceVariant"
+        android:state_enabled="false" />
+    <item android:color="?attr/colorOnPrimary" android:state_checked="true" />
+    <item android:color="?attr/colorOnSurfaceVariant" />
+</selector>

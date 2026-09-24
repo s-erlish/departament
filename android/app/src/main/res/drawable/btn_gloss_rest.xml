@@ -1,0 +1,81 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  THE BEVEL, resting. Drawn as android:foreground OVER a MaterialButton's own
+  tinted MaterialShapeDrawable, because MaterialButton builds and owns its
+  background (MaterialButtonHelper.createBackground) and throws away any
+  android:background a style supplies — so the only way to put a gradient on a
+  Departament button is to lay it on top.
+
+  It is pure luminance, never hue: a white lift and a black settle. That is what
+  makes ONE drawable correct on the blue primary, the red destructive, the neutral
+  secondary, the greyscale mono theme, and in light as well as dark — the per-theme
+  strengths live in @color/btn_gloss_* (values/ and values-night/), not here.
+
+  Three stacked full-bounds shapes, all on @dimen/radius_button, so every layer's
+  corner follows the button's corner exactly. A layer sized with android:height and
+  gravity would NOT: Canvas.drawRoundRect clamps ry to half the layer's height, so a
+  16dp-tall strip corners as a 16x8 ellipse and spills outside the button's arc.
+
+  The stops are chosen so the LABEL BAND IS NEVER TOUCHED. A 16sp label centred in a
+  48-52dp button occupies roughly 30%-70% of the height; the lift is spent by 30%
+  and the settle does not begin until 74%. Contrast at the label is therefore exactly
+  the contrast of the flat fill - 5.51:1 dark, 5.97:1 light - in every state, which
+  is the whole reason this is a bevel and not a tinted wash.
+
+  centerY positions the middle stop: GradientDrawable takes mPositions[1] as
+  mCenterX != 0.5 ? mCenterX : mCenterY, so leaving centerX alone and setting
+  centerY moves the stop along a vertical (angle 270) ramp.
+
+  White ramps fade to @color/btn_gloss_clear and black ramps to
+  @color/btn_gloss_clear_dark, never the other way round — Android interpolates
+  gradients unpremultiplied, so a transparent stop's RGB still steers the colours
+  before it and the wrong one turns the falloff grey. See values/colors.xml.
+-->
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <!-- 1. RIM — the light source. A crisp bright edge hugging the top arc, gone
+         within ~6% of the height. This is the layer that reads as "raised". -->
+    <item>
+        <shape android:shape="rectangle">
+            <corners android:radius="@dimen/radius_button" />
+            <gradient
+                android:angle="270"
+                android:centerColor="@color/btn_gloss_clear"
+                android:centerY="0.06"
+                android:endColor="@color/btn_gloss_clear"
+                android:startColor="@color/btn_gloss_rim"
+                android:type="linear" />
+        </shape>
+    </item>
+
+    <!-- 2. WASH — the falloff under the rim, spent by 30% so the label band starts
+         on the flat fill. -->
+    <item>
+        <shape android:shape="rectangle">
+            <corners android:radius="@dimen/radius_button" />
+            <gradient
+                android:angle="270"
+                android:centerColor="@color/btn_gloss_clear"
+                android:centerY="0.30"
+                android:endColor="@color/btn_gloss_clear"
+                android:startColor="@color/btn_gloss_top"
+                android:type="linear" />
+        </shape>
+    </item>
+
+    <!-- 3. SETTLE — the base deepening, starting below the label at 74%. Gives the
+         button a weighted bottom so it sits on the surface instead of floating. -->
+    <item>
+        <shape android:shape="rectangle">
+            <corners android:radius="@dimen/radius_button" />
+            <gradient
+                android:angle="270"
+                android:centerColor="@color/btn_gloss_clear_dark"
+                android:centerY="0.74"
+                android:endColor="@color/btn_gloss_bottom"
+                android:startColor="@color/btn_gloss_clear_dark"
+                android:type="linear" />
+        </shape>
+    </item>
+
+</layer-list>

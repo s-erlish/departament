@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  OFF -> ON. The 16dp disc swells through a squashed stadium and settles as the 24dp
+  disc: two legs on one path, 150 + 100 = 250ms, which is what M3 draws and what
+  docs/design2026/AUTONOMOUS-STATE.md records as «морфящий форму бегунка ~250 мс».
+
+  THE FLIP IS THE ONE ANIMATION THE SWITCH KEEPS, and reproducing it is the reason
+  @drawable/switch_thumb is an <animated-selector> rather than a plain <selector>.
+  Dropping to a selector would have been three fewer files and would have taken the
+  morph out of the product — a removal, not a refinement.
+
+  Easing is @interpolator/ease_standard, this product's curve for a state change
+  (cubic-bezier 0.2, 0, 0, 1) and the same one RowBinder.animateExpand runs on. M3
+  uses its emphasized curve here; that interpolator is a private resource of the
+  library, so the design system's own standard curve stands in for it.
+
+  It is also the animation RowBinder.restoreChecked exists to suppress before the
+  first draw — a morph queued before a row is drawn parks and then spills into the
+  first frame («переключатели дёргаются»). Nothing here changes that contract.
+-->
+<animated-vector xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:aapt="http://schemas.android.com/aapt"
+    android:drawable="@drawable/switch_thumb_unchecked">
+
+    <set
+        android:interpolator="@interpolator/ease_standard"
+        android:shareInterpolator="true">
+
+        <target android:name="thumb">
+            <aapt:attr name="android:animation">
+                <objectAnimator
+                    android:duration="@integer/switch_thumb_morph_settle"
+                    android:propertyName="pathData"
+                    android:valueFrom="@string/switch_thumb_path_unchecked"
+                    android:valueTo="@string/switch_thumb_path_morphing"
+                    android:valueType="pathType" />
+            </aapt:attr>
+        </target>
+
+        <target android:name="thumb">
+            <aapt:attr name="android:animation">
+                <objectAnimator
+                    android:duration="@integer/switch_thumb_morph_lead"
+                    android:propertyName="pathData"
+                    android:startOffset="@integer/switch_thumb_morph_settle"
+                    android:valueFrom="@string/switch_thumb_path_morphing"
+                    android:valueTo="@string/switch_thumb_path_checked"
+                    android:valueType="pathType" />
+            </aapt:attr>
+        </target>
+    </set>
+
+</animated-vector>

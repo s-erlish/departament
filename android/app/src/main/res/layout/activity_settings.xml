@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    Экран «Дополнительно» (SettingsActivity).
+
+    Фон прозрачный намеренно. Тулбар из activity_base.xml тоже прозрачный, поэтому
+    и шапка, и список показывают один и тот же фон окна: шва между ними нет, как
+    того требует 00-rules.md 4.8 (бесшовная шапка вложенного экрана). До этой
+    правки корень заливался ?attr/colorSurface (#141619 в тёмной теме) поверх фона
+    окна (#0A0B0D) - под шапкой шла видимая полоса другого тона.
+-->
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@android:color/transparent"
+    tools:context=".ui.SettingsActivity">
+
+    <androidx.fragment.app.FragmentContainerView
+        android:id="@+id/fragment_settings"
+        android:name="com.v2ray.ang.ui.SettingsActivity$SettingsFragment"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent" />
+
+</FrameLayout>

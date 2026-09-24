@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  `android:clipToOutline` as a STYLE item is API 31 (the view attribute is older, the
+  styleable entry is not). minSdk is 24, so it lives here rather than in values/, where
+  it read as though it applied everywhere. Below 31 the group card simply does not clip
+  its children to its own radius, which is a corner, not a defect: nothing in the card
+  draws into the corners.
+-->
+<resources>
+
+    <style name="Widget.Departament.Card.Group.Api31" parent="Widget.Departament.Card">
+        <item name="android:clipToOutline">true</item>
+    </style>
+
+</resources>

@@ -1,0 +1,75 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  ============================================================================
+  THE METER. Traffic, device allowance, any determinate quantity.
+  22-components.md 17.2, 32-master-plan-android.md 8.11.
+  ============================================================================
+
+      Label ......................................... Value
+                              8
+      [==================================               ]   6 tall, round ends
+
+  THE LABEL IS NEVER PRINTED ON TOP OF THE FILL. The shipped subscription meta bar
+  centres an 11sp label over a moving accent fill: 2.9:1, and it changes mid-word as
+  the bar advances. That is the defect this file ends — the label sits BESIDE the
+  bar, on its own line, at the full 4.5:1 body floor.
+
+  The fill is SOLID accent. No gradient: a gradient encodes nothing a solid fill of
+  the same width does not (6.5), and bg_traffic_gradient is the shipped violation.
+
+  RUNTIME, all of it token-faithful:
+      meterBar.progress = pct                       animate over motion_state 220ms
+      over quota (>= 100%)  fill -> ?attr/colorError and the value says «Лимит исчерпан»
+      unlimited             meterBar.isVisible = false and the value reads
+                            «12,4 ГБ · без ограничений» — a bar with no ceiling is a lie
+      no data (userinfo 0)  hide this whole view rather than draw 0 B / 0 B
+
+  The value keeps the UI face because «12,4 из 50 ГБ» is a Russian phrase and a
+  sentence never ripples between two faces (D-2). A value that is a bare figure wants
+  the Numeric role at Subtitle metrics; that ramp style does not exist yet and is
+  filed with the styles owner.
+-->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/meter"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:baselineAligned="true"
+        android:orientation="horizontal">
+
+        <TextView
+            android:id="@+id/meter_label"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:ellipsize="end"
+            android:maxLines="1"
+            android:textAppearance="@style/TextAppearance.App.Subtitle"
+            tools:text="Трафик" />
+
+        <TextView
+            android:id="@+id/meter_value"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="@dimen/space_12"
+            android:gravity="end"
+            android:maxLines="2"
+            android:textAppearance="@style/TextAppearance.App.Subtitle"
+            tools:text="12,4 из 50 ГБ" />
+    </LinearLayout>
+
+    <com.google.android.material.progressindicator.LinearProgressIndicator
+        android:id="@+id/meter_bar"
+        style="@style/Widget.Departament.Progress.Linear"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="@dimen/space_8"
+        android:max="100"
+        android:progress="0"
+        tools:progress="25" />
+</LinearLayout>

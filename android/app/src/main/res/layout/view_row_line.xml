@@ -1,0 +1,73 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  ============================================================================
+  THE UNIVERSAL ROW, AS ONE LINE OF A LIST — handoff README §6 / §7.
+  ============================================================================
+
+  §7 draws every list on a sub-screen the same way §6 draws the settings groups:
+  ONE card, rows inside it, a hairline between them running the FULL width of the
+  card. Not one card per item — the prototype has no screen anywhere that stacks
+  bordered boxes, and a list of them turns a page of five rules into a page of five
+  objects («Настройки правил маршрутизации», port-shots-2/43-routing.png).
+
+  This is that line: a full-bleed divider and the row under it. The divider ships
+  VISIBLE and the adapter hides it on the first item of a card, which is exactly
+  the prototype's rule: transparent at index 0, the line colour everywhere else.
+  Doing it on the item rather than with an ItemDecoration keeps it correct across
+  insert, remove and drag-reorder, all three of which this list supports.
+
+  The card itself is the LIST's background (@drawable/bg_card_inert on the
+  RecyclerView), not a wrapper: these screens hide the list when it is empty, and a
+  MaterialCardView around a hidden list leaves an empty outlined box above the
+  empty state.
+
+  It wraps @layout/view_row rather than restating it, so the row keeps its one
+  definition and every slot; callers bind through RowBinder on `binding.row.root`.
+-->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/row_line"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical">
+
+    <com.google.android.material.divider.MaterialDivider
+        android:id="@+id/row_divider"
+        style="@style/Widget.Departament.Divider.Full"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content" />
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:baselineAligned="false"
+        android:gravity="center_vertical"
+        android:orientation="horizontal">
+
+        <include
+            android:id="@+id/row"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            layout="@layout/view_row" />
+
+        <!--
+          THE LINE'S OWN TRAILING SWITCH. Ships GONE; only a list whose items carried
+          an INLINE toggle before the redesign turns it on — today that is the routing
+          rules list alone (item_recycler_routing_setting.xml's chk_enable).
+
+          It sits beside the row and not in the row's own trailing slot because that
+          slot holds the chevron which opens the rule. RowBinder.Trailing.Toggle would
+          make the whole row toggle the switch and take the tap-to-edit route away,
+          which is a removal.
+        -->
+        <com.google.android.material.materialswitch.MaterialSwitch
+            android:id="@+id/row_line_switch"
+            style="@style/Widget.Departament.Switch"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginEnd="@dimen/space_16"
+            android:visibility="gone"
+            tools:visibility="visible" />
+    </LinearLayout>
+</LinearLayout>

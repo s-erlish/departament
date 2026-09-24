@@ -1,0 +1,440 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  ============================================================================
+  «Настройки подписок» (ProviderSettingsActivity) — handoff README §7.
+  ============================================================================
+
+  §7's table gives this screen four groups and this file draws exactly those four,
+  in that order: «Обновление · При запуске · Сеть · Список серверов».
+
+      кнопка назад → заголовок 24sp/700 → четыре карточки
+
+  The header is @layout/view_sub_header, so the screen goes through setContentView
+  and ToolbarBinder rather than BaseActivity.setContentViewWithToolbar and its 16sp
+  MaterialToolbar title.
+
+  EVERY ROW IS §6's «Строка», AND EVERY ROW IS THE SAME HEIGHT:
+
+      плитка 40dp r12 нейтральная, глиф 22dp   @style/Widget.Departament.Tile
+      → 16dp → заголовок 14sp                  Body
+      → 12dp → значение 13sp / переключатель   Subtitle / MaterialSwitch
+      минимум 56dp, высота по плитке = 60dp    @style/Widget.Departament.Row
+
+  What that replaces, line for line: `?attr/selectableItemBackground` (a ripple, and
+  §1 bans the whole kind — it is @drawable/bg_row plus @anim/press_row 0.975 now),
+  a 60dp fixed row height, 14dp inner padding, inline 16sp/12sp/13sp sizes, a 12dp
+  card inset, a 68dp-inset hairline, and five colours of icon tile — blue, green,
+  orange, yellow and purple — that encoded no category at all (D-5, §9).
+
+  NOT ONE ROW CARRIES A SUBTITLE, and every switch overrides android:minHeight.
+  Owner report 0.4.9, the same one that levelled the Настройки tab: «в настройках
+  подписок такая же тема с высотой, надо фиксить». This screen was the worse of the
+  two — FIVE different row heights, 60 / 61 / 68 / 78 / 95 — from two causes:
+
+    1. FOUR ROWS CARRIED A SECOND LINE, and unlike the tab's these had no maxLines,
+       so they ran as long as they liked: «Показывать уведомление после обновления
+       подписки» took two lines and «Отправлять идентификатор устройства при
+       обновлении подписки» took THREE, which is a 95dp row next to a 60dp one.
+       Dropped at the call site — here. NO STRING WAS DELETED; each one stays in
+       values/strings_provider.xml with a comment saying it has no reader and why.
+    2. EVERY SWITCH WAS 48dp TALL. Material's
+       Widget.Material3.CompoundButton.MaterialSwitch (the parent of
+       @style/Widget.Departament.Switch) sets android:minHeight="?minTouchTargetSize"
+       = 48dp — 8dp above the tile — so even a bare toggle row measured 68 against
+       a value row's 60. Every switch here is clickable="false" focusable="false"
+       because THE ROW is the target and the row already carries minHeight 56, so
+       the floor guards a target that does not exist; minHeight 0 lets the switch
+       sit at its own 32dp track. Not a fixed height, and a switch has no text to
+       clip: at font scale 200% the text column overtakes the tile and the row grows.
+
+  «СПИСОК СЕРВЕРОВ» УБРАН ЦЕЛИКОМ по указанию владельца — см. комментарий на месте,
+  где стоял раздел. Ни одна строка ресурсов при этом не удалена.
+
+  «User-Agent» IS Row.Fact NOW: it reports, it does not lead anywhere. See the
+  comment on @id/row_user_agent. «Интервал обновления» is gone from this screen
+  altogether; see the comment where it stood, in the ОБНОВЛЕНИЕ card.
+-->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="?android:attr/colorBackground"
+    android:fitsSystemWindows="true"
+    android:orientation="vertical"
+    tools:context=".ui.ProviderSettingsActivity">
+
+    <include
+        android:id="@+id/toolbar"
+        layout="@layout/view_sub_header" />
+
+    <androidx.core.widget.NestedScrollView
+        android:id="@+id/main_content"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:clipChildren="false"
+        android:clipToPadding="false"
+        android:paddingBottom="@dimen/space_32"
+        android:scrollbars="none">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:clipChildren="false"
+            android:orientation="vertical">
+
+            <!-- ==================== ОБНОВЛЕНИЕ ==================== -->
+            <TextView
+                style="@style/SettingsSectionLabel"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="@string/ps_section_update" />
+
+            <com.google.android.material.card.MaterialCardView
+                style="@style/Widget.Departament.CardSection"
+                android:clipChildren="false"
+                android:clipToPadding="false">
+
+                <LinearLayout
+                    style="@style/Widget.Departament.CardSection.Body"
+                    android:clipChildren="false"
+                    android:clipToPadding="false">
+
+                    <!-- Автообновление. THE EDGE ROWS OF THIS CARD ROUND THEMSELVES: the card
+                         hosts «Интервал обновления»'s select popup and therefore cannot clip its
+                         children (§11 grabl 4), so it no longer trims its first and last row to
+                         its own corner. 19dp, one pixel inside the card's 20dp stroke. -->
+                    <LinearLayout
+                        android:id="@+id/row_auto_update"
+                        style="@style/Widget.Departament.Row"
+                        android:background="@drawable/bg_row_top"
+                        android:baselineAligned="false">
+
+                        <ImageView
+                            style="@style/Widget.Departament.Tile"
+                            android:backgroundTint="?attr/colorSurfaceContainerHighest"
+                            android:layout_marginEnd="@dimen/space_16"
+                            android:importantForAccessibility="no"
+                            app:srcCompat="@drawable/ic_refresh_24dp" />
+
+                        <TextView
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_marginEnd="@dimen/space_12"
+                            android:layout_weight="1"
+                            android:text="@string/ps_auto_update"
+                            android:textAppearance="@style/TextAppearance.App.Body" />
+
+                        <com.google.android.material.materialswitch.MaterialSwitch
+                            android:id="@+id/switch_auto_update"
+                            style="@style/Widget.Departament.Switch"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:clickable="false"
+                            android:focusable="false"
+                            android:importantForAccessibility="no"
+                            android:minHeight="0dp" />
+                    </LinearLayout>
+
+                    <!-- «ИНТЕРВАЛ ОБНОВЛЕНИЯ» СТОЯЛ ЗДЕСЬ и снят по указанию владельца
+                         («он уже и так вынесен в общий список настроек»). Проверено перед
+                         снятием, а не после: обе строки писали ОДНО И ТО ЖЕ хранилище —
+                         SubscriptionItem.updateInterval + .autoUpdate у каждой подписки,
+                         с последующим SubscriptionUpdater.sync(forceReschedule = true).
+                         Отдельного ключа у этого экрана нет и не было (см. комментарий
+                         к DEFAULT_INTERVAL_MINUTES в ProviderSettingsActivity).
+                         Уцелевший вход — «Автообновление подписки» (@id/row_sub_auto_update)
+                         в разделе ПОДПИСКА вкладки Настройки, SettingsTabFragment.
+                         pickSubAutoUpdate(). Он же умеет «Выключено», чего здешний список
+                         не умел. Единственная разница в наборе значений: здесь предлагалось
+                         «2 ч», а на вкладке — «3 часа»; уже сохранённые 120 минут не
+                         теряются, вкладка покажет их как «120 мин». Ни одна строка
+                         values/strings_provider.xml не удалена. -->
+
+                    <!-- The id this divider used to carry (@id/divider_interval) went with the row
+                         it was named after. It never had a reader in Kotlin — the interval row was
+                         hidden by nothing and disabled instead — so the name was already only a
+                         label, and a divider called «interval» between «Автообновление» and
+                         «Уведомлять об обновлениях» would be a lie the next reader has to check. -->
+                    <com.google.android.material.divider.MaterialDivider
+                        style="@style/Widget.Departament.Divider.Full"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content" />
+
+                    <!-- Уведомлять об обновлениях -->
+                    <LinearLayout
+                        android:id="@+id/row_notify"
+                        style="@style/Widget.Departament.Row"
+                        android:background="@drawable/bg_row_bottom"
+                        android:baselineAligned="false">
+
+                        <ImageView
+                            style="@style/Widget.Departament.Tile"
+                            android:backgroundTint="?attr/colorSurfaceContainerHighest"
+                            android:layout_marginEnd="@dimen/space_16"
+                            android:importantForAccessibility="no"
+                            app:srcCompat="@drawable/ic_ps_bell" />
+
+                        <TextView
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_marginEnd="@dimen/space_12"
+                            android:layout_weight="1"
+                            android:text="@string/ps_notify_updates"
+                            android:textAppearance="@style/TextAppearance.App.Body" />
+
+                        <com.google.android.material.materialswitch.MaterialSwitch
+                            android:id="@+id/switch_notify"
+                            style="@style/Widget.Departament.Switch"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:clickable="false"
+                            android:focusable="false"
+                            android:importantForAccessibility="no"
+                            android:minHeight="0dp" />
+                    </LinearLayout>
+                </LinearLayout>
+            </com.google.android.material.card.MaterialCardView>
+
+            <!-- ==================== ПРИ ЗАПУСКЕ ==================== -->
+            <TextView
+                style="@style/SettingsSectionLabel"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="@string/ps_section_startup" />
+
+            <com.google.android.material.card.MaterialCardView style="@style/Widget.Departament.CardSection">
+
+                <LinearLayout style="@style/Widget.Departament.CardSection.Body">
+
+                    <!-- Обновлять подписки при запуске -->
+                    <LinearLayout
+                        android:id="@+id/row_update_on_launch"
+                        style="@style/Widget.Departament.Row"
+                        android:baselineAligned="false">
+
+                        <ImageView
+                            style="@style/Widget.Departament.Tile"
+                            android:backgroundTint="?attr/colorSurfaceContainerHighest"
+                            android:layout_marginEnd="@dimen/space_16"
+                            android:importantForAccessibility="no"
+                            app:srcCompat="@drawable/ic_power_settings" />
+
+                        <TextView
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_marginEnd="@dimen/space_12"
+                            android:layout_weight="1"
+                            android:text="@string/ps_update_on_launch"
+                            android:textAppearance="@style/TextAppearance.App.Body" />
+
+                        <com.google.android.material.materialswitch.MaterialSwitch
+                            android:id="@+id/switch_update_on_launch"
+                            style="@style/Widget.Departament.Switch"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:clickable="false"
+                            android:focusable="false"
+                            android:importantForAccessibility="no"
+                            android:minHeight="0dp" />
+                    </LinearLayout>
+
+                    <com.google.android.material.divider.MaterialDivider
+                        style="@style/Widget.Departament.Divider.Full"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content" />
+
+                    <!-- Пинг серверов при запуске -->
+                    <LinearLayout
+                        android:id="@+id/row_ping_on_launch"
+                        style="@style/Widget.Departament.Row"
+                        android:baselineAligned="false">
+
+                        <ImageView
+                            style="@style/Widget.Departament.Tile"
+                            android:backgroundTint="?attr/colorSurfaceContainerHighest"
+                            android:layout_marginEnd="@dimen/space_16"
+                            android:importantForAccessibility="no"
+                            app:srcCompat="@drawable/ic_ping_24dp" />
+
+                        <TextView
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_marginEnd="@dimen/space_12"
+                            android:layout_weight="1"
+                            android:text="@string/ps_ping_on_launch"
+                            android:textAppearance="@style/TextAppearance.App.Body" />
+
+                        <com.google.android.material.materialswitch.MaterialSwitch
+                            android:id="@+id/switch_ping_on_launch"
+                            style="@style/Widget.Departament.Switch"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:clickable="false"
+                            android:focusable="false"
+                            android:importantForAccessibility="no"
+                            android:minHeight="0dp" />
+                    </LinearLayout>
+
+                    <com.google.android.material.divider.MaterialDivider
+                        style="@style/Widget.Departament.Divider.Full"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content" />
+
+                    <!-- Пинг при обновлении -->
+                    <LinearLayout
+                        android:id="@+id/row_ping_on_update"
+                        style="@style/Widget.Departament.Row"
+                        android:baselineAligned="false">
+
+                        <ImageView
+                            style="@style/Widget.Departament.Tile"
+                            android:backgroundTint="?attr/colorSurfaceContainerHighest"
+                            android:layout_marginEnd="@dimen/space_16"
+                            android:importantForAccessibility="no"
+                            app:srcCompat="@drawable/ic_ping_24dp" />
+
+                        <TextView
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_marginEnd="@dimen/space_12"
+                            android:layout_weight="1"
+                            android:text="@string/ps_ping_on_update"
+                            android:textAppearance="@style/TextAppearance.App.Body" />
+
+                        <com.google.android.material.materialswitch.MaterialSwitch
+                            android:id="@+id/switch_ping_on_update"
+                            style="@style/Widget.Departament.Switch"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:clickable="false"
+                            android:focusable="false"
+                            android:importantForAccessibility="no"
+                            android:minHeight="0dp" />
+                    </LinearLayout>
+                </LinearLayout>
+            </com.google.android.material.card.MaterialCardView>
+
+            <!-- ==================== СЕТЬ ==================== -->
+            <TextView
+                style="@style/SettingsSectionLabel"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="@string/ps_section_network" />
+
+            <com.google.android.material.card.MaterialCardView style="@style/Widget.Departament.CardSection">
+
+                <LinearLayout style="@style/Widget.Departament.CardSection.Body">
+
+                    <!-- Отправлять HWID -->
+                    <LinearLayout
+                        android:id="@+id/row_send_hwid"
+                        style="@style/Widget.Departament.Row"
+                        android:baselineAligned="false">
+
+                        <ImageView
+                            style="@style/Widget.Departament.Tile"
+                            android:backgroundTint="?attr/colorSurfaceContainerHighest"
+                            android:layout_marginEnd="@dimen/space_16"
+                            android:importantForAccessibility="no"
+                            app:srcCompat="@drawable/ic_ps_fingerprint" />
+
+                        <TextView
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_marginEnd="@dimen/space_12"
+                            android:layout_weight="1"
+                            android:text="@string/ps_send_hwid"
+                            android:textAppearance="@style/TextAppearance.App.Body" />
+
+                        <com.google.android.material.materialswitch.MaterialSwitch
+                            android:id="@+id/switch_send_hwid"
+                            style="@style/Widget.Departament.Switch"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:clickable="false"
+                            android:focusable="false"
+                            android:importantForAccessibility="no"
+                            android:minHeight="0dp" />
+                    </LinearLayout>
+
+                    <com.google.android.material.divider.MaterialDivider
+                        style="@style/Widget.Departament.Divider.Full"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content" />
+
+                    <!-- User-Agent — Row.Fact (view_row.xml 8.1): заголовок слева, значение
+                         справа, СТРОКА НИЧЕГО НЕ ОТКРЫВАЕТ.
+
+                         Владелец: «убери возможность настройки user agent, чтобы жил было
+                         некликабельно». Поэтому здесь нет шеврона (шеврон обещает экран),
+                         нет отклика на нажатие и нет clickable/focusable — иначе строка
+                         осталась бы остановкой для TalkBack и D-pad, то есть мишенью,
+                         которая ничего не делает. Стиль Widget.Departament.Row включает всё
+                         три, их приходится гасить здесь поимённо; stateListAnimator="@null"
+                         снимает @anim/press_row, а фон остаётся @drawable/bg_row — его
+                         состояние покоя и есть поверхность карточки, а нажатого состояния
+                         у неведущей строки не бывает.
+
+                         ЗНАЧЕНИЕ ПЕРЕЕХАЛО В ХВОСТ СТРОКИ и не потерялось. Прежде оно
+                         стояло второй строчкой (12.5sp, две строки), и это была ровно та
+                         подпись, из-за которой ряды на экране разной высоты. Прежний
+                         комментарий здесь возражал, что длинный User-Agent в хвосте
+                         обрежется до «Mozilla/5.0…» — но он и подписью обрезался, просто
+                         на строку позже, а всё, что приложение отправляет по умолчанию
+                         («v2rayNG/2.2.1», «departament/2.2.1»), это ~90dp при 206dp
+                         свободных, то есть целиком. Показать сокращённо то, что почти
+                         всегда влезает, лучше, чем ради редкого случая держать весь экран
+                         разновысоким. -->
+                    <LinearLayout
+                        android:id="@+id/row_user_agent"
+                        style="@style/Widget.Departament.Row"
+                        android:baselineAligned="false"
+                        android:clickable="false"
+                        android:focusable="false"
+                        android:stateListAnimator="@null">
+
+                        <ImageView
+                            style="@style/Widget.Departament.Tile"
+                            android:backgroundTint="?attr/colorSurfaceContainerHighest"
+                            android:layout_marginEnd="@dimen/space_16"
+                            android:importantForAccessibility="no"
+                            app:srcCompat="@drawable/ic_ps_tag" />
+
+                        <!-- 12 и не 4: §6 даёт 12dp тому, у кого справа ЗНАЧЕНИЕ или
+                             переключатель, а здесь теперь значение. -->
+                        <TextView
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_marginEnd="@dimen/space_12"
+                            android:layout_weight="1"
+                            android:text="@string/ps_user_agent"
+                            android:textAppearance="@style/TextAppearance.App.Body" />
+
+                        <TextView
+                            android:id="@+id/value_user_agent"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:ellipsize="end"
+                            android:maxLines="1"
+                            android:textAppearance="@style/TextAppearance.App.Subtitle"
+                            tools:text="departament/2.2.1" />
+                    </LinearLayout>
+                </LinearLayout>
+            </com.google.android.material.card.MaterialCardView>
+
+            <!-- «СПИСОК СЕРВЕРОВ» СНЯТ ПО УКАЗАНИЮ ВЛАДЕЛЬЦА: «убери кнопку сортировка
+                 серверов и текст выше "список серверов" вообще убери функцию».
+
+                 Раздел был одной карточкой с одной строкой, поэтому вместе со строкой уходит и
+                 заголовок — секция из ноля строк это заголовок, под которым ничего нет.
+
+                 Ни одна строка ресурсов не удалена: ps_section_server_list, ps_sort_order,
+                 ps_sort_default/_ping/_name остаются в strings_provider.xml, у них просто больше
+                 нет читателя. Порядок серверов теперь всегда тот, что задан по умолчанию — см.
+                 ProviderSettingsActivity, где сохранённое значение приводится к нему. -->
+
+        </LinearLayout>
+    </androidx.core.widget.NestedScrollView>
+</LinearLayout>

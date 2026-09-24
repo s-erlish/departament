@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- THE PRESS LADDER, RUNG 1 — ROW AND CARD, scale 0.975 (handoff README §1).
+
+     Attach to: a settings row, a server row, a sheet row, a subscription card,
+     a tariff card, a device card, a payment row — anything the user reads as one
+     wide slab. The travel is the smallest on the ladder because the target is
+     the largest: 2.5% of a 328dp card is 8dp of movement, which is the same
+     amount of "push" 12% gives a 40dp glyph.
+
+     THE SECOND CHANNEL comes from the background, not from this file:
+     @drawable/bg_row steps the fill DOWN to ?attr/colorPressBg while the finger
+     is held (§1 «шаг фона вниз по рампе»). Attach both — the scale without the
+     step reads as a card that shrank for no reason.
+
+     THIS REPLACES R5's "rows do not scale", and the reversal is the owner's:
+     R5 existed because scaling a row was found to tear the hairlines above and
+     below it, and §1 answers that by scaling every row on a card by the same
+     factor at the same moment, so the divider travels with them. What is NOT
+     answered by that is the row's TEXT — see PressFeedback, which holds a
+     hardware layer for the duration (§11 grabl 1).
+
+     Clock: in @integer/motion_press_in 70ms on ease_press_in, out
+     @integer/motion_press_out 200ms on ease_press_out, whose 1.25 control point
+     gives the ~2% overshoot §1 asks for. Reduced motion collapses it to 0ms
+     declaratively, like every other press here. -->
+<selector xmlns:android="http://schemas.android.com/apk/res/android">
+    <item android:state_pressed="true">
+        <set>
+            <objectAnimator
+                android:duration="@integer/motion_press_in"
+                android:interpolator="@interpolator/ease_press_in"
+                android:propertyName="scaleX"
+                android:valueTo="0.975"
+                android:valueType="floatType" />
+            <objectAnimator
+                android:duration="@integer/motion_press_in"
+                android:interpolator="@interpolator/ease_press_in"
+                android:propertyName="scaleY"
+                android:valueTo="0.975"
+                android:valueType="floatType" />
+        </set>
+    </item>
+    <item>
+        <set>
+            <objectAnimator
+                android:duration="@integer/motion_press_out"
+                android:interpolator="@interpolator/ease_press_out"
+                android:propertyName="scaleX"
+                android:valueTo="1.0"
+                android:valueType="floatType" />
+            <objectAnimator
+                android:duration="@integer/motion_press_out"
+                android:interpolator="@interpolator/ease_press_out"
+                android:propertyName="scaleY"
+                android:valueTo="1.0"
+                android:valueType="floatType" />
+        </set>
+    </item>
+</selector>

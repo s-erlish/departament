@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Заливка контурной пилюли: в покое её нет, под пальцем — шаг фона ВНИЗ
+     (?attr/colorPressBg), тот самый второй канал отклика из §1. Ripple нет. -->
+<selector xmlns:android="http://schemas.android.com/apk/res/android">
+    <item android:color="?attr/colorPressBg" android:state_pressed="true" />
+    <item android:color="@android:color/transparent" />
+</selector>

@@ -1,0 +1,187 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  ============================================================================
+  A-18  settings/perapp - Прокси по приложениям.  H3 · R1.
+  24-tab-conformance.md A-18, 00-rules.md 4.5 / 4.8 / 15.
+  ============================================================================
+
+  What this replaces: two switches inside a card - one of them with a second,
+  independent info target that fired a Toasty - above a GridLayoutManager of bordered
+  cards, each with a bare MaterialCheckBox, a `** ` prefix glued onto system app names
+  in Kotlin, an 18dp radius, 15sp and 12sp inline sizes, and no empty state, no
+  loading state and no search anywhere on screen.
+
+  The screen now reads top to bottom as one ledger (R1):
+
+      §7 header                        «Прокси по приложениям» + one overflow
+      Row.Value «Режим»                opens the select popup on Все / Только выбранные /
+                                       Кроме выбранных, with the current one marked
+      search 56                        filters in place, never navigates
+      meta line                        «Отмечено 4 из 128», Caption, Numeric figures
+      grouped list                     «Ваши приложения» then «Системные приложения»,
+                                       one checkbox row per app, the row owns the box
+
+  Three states share the frame below the meta line and exactly one is visible at a
+  time: the list, the skeleton (the package manager is slow on a cold start and the
+  screen used to show nothing at all while it worked), and the empty state, which
+  carries either «Ничего не найдено» for a search that matched nothing or the load
+  failure with «Повторить».
+
+  2026-08 REDESIGN (handoff README §7): the sub-page lekalo header, @layout/view_sub_header.
+
+  THE APP LIST IS ROWS, NOT ONE CARD PER APP. Until this pass every app was its own
+  MaterialCardView with a 4dp margin, so 128 apps drew 128 bordered boxes — the one
+  composition the prototype never uses anywhere. They are rows with a full-width
+  hairline between them now (@layout/view_row_line), which is §6's «строка» exactly.
+
+  THE LIST IS STILL NOT WRAPPED IN A CARD, and that part is a considered departure.
+  §7 draws «список приложений с чекбоксами» inside one card, which is right for the
+  five demo apps the prototype holds; this list is 128 rows long, scrolls the rest of
+  the screen, carries two section headers inside it («Ваши» / «Системные») and shares
+  its frame with a skeleton and an empty state. A card around a full-height scrolling
+  list draws a boundary that never closes. The mode group above it is the card §7
+  asks for, and the rows below read as its continuation.
+
+  THE CHECKBOX IS THE PROTOTYPE'S CONTROL. Each app carries the 22dp box of
+  @drawable/bg_checkbox rather than a switch: a switch says «this is on now», a box
+  says «this one is in the set», and the set is what the mode row acts on.
+
+  «Российские приложения» (@id/row_ru_preset) STAYS. It is not in §7's table
+  because handler/RussianAppsPreset.kt did not exist when the handoff was drawn; the
+  owner has named it explicitly as a feature that keeps working.
+-->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="?android:attr/colorBackground"
+    android:fitsSystemWindows="true"
+    android:orientation="vertical"
+    tools:context=".ui.PerAppProxyActivity">
+
+    <include
+        android:id="@+id/toolbar"
+        layout="@layout/view_sub_header" />
+
+    <!-- The mode sits in a card, as the two switches it replaced did at 5e8cd54
+         (container_per_app_proxy / container_bypass_apps lived inside one bordered
+         card). Owner decision, 2026-08-02: sub-screen content goes back to the
+         grouped-card composition; the shared toolbar above stays.
+
+         «Режим» opens §6's select popup, so this card must NOT clip its children or
+         the flyout is sliced off at its bottom edge (§11 grabl 4). With the clip gone
+         the card stops trimming its first and last row to its own radius, so those two
+         carry the corner themselves — see PerAppProxyActivity.bindModeRow. -->
+    <com.google.android.material.card.MaterialCardView
+        style="@style/Widget.Departament.CardSection"
+        android:layout_marginTop="@dimen/screen_gutter"
+        android:clipChildren="false"
+        android:clipToPadding="false">
+
+        <LinearLayout
+            style="@style/Widget.Departament.CardSection.Body"
+            android:clipChildren="false"
+            android:clipToPadding="false">
+
+            <include
+                android:id="@+id/row_mode"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                layout="@layout/view_row" />
+
+            <!-- §6: «Разделитель во всю ширину карточки». -->
+            <com.google.android.material.divider.MaterialDivider
+                style="@style/Widget.Departament.Divider.Full"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content" />
+
+            <!-- «Российские приложения» — the named bypass preset, in the same card as the
+                 mode it depends on, because it is a shortcut for filling that mode's list
+                 and reads as a stray feature anywhere else. A plain row with a switch: the
+                 whole row is the target, and the contents are one tap away in the actions
+                 sheet, which filters the list below to exactly this set. -->
+            <include
+                android:id="@+id/row_ru_preset"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                layout="@layout/view_row" />
+        </LinearLayout>
+    </com.google.android.material.card.MaterialCardView>
+
+    <FrameLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:paddingStart="@dimen/screen_gutter"
+        android:paddingTop="@dimen/space_12"
+        android:paddingEnd="@dimen/screen_gutter">
+
+        <include
+            android:id="@+id/search"
+            layout="@layout/view_search_field" />
+    </FrameLayout>
+
+    <TextView
+        android:id="@+id/tv_meta"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="@dimen/space_12"
+        android:layout_marginBottom="@dimen/space_8"
+        android:paddingStart="@dimen/screen_gutter"
+        android:paddingEnd="@dimen/screen_gutter"
+        android:textAppearance="@style/TextAppearance.App.Caption"
+        tools:text="Отмечено 4 из 128" />
+
+    <!-- ONE of the three children below is visible at a time (00-rules.md 15). -->
+    <FrameLayout
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1">
+
+        <androidx.recyclerview.widget.RecyclerView
+            android:id="@+id/recycler_view"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:clipToPadding="false"
+            android:paddingBottom="@dimen/space_32"
+            android:scrollbars="vertical"
+            tools:listitem="@layout/view_row_line" />
+
+        <!-- The silhouette of the list, not a spinner over a blank screen: same tile,
+             same 68 text origin, same 56 minimum. Shown only after 300ms. -->
+        <LinearLayout
+            android:id="@+id/skeleton"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:importantForAccessibility="noHideDescendants"
+            android:orientation="vertical"
+            android:visibility="gone">
+
+            <include
+                android:id="@+id/skeleton_1"
+                layout="@layout/view_skeleton_row" />
+
+            <include
+                android:id="@+id/skeleton_2"
+                layout="@layout/view_skeleton_row" />
+
+            <include
+                android:id="@+id/skeleton_3"
+                layout="@layout/view_skeleton_row" />
+
+            <include
+                android:id="@+id/skeleton_4"
+                layout="@layout/view_skeleton_row" />
+
+            <include
+                android:id="@+id/skeleton_5"
+                layout="@layout/view_skeleton_row" />
+        </LinearLayout>
+
+        <include
+            android:id="@+id/empty_state"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center_vertical"
+            layout="@layout/view_empty_state" />
+    </FrameLayout>
+</LinearLayout>

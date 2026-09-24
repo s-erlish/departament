@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Destructive button container: colorError #F04452. This is the FILL role, which is
+  legal for red; destructive *text* on a surface is @color/ping_bad #FF6069 instead
+  (00-rules.md 3.5 — #F04452 as text measures 4.88:1, #FF6069 measures 6.15:1).
+-->
+<selector xmlns:android="http://schemas.android.com/apk/res/android">
+    <item
+        android:alpha="0.38"
+        android:color="?attr/colorError"
+        android:state_enabled="false" />
+    <item android:color="?attr/colorError" />
+</selector>

@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Carousel page indicator, current page: the single blue accent, slightly larger. -->
+<shape xmlns:android="http://schemas.android.com/apk/res/android"
+    android:shape="oval">
+    <solid android:color="?attr/iconTintBlue" />
+    <size
+        android:width="@dimen/dot_size_active"
+        android:height="@dimen/dot_size_active" />
+</shape>

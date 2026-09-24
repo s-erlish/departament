@@ -1,0 +1,11 @@
+<shape xmlns:android="http://schemas.android.com/apk/res/android" android:shape="rectangle">
+    <!-- Mono (dark) background: neutral near-black, no colour cast. -->
+    <gradient
+        android:type="radial"
+        android:gradientRadius="560dp"
+        android:centerX="0.5"
+        android:centerY="0.30"
+        android:startColor="#161618"
+        android:centerColor="#0D0D0F"
+        android:endColor="#000000" />
+</shape>

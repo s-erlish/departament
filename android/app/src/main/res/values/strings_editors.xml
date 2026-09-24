@@ -1,0 +1,530 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- ==================================================================
+         SHARED - the empty, error and search grammar of 24-tab-conformance 0.4
+         ================================================================== -->
+    <string name="editor_search_empty_title">Ничего не найдено</string>
+    <string name="editor_search_empty_line">Попробуйте другой запрос.</string>
+    <string name="editor_search_reset">Сбросить поиск</string>
+    <string name="editor_retry">Повторить</string>
+    <string name="editor_more_actions">Другие действия</string>
+    <string name="editor_actions_title">Действия</string>
+    <string name="editor_save">Сохранить</string>
+    <string name="editor_cancel">Отмена</string>
+    <string name="editor_delete">Удалить</string>
+    <string name="editor_confirm_replace">Заменить</string>
+    <string name="editor_copied">Скопировано</string>
+    <string name="editor_close">Закрыть</string>
+
+    <!-- ==================================================================
+         A-18 settings/perapp - Прокси по приложениям
+         ================================================================== -->
+    <string name="perapp_mode_row">Режим</string>
+    <string name="perapp_mode_all">Все приложения</string>
+    <string name="perapp_mode_selected">Только выбранные</string>
+    <string name="perapp_mode_except">Кроме выбранных</string>
+    <!-- NOT DISPLAYED since 0.4.9. The «Режим» row lost its subtitle on owner report - these
+         three ran to «Отмеченные — напрямую, остальные…» in the row's two lines, and a sentence
+         clipped mid-clause promises an explanation it does not give. They are kept, and kept next
+         to the mode each belongs to (PerAppProxyActivity.Mode.hintRes still names them), for the
+         day one of them is wanted somewhere it can be read whole - the actions sheet, a help
+         screen. Do not wire them back into the row. -->
+    <string name="perapp_mode_all_hint">Через VPN идут все приложения</string>
+    <string name="perapp_mode_selected_hint">Отмеченные идут через прокси, остальные напрямую</string>
+    <string name="perapp_mode_except_hint">Отмеченные идут напрямую, остальные через прокси</string>
+    <string name="perapp_search_hint">Поиск по приложениям</string>
+    <string name="perapp_section_user">Ваши приложения</string>
+    <string name="perapp_section_system">Системные приложения</string>
+    <string name="perapp_selected_count">Отмечено %1$d из %2$d</string>
+    <string name="perapp_action_select_all">Отметить все</string>
+    <string name="perapp_action_clear_all">Снять отметки</string>
+    <string name="perapp_action_invert">Инвертировать</string>
+    <string name="perapp_action_auto">Подобрать автоматически</string>
+    <string name="perapp_action_auto_hint">Загрузит список приложений, которым нужен прокси</string>
+    <string name="perapp_action_import">Импорт из буфера</string>
+    <string name="perapp_action_export">Экспорт в буфер</string>
+    <string name="perapp_empty_title">Приложений нет</string>
+    <string name="perapp_empty_line">Ни одно установленное приложение не запрашивает доступ в сеть.</string>
+    <string name="perapp_error_title">Не удалось загрузить список</string>
+    <string name="perapp_error_line">Проверьте, что приложению разрешено читать список программ, и повторите.</string>
+    <!-- «Российские приложения» — the named bypass preset. The count is of what is actually on
+         this phone, so the row is honest about how much it is doing.
+         perapp_ru_preset_hint is NOT DISPLAYED since 0.4.9: it is a list of seven, and the row
+         showed «Госуслуги, банки, Mir Pay, Ozon, Wildberries, Яндекс, операторы — и…», naming four
+         members and hiding the rest. It has NO READER now, in Kotlin or in a layout. Kept because
+         it is the only written statement of what the набор is for, and because the place it
+         belongs is a sheet or a help line where it can be read whole - not a two-line row. -->
+    <string name="perapp_ru_preset">Российские приложения</string>
+    <string name="perapp_ru_preset_installed">Установлено на этом устройстве: %1$d</string>
+    <string name="perapp_ru_preset_show">Показать приложения набора</string>
+    <string name="perapp_ru_preset_show_off">Показать все приложения</string>
+    <string name="perapp_ru_preset_empty_title">Ни одного приложения из набора</string>
+    <string name="perapp_ru_preset_empty_line">На этом устройстве нет приложений из набора. Он ничего не изменит, пока вы не установите хотя бы одно.</string>
+    <string name="perapp_ru_preset_pending">Набор применён. Изменения вступят в силу при следующем подключении.</string>
+    <string name="perapp_picker_title">Выбор приложений</string>
+    <string name="perapp_picker_selected">Выбрано: %1$d</string>
+
+    <!-- ==================================================================
+         A-20 settings/routing - Маршрутизация
+         ================================================================== -->
+    <string name="routing_title">Маршрутизация</string>
+    <string name="routing_domain_strategy">Доменная стратегия</string>
+    <string name="routing_import_confirm">Текущие правила будут заменены набором из этого источника. Продолжить?</string>
+    <string name="routing_section_rules">Настройки правил маршрутизации</string>
+    <string name="routing_section_actions">Наборы и обмен</string>
+    <!-- The accessible name of the rule row's own switch, restored from 5e8cd54's chk_enable.
+         It names the ACTION on the object, because the row already says which rule it is. -->
+    <string name="routing_rule_enabled_cd">Включить правило</string>
+    <string name="routing_rule_locked">Защищено</string>
+    <string name="routing_action_add">Добавить правило</string>
+    <string name="routing_action_presets">Готовые наборы</string>
+    <string name="routing_action_import_clipboard">Импорт из буфера</string>
+    <string name="routing_action_import_qrcode">Импорт из QR-кода</string>
+    <string name="routing_action_export">Экспорт в буфер</string>
+    <string name="routing_empty_title">Правил пока нет</string>
+    <string name="routing_empty_line">Добавьте правило или загрузите готовый набор.</string>
+    <string name="routing_export_empty">Экспортировать нечего: список правил пуст</string>
+    <string name="routing_import_done">Набор правил загружен</string>
+    <string name="routing_import_failed">Не удалось загрузить набор. Проверьте данные и повторите.</string>
+    <string name="routing_strategy_cd">Сменить доменную стратегию</string>
+
+    <!-- A-21 settings/routing/rule/{id} - Правило -->
+    <string name="routing_ed_title_new">Новое правило</string>
+    <string name="routing_ed_title_edit">Правило</string>
+    <string name="routing_ed_section_match">Что попадает под правило</string>
+    <string name="routing_ed_section_route">Куда направлять</string>
+    <string name="routing_ed_name">Название</string>
+    <string name="routing_ed_name_hint">Например: реклама</string>
+    <string name="routing_ed_name_required">Укажите название правила</string>
+    <string name="routing_ed_domain">Домены</string>
+    <string name="routing_ed_ip">IP-адреса</string>
+    <string name="routing_ed_process">Приложения</string>
+    <string name="routing_ed_port">Порты</string>
+    <string name="routing_ed_protocol">Протоколы</string>
+    <string name="routing_ed_network">Тип соединения</string>
+    <string name="routing_ed_outbound">Исходящее соединение</string>
+    <string name="routing_ed_locked">Защитить от перезаписи</string>
+    <string name="routing_ed_list_hint">Несколько значений разделяйте запятой</string>
+    <string name="routing_ed_port_hint">Например: 80 или 1000-2000</string>
+    <string name="routing_ed_protocol_hint" translatable="false">http, tls, bittorrent</string>
+    <string name="routing_ed_network_hint" translatable="false">tcp, udp</string>
+    <string name="routing_ed_enabled">Правило включено</string>
+    <string name="routing_ed_enabled_hint">Выключенное правило сохраняется, но не применяется</string>
+    <string name="routing_ed_locked_hint">Защищённое правило переживает загрузку готового набора</string>
+    <string name="routing_ed_process_pick">Выбрать приложения</string>
+    <string name="routing_ed_outbound_pick">Показать варианты</string>
+    <string name="routing_ed_delete">Удалить правило</string>
+    <string name="routing_ed_delete_confirm">Удалить правило? Отменить это действие нельзя.</string>
+    <string name="routing_ed_process_unavailable">Маршрутизация по приложениям недоступна на этой версии Android</string>
+
+    <!-- ==================================================================
+         A-17 Подписки (список групп подписок)
+         ================================================================== -->
+    <string name="subs_title">Подписки</string>
+    <string name="subs_section_list">Подписки</string>
+    <string name="subs_add">Добавить подписку</string>
+    <string name="subs_update_all">Обновить все</string>
+    <string name="subs_updating">Обновляем…</string>
+    <string name="subs_disabled">Выключена</string>
+    <string name="subs_action_enable">Включить</string>
+    <string name="subs_action_disable">Выключить</string>
+    <string name="subs_empty_title">Подписок пока нет</string>
+    <string name="subs_empty_line">Добавьте ссылку подписки, чтобы серверы обновлялись сами.</string>
+    <string name="subs_local">Локальная группа, без ссылки</string>
+    <string name="subs_updated">Обновлено %1$s</string>
+    <string name="subs_never_updated">Ещё не обновлялась</string>
+    <string name="subs_action_edit">Изменить</string>
+    <string name="subs_action_qrcode">Показать QR-код</string>
+    <string name="subs_action_copy">Скопировать ссылку</string>
+    <string name="subs_action_delete">Удалить подписку</string>
+    <string name="subs_delete_confirm">Удалить подписку и её серверы?</string>
+
+    <!-- A-14 servers/provider/{id} - форма подписки -->
+    <string name="subs_ed_title_new">Новая подписка</string>
+    <string name="subs_ed_title_edit">Подписка</string>
+    <string name="subs_ed_delete">Удалить подписку</string>
+    <string name="subs_ed_section_update">Обновление</string>
+    <string name="subs_ed_section_advanced">Дополнительно</string>
+    <string name="subs_ed_name">Название</string>
+    <string name="subs_ed_name_required">Укажите название подписки</string>
+    <string name="subs_ed_url">Ссылка подписки</string>
+    <string name="subs_ed_url_locked">Ссылка выдана оператором и не показывается целиком</string>
+    <string name="subs_ed_url_foreign">Эта ссылка не от departament. Используйте подписку из нашего бота.</string>
+    <string name="subs_ed_url_invalid">Ссылка выглядит неверно. Проверьте адрес и повторите.</string>
+    <string name="subs_ed_url_insecure">Ссылка без шифрования. Включите «Разрешить незащищённую ссылку», если это ожидаемо.</string>
+    <string name="subs_ed_enabled">Подписка включена</string>
+    <string name="subs_ed_enabled_hint">Выключенная подписка не обновляется и её серверы скрыты</string>
+    <string name="subs_ed_auto_update">Обновлять автоматически</string>
+    <string name="subs_ed_auto_update_hint">Приложение будет само подтягивать серверы</string>
+    <string name="subs_ed_interval">Интервал обновления, минуты</string>
+    <string name="subs_ed_interval_hint">Не реже одного раза в сутки достаточно</string>
+    <string name="subs_ed_interval_too_small">Слишком короткий интервал. Укажите значение побольше.</string>
+    <string name="subs_ed_user_agent" translatable="false">User-Agent</string>
+    <string name="subs_ed_user_agent_hint">Оставьте пустым, чтобы использовать значение из настроек подписок</string>
+    <string name="subs_ed_user_agent_error">В заголовке нельзя передать кириллицу и другие не-ASCII символы. Оставьте латиницу, цифры и знаки.</string>
+    <string name="subs_ed_filter">Фильтр серверов</string>
+    <string name="subs_ed_filter_hint">Показывать только серверы, чьё имя подходит под выражение</string>
+    <string name="subs_ed_allow_insecure">Разрешить незащищённую ссылку</string>
+    <string name="subs_ed_allow_insecure_hint">Позволяет загружать подписку по http вместо https</string>
+    <string name="subs_ed_allow_insecure_locked">Для подписки оператора всегда используется https</string>
+    <string name="subs_ed_pre_profile">Сервер перед подпиской</string>
+    <string name="subs_ed_next_profile">Сервер после подписки</string>
+    <string name="subs_ed_profile_hint">Оставьте пустым, если цепочка не нужна</string>
+    <string name="subs_ed_profile_pick">Выбрать сервер</string>
+    <string name="subs_ed_profile_none">Пока нет серверов, которые можно выбрать</string>
+
+    <!-- ==================================================================
+         A-25 settings/assets - Файлы ресурсов
+         ================================================================== -->
+    <string name="asset_title">Файлы ресурсов</string>
+    <string name="asset_source">Источник Geo-файлов</string>
+    <string name="asset_section_files">Файлы ресурсов</string>
+    <string name="asset_action_add_file">Добавить файл с устройства</string>
+    <string name="asset_action_add_url">Добавить по ссылке</string>
+    <string name="asset_action_add_qrcode">Добавить по QR-коду</string>
+    <string name="asset_action_download">Обновить файлы</string>
+    <string name="asset_action_download_hint">Скачает geoip.dat и geosite.dat из выбранного источника</string>
+    <string name="asset_empty_title">Файлов пока нет</string>
+    <string name="asset_empty_line">Добавьте geoip.dat и geosite.dat, чтобы работала маршрутизация.</string>
+    <string name="asset_missing">Файл не найден на устройстве</string>
+    <string name="asset_action_edit">Изменить ссылку</string>
+    <string name="asset_action_delete">Удалить файл</string>
+    <string name="asset_delete_confirm">Удалить файл? Его можно будет скачать снова.</string>
+    <string name="asset_source_cd">Сменить источник Geo-файлов</string>
+    <string name="asset_downloading">Загружаем файлы…</string>
+    <string name="asset_download_failed">Не удалось скачать файлы. Проверьте сеть и повторите.</string>
+
+    <!-- A-26 Add asset URL -->
+    <string name="asset_url_title_new">Новый файл</string>
+    <string name="asset_url_title_edit">Файл ресурсов</string>
+    <string name="asset_url_delete">Удалить файл</string>
+    <string name="asset_name_label">Название файла</string>
+    <string name="asset_name_hint">Так файл будет назван на устройстве</string>
+    <string name="asset_name_required">Укажите название файла</string>
+    <string name="asset_name_duplicate">Файл с таким названием уже есть</string>
+    <string name="asset_url_label">Ссылка</string>
+    <string name="asset_url_required">Укажите ссылку на файл</string>
+
+    <!-- ==================================================================
+         A-35 settings/about/log - Журнал
+         ================================================================== -->
+    <string name="log_title">Журнал</string>
+    <string name="log_search_hint">Поиск по журналу</string>
+    <string name="log_empty_title">Записей пока нет</string>
+    <string name="log_empty_line">Журнал заполнится при следующем подключении.</string>
+    <string name="log_action_copy">Копировать</string>
+    <string name="log_action_share">Поделиться файлом</string>
+    <string name="log_action_clear">Очистить</string>
+    <string name="log_level_error">Ошибка</string>
+    <string name="log_level_warn">Внимание</string>
+    <string name="log_cleared">Журнал очищен</string>
+    <string name="log_share_failed">Не удалось подготовить файл журнала</string>
+
+    <!-- ==================================================================
+         A-33 settings/about - О приложении
+         ================================================================== -->
+    <string name="about_title">О приложении</string>
+    <string name="about_section_app">Приложение</string>
+    <string name="about_section_links">Ссылки и документы</string>
+    <string name="about_version">Версия</string>
+    <string name="about_version_cd">Скопировать версию</string>
+    <string name="about_package">Идентификатор</string>
+    <string name="about_package_cd">Скопировать идентификатор</string>
+    <string name="about_check_update">Проверить обновления</string>
+    <string name="about_source_code">Исходный код</string>
+    <string name="about_feedback">Обратная связь</string>
+    <string name="about_telegram">Канал в Telegram</string>
+    <string name="about_licenses">Лицензии открытого ПО</string>
+    <string name="about_privacy">Политика конфиденциальности</string>
+
+    <!-- ==================================================================
+         A-36 Проверка обновлений
+         ================================================================== -->
+    <string name="upd_title">Проверить обновление</string>
+    <string name="upd_prerelease">Искать предварительный выпуск</string>
+    <!-- The version caption §7 draws under the card: «departament 2.2.1». The core build
+         follows it in brackets because that is what a bug report needs. -->
+    <string name="upd_version_line">departament %1$s</string>
+    <string name="upd_prerelease_hint">Ранние версии выходят чаще и могут работать нестабильно</string>
+    <string name="upd_action_check">Проверить обновление</string>
+    <string name="upd_checking">Проверяем обновления…</string>
+    <string name="upd_none_title">Обновлений нет</string>
+    <string name="upd_none_line">Установлена последняя версия.</string>
+    <string name="upd_found_title">Доступна версия %1$s</string>
+    <string name="upd_found_line">Скачаем и установим обновление. Данные и подписка останутся на месте.</string>
+    <string name="upd_action_download">Обновить</string>
+
+    <!-- Скачивание. Определённый прогресс, пока сервер прислал длину; иначе одна строка без цифр,
+         потому что «73%» без знаменателя — это не прогресс, а украшение. -->
+    <string name="upd_downloading">Скачиваем обновление…</string>
+    <string name="upd_downloading_size">%1$.1f МБ из %2$.1f МБ</string>
+    <string name="upd_downloading_done">Скачано %1$.1f МБ</string>
+    <string name="upd_action_cancel">Отменить</string>
+
+    <!-- Файл скачан и проверен: пакет наш, версия выше установленной. -->
+    <string name="upd_ready_title">Обновление готово</string>
+    <string name="upd_ready_line">Осталось подтвердить установку в системном окне.</string>
+    <string name="upd_action_install">Установить</string>
+
+    <!-- Установка из неизвестных источников: не ошибка, а недостающее разрешение.
+
+         Порядок фраз перевёрнут вместе с правкой тире (00-rules 1.4.11): раньше строка начиналась
+         с просьбы и объясняла её после длинного тире. Теперь сначала состояние, потом действие —
+         так экран отвечает на вопрос «почему я тут оказался» прежде, чем что-то требует. -->
+    <string name="upd_permission_title">Нужно разрешение на установку</string>
+    <string name="upd_permission_line">Обновление уже скачано. Разрешите departament устанавливать приложения.</string>
+    <string name="upd_action_permission">Открыть настройки</string>
+
+    <!-- Отказы. У каждого своя причина, и «Повторить» стоит рядом с ней (G2). -->
+    <string name="upd_error_title">Не удалось проверить обновления</string>
+    <string name="upd_error_unreachable">Не удалось связаться с сервером обновлений. Проверьте сеть и повторите.</string>
+    <string name="upd_error_no_channel_title">Обновления недоступны</string>
+    <string name="upd_error_no_channel">В этой сборке нет канала обновлений. Скачайте новую версию с сайта departament.</string>
+    <string name="upd_error_no_release">Пока не опубликовано ни одной версии.</string>
+    <string name="upd_error_no_asset">Для вашего устройства сборки в этой версии нет.</string>
+    <string name="upd_error_download_title">Не удалось скачать обновление</string>
+    <string name="upd_error_download">Связь прервалась или не хватило места. Повторите.</string>
+    <string name="upd_error_foreign_title">Файл не от departament</string>
+    <string name="upd_error_foreign">Скачанный файл оказался другим приложением, поэтому он удалён. Обновитесь вручную с сайта.</string>
+    <string name="upd_error_not_newer_title">Эта версия не новее</string>
+    <string name="upd_error_not_newer">Система откажется её установить. Дождитесь следующей сборки.</string>
+    <string name="upd_error_installer_title">Установщик не открылся</string>
+    <string name="upd_error_installer">Откройте скачанный файл вручную или обновитесь с сайта.</string>
+    <string name="upd_action_open_releases">Открыть страницу загрузки</string>
+
+    <!-- ==================================================================
+         A-34 settings/about/urlschemes - Схемы URL-адресов
+         ================================================================== -->
+    <string name="scheme_intro">Эти ссылки открывают приложение из браузера, заметок или автоматизации. Нажмите на строку, чтобы скопировать её.</string>
+    <string name="scheme_copy_cd">Скопировать ссылку</string>
+    <string name="scheme_empty_title">Схемы не зарегистрированы</string>
+    <string name="scheme_empty_line">Зарегистрируйте схему, чтобы открывать ссылки в приложении.</string>
+    <string name="scheme_section_control">Управление подключением</string>
+    <string name="scheme_section_import">Импорт</string>
+    <string name="scheme_section_routing">Маршрутизация</string>
+
+    <!-- ==================================================================
+         A-29 settings/data - Данные и резервные копии
+         ================================================================== -->
+    <string name="backup_title">Резервное копирование</string>
+    <string name="backup_note">Файл с серверами и настройками</string>
+    <string name="backup_grp_device">Данные</string>
+    <string name="backup_grp_cloud">Облако</string>
+    <string name="backup_action_create">Сохранить копию</string>
+    <string name="backup_action_create_hint">Все серверы и настройки в один файл</string>
+    <string name="backup_action_restore">Восстановить из файла</string>
+    <string name="backup_action_restore_hint">Заменит текущие серверы</string>
+    <string name="backup_action_share">Поделиться конфигурацией</string>
+    <string name="backup_action_share_hint">Отправить файл в другое приложение</string>
+    <string name="backup_action_webdav_setup">Настройки WebDAV</string>
+    <string name="backup_action_webdav_backup">Выгрузить копию в облако</string>
+    <string name="backup_action_webdav_restore">Восстановить из облака</string>
+    <string name="backup_webdav_not_set">Не настроено</string>
+    <string name="backup_webdav_required">Сначала укажите адрес WebDAV</string>
+    <string name="backup_busy">Выполняем…</string>
+    <string name="backup_created">Копия создана</string>
+    <string name="backup_restored">Настройки восстановлены</string>
+    <string name="backup_failed">Не удалось создать копию. Проверьте место на устройстве и повторите.</string>
+    <string name="backup_restore_failed">Не удалось прочитать файл копии. Выберите другой файл.</string>
+    <string name="backup_cloud_failed">Облако недоступно. Проверьте адрес, логин и сеть.</string>
+    <string name="backup_restore_confirm">Текущие серверы, подписки и настройки будут заменены копией. Отменить это действие нельзя.</string>
+    <string name="backup_restore_confirm_action">Восстановить</string>
+    <string name="webdav_url_label">Адрес сервера</string>
+    <string name="webdav_url_hint">Например: https://cloud.example.com/remote.php/dav</string>
+    <string name="webdav_user_label">Логин</string>
+    <string name="webdav_pass_label">Пароль</string>
+    <string name="webdav_path_label">Папка на сервере</string>
+    <string name="webdav_path_hint">Оставьте пустым, чтобы использовать папку по умолчанию</string>
+
+    <!-- ==================================================================
+         A-13 servers/server/{guid} - формы серверов
+         ================================================================== -->
+    <string name="srv_section_members">Участники цепочки</string>
+    <string name="srv_delete">Удалить сервер</string>
+    <string name="srv_delete_confirm">Удалить сервер? Отменить это действие нельзя.</string>
+    <string name="srv_chain_title">Цепочка прокси</string>
+    <string name="srv_name_label">Название</string>
+    <string name="srv_chain_empty_title">Цепочка пуста</string>
+    <string name="srv_chain_empty_line">Добавьте хотя бы один сервер, через который пойдёт трафик.</string>
+    <string name="srv_chain_add">Добавить сервер в цепочку</string>
+    <string name="srv_chain_step">Шаг %1$d</string>
+    <string name="srv_chain_pick">Выберите сервер</string>
+    <string name="srv_chain_remove_step">Убрать шаг</string>
+    <!-- Отказы при сохранении цепочки. Обе строки были с подстановкой (номер шага, список имён)
+         и уходили в CharSequence-дверь, которая ничего не показывает; вторую вдобавок отсеивал
+         `isCounterReport`, потому что в именах серверов есть цифры. Нажатие «Сохранить» с пустым
+         шагом не делало ВООБЩЕ ничего. Теперь это предложения без подстановки: их видно. -->
+    <string name="srv_chain_step_empty">В цепочке остался пустой шаг. Выберите для него сервер.</string>
+    <string name="srv_chain_no_servers">Пока нет серверов, из которых можно собрать цепочку</string>
+    <string name="srv_group_title">Группа серверов</string>
+    <string name="srv_group_type">Тип группы</string>
+    <string name="srv_group_sub">Подписка</string>
+    <string name="srv_group_filter">Фильтр серверов</string>
+    <string name="srv_group_filter_hint">Оставьте пустым, чтобы взять все серверы подписки</string>
+    <string name="srv_custom_title">Своя конфигурация</string>
+    <string name="srv_config_invalid">Конфигурация не разобрана. Проверьте JSON и повторите.</string>
+    <string name="srv_name_required">Укажите название сервера</string>
+
+    <!-- ОТКАЗЫ ФОРМЫ «сервер вручную» (ServerActivity).
+         Раньше на месте каждого стояла ПОДПИСЬ ПОЛЯ («Название», «Адрес», «Порт», «Пароль»),
+         и ни одна из них не была в разрешённых NoticePolicy - то есть «Сохранить» с пустым
+         адресом не делало вообще ничего: экран стоял, ответа не было. Подпись поля и так
+         написана над полем; сообщению нужно назвать, ЧТО сделать. -->
+    <string name="srv_address_required">Укажите адрес сервера</string>
+    <string name="srv_port_required">Укажите порт: число от 1 до 65535</string>
+    <string name="srv_id_required">Укажите идентификатор пользователя</string>
+    <string name="srv_password_required">Укажите пароль</string>
+    <string name="srv_secret_key_required">Укажите закрытый ключ</string>
+    <!-- ПОЛЯ, БЕЗ КОТОРЫХ ПРОТОКОЛ НЕ ПОДНИМЕТСЯ. Сохранённый без них сервер - это не
+         сохранённый сервер, а будущее «не подключается» без объяснения: пустой открытый
+         ключ уходит в конфиг как есть и рукопожатие не состоится, пустое шифрование
+         VLESS ядро не принимает, пустой порт Hysteria2 роняет сборку конфига на toInt().
+         Проверка стоит на СОХРАНЕНИИ, поэтому уже сохранённую запись всегда можно
+         открыть и починить. -->
+    <string name="srv_public_key_required">Укажите открытый ключ сервера</string>
+    <string name="srv_public_key_required_reality">Укажите открытый ключ сервера: без него REALITY не соединится</string>
+    <string name="srv_encryption_required">Укажите шифрование: для VLESS это почти всегда none</string>
+    <string name="srv_tls_required">Для Trojan нужно выбрать TLS</string>
+    <string name="srv_json_invalid">Проверьте JSON: он не разобрался</string>
+
+    <!-- ==================================================================
+         A-13 «СЕРВЕР ВРУЧНУЮ» (ServerActivity) - восемь протокольных форм.
+
+         Восемь экранов - последнее место, где приложение выглядело форком
+         v2rayNG: голый EditText под TextView, шкала отступов из форка и ни
+         одного поля с состоянием ошибки. Формы собраны из тех же деталей,
+         что «Группа серверов» и «Подписка»: подпись сверху, поле 56 с
+         зарезервированной строкой подсказки, отказ ПОД полем.
+
+         ПОДПИСЬ ГОВОРИТ, ЧТО ЭТО ЗА ПОЛЕ; ПОДСКАЗКА - ЧТО В НЕГО ПИСАТЬ.
+         В форке половина подписей несла инструкцию в скобках («MTU
+         (необязательно, по умолчанию 1420)»), то есть подпись читалась как
+         предложение и переставала быть именем поля. Скобки вынесены в
+         helperText - строку, которая под полем и так зарезервирована.
+         ================================================================== -->
+
+    <!-- Заголовок экрана - имя протокола. Технический идентификатор, 1.4.10.
+         EConfigType.toString() давал «SHADOWSOCKS» и «WIREGUARD»: имена этих
+         двух проектов пишутся не так, а капс запрещён (0.4.3). -->
+    <!-- Заголовок экрана: русское подлежащее плюс имя протокола. «VLESS» в одиночку
+         выпадает из ряда соседей по семейству - «Группа серверов», «Своя
+         конфигурация», «Цепочка прокси»: те названы существительными по-русски.
+         Имя протокола остаётся как есть - это технический идентификатор (1.4.10). -->
+    <string name="srv_title_fmt">Сервер %1$s</string>
+    <string name="srv_proto_vmess" translatable="false">VMess</string>
+    <string name="srv_proto_vless" translatable="false">VLESS</string>
+    <string name="srv_proto_trojan" translatable="false">Trojan</string>
+    <string name="srv_proto_shadowsocks" translatable="false">Shadowsocks</string>
+    <string name="srv_proto_socks" translatable="false">SOCKS</string>
+    <string name="srv_proto_http" translatable="false">HTTP</string>
+    <string name="srv_proto_wireguard" translatable="false">WireGuard</string>
+    <string name="srv_proto_hysteria2" translatable="false">Hysteria2</string>
+
+    <!-- Заголовки групп. Предложением, полужирным, без капса (0.4.3, 1.4.7). -->
+    <string name="srv_section_access">Доступ</string>
+    <string name="srv_section_tls">Шифрование канала</string>
+    <string name="srv_section_keys">Ключи</string>
+    <string name="srv_section_interface">Интерфейс</string>
+    <string name="srv_section_advanced">Дополнительно</string>
+
+    <!-- Подписи, из которых вынута инструкция в скобках. -->
+    <string name="srv_user_label">Пользователь</string>
+    <string name="srv_preshared_key_label">Дополнительный ключ шифрования</string>
+    <string name="srv_reserved_label" translatable="false">Reserved</string>
+    <string name="srv_local_address_label">Локальный адрес</string>
+    <string name="srv_mtu_label" translatable="false">MTU</string>
+    <string name="srv_kcp_mtu_label" translatable="false">mKCP MTU</string>
+    <string name="srv_kcp_tti_label" translatable="false">mKCP TTI</string>
+    <string name="srv_port_hop_label">Смена портов</string>
+    <string name="srv_bandwidth_down_label">Входящая полоса</string>
+    <string name="srv_bandwidth_up_label">Исходящая полоса</string>
+    <string name="srv_xhttp_extra_label" translatable="false">XHTTP Extra</string>
+    <string name="srv_final_mask_label" translatable="false">FinalMask</string>
+
+    <!-- Подсказки под полями. -->
+    <string name="srv_hint_optional">Можно оставить пустым</string>
+    <string name="srv_hint_pinned_ca256">SHA-256. Можно оставить пустым</string>
+    <string name="srv_hint_address">Домен или IP-адрес сервера</string>
+    <string name="srv_hint_port">От 1 до 65535</string>
+    <string name="srv_hint_reserved">Три числа через запятую. Можно оставить пустым</string>
+    <string name="srv_hint_local_address">IPv4 и IPv6 через запятую. Можно оставить пустым</string>
+    <string name="srv_hint_mtu">По умолчанию 1420</string>
+    <string name="srv_hint_kcp_mtu">По умолчанию 1350</string>
+    <string name="srv_hint_kcp_tti">По умолчанию 50</string>
+    <string name="srv_hint_port_hop">Заменяет порт выше. Можно оставить пустым</string>
+    <string name="srv_hint_port_hop_interval">В секундах. Можно оставить пустым</string>
+    <string name="srv_hint_bandwidth">Число и единица, например 100 m. Допустимы k, m, g, t</string>
+    <string name="srv_hint_xhttp_extra">Необработанный JSON вида { XHTTPObject }</string>
+    <string name="srv_hint_final_mask">Необработанный JSON вида { FinalMaskObject }</string>
+    <string name="srv_hint_encryption">Для VLESS почти всегда none</string>
+
+    <!-- Примеры значения в пустом поле. Плейсхолдер - это пример, а не подпись (7.4). -->
+    <string name="srv_ph_address" translatable="false">example.com</string>
+    <!-- Значение, которого VLESS ждёт в поле «Шифрование» по умолчанию. Технический
+         идентификатор, не текст интерфейса. -->
+    <string name="srv_encryption_default" translatable="false">none</string>
+
+    <!-- Выбор значения из списка. Поле открывает лист с вариантами: Spinner в
+         разрешённый набор компонентов не входит (11.2), а поле, в отличие от
+         строки настроек, несёт ту же строку отказа, что и соседи по форме. -->
+    <string name="srv_pick_value">Выберите значение</string>
+    <string name="srv_saving_cd">Сохранение</string>
+    <string name="srv_value_none">Нет</string>
+    <string name="srv_value_not_applicable">Не применимо</string>
+    <string name="srv_value_default">Как в настройках</string>
+    <string name="srv_value_yes">Да</string>
+    <string name="srv_value_no">Нет</string>
+
+    <!-- ОТКАЗЫ. Каждый называет, что исправить, и приходит ПОД своё поле, а не
+         поверх экрана: тост поверх формы не показывает, какое из двадцати полей
+         он имеет в виду. -->
+    <string name="srv_address_invalid">В адресе не должно быть пробелов и косых черт. Укажите домен или IP</string>
+    <string name="srv_number_invalid">Введите целое число больше нуля</string>
+    <string name="srv_reserved_invalid">Здесь нужны три числа через запятую, например 0,0,0</string>
+    <string name="srv_bandwidth_invalid">Укажите число и единицу, например 100 m</string>
+    <string name="srv_editor_unavailable">Для этого типа сервера формы нет. Откройте его как свою конфигурацию</string>
+    <string name="srv_config_unreadable">Сервер не открылся: запись повреждена. Удалите его и добавьте заново</string>
+
+    <!-- ==================================================================
+         RUSSIAN REPLACEMENTS FOR THE UPSTREAM ENGLISH THESE SCREENS STILL SHOWED
+
+         Every screen in this file was rebuilt, but sixteen of the messages they
+         raise still came from the upstream res/values/strings.xml - «Success»,
+         «Failure», «Invalid URL», «Update %d configs», «Insufficient members». A
+         Russian-only product (00-rules.md 1.4.10 / 9) cannot answer a save with an
+         English word, so the keys below replace them for these screens. The shared
+         upstream keys stay where they are: other screens still use them and this
+         wave does not own res/values/strings.xml.
+         ================================================================== -->
+    <string name="editor_saved">Сохранено</string>
+    <string name="editor_done">Готово</string>
+    <string name="editor_failed">Не удалось выполнить</string>
+    <string name="editor_url_invalid">Ссылка указана неверно</string>
+
+    <string name="perapp_unknown_app">Неопознанный трафик</string>
+
+    <!-- ИТОГ «Обновить все».
+         `subs_update_done` («Обновлено серверов: %1$d») и `subs_update_result` («Серверов: … ·
+         обновлено: …, с ошибкой: …») УДАЛЕНЫ. Обе строились через getString и уходили в
+         CharSequence-дверь, которая по правилу 4 NoticePolicy не показывает ничего, а вторая ещё
+         и распознавалась как счётчик. То есть «Обновить все» молчал ОБО ВСЁМ, кроме случая «нет
+         подписок»: неудача выглядела ровно как успех.
+         Успех и дальше молчит (правило 1 - строки перерисовались, это и есть подтверждение), а у
+         неудачи теперь есть предложение с причиной и следующим шагом. -->
+    <string name="subs_update_none">Нет подписок для обновления</string>
+    <string name="subs_update_failed">Не удалось обновить подписки. Проверьте сеть и повторите.</string>
+    <string name="subs_update_partial">Часть подписок не обновилась. Проверьте сеть и повторите.</string>
+    <string name="subs_update_skipped">Обновлять нечего: подписки выключены или их срок истёк.</string>
+
+    <string name="asset_copy_failed">Не удалось скопировать файл</string>
+
+    <string name="scheme_import_done">Импорт выполнен</string>
+    <string name="scheme_import_failed">Не удалось импортировать</string>
+
+    <string name="srv_group_sub_all">Все подписки</string>
+    <string name="srv_delete_selected">Нельзя удалить выбранный сервер</string>
+    <string name="srv_chain_too_few">В цепочке нужно минимум два шага</string>
+    <string name="srv_chain_invalid_members">Не все шаги ведут на обычный сервер. Выберите для них другой.</string>
+    <string name="srv_config_label">Конфигурация</string>
+    <string name="srv_config_note">Порт входящего подключения должен совпадать с настройками приложения.</string>
+</resources>

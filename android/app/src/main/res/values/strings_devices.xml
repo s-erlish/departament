@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="devices_title">Устройства</string>
+    <string name="devices_subtitle">Устройства, подключённые к вашей подписке</string>
+    <string name="devices_empty">Устройств пока нет</string>
+    <string name="devices_empty_hint">Устройства появятся после первого подключения.</string>
+    <string name="devices_error_generic">Не удалось загрузить устройства. Проверьте подключение и повторите.</string>
+    <string name="devices_error_no_subscription">Активной подписки нет. Купите тариф, чтобы управлять устройствами.</string>
+    <string name="devices_error_delete">Не удалось удалить устройство. Повторите попытку позже.</string>
+    <string name="devices_delete_title">Удалить устройство?</string>
+    <string name="devices_delete_message">Устройство «%1$s» будет отключено от подписки. Продолжить?</string>
+    <string name="devices_delete_confirm">Удалить</string>
+    <string name="devices_delete_cancel">Отмена</string>
+    <string name="devices_delete_cd">Удалить устройство</string>
+    <string name="devices_deleted">Устройство удалено</string>
+    <!-- README §7 «Устройства», взято из прототипа дословно: своё устройство помечено акцентом
+         и не удаляется; удалённое гаснет с этой подписью и через 700 мс уходит из списка. -->
+    <string name="devices_this_device">Это устройство</string>
+    <string name="devices_disconnected">Отключено от подписки</string>
+    <string name="devices_footnote">Удалённое устройство отключается от подписки и освобождает слот.</string>
+    <string name="devices_last_active">Активно: %1$s</string>
+    <string name="devices_unknown_model">Неизвестное устройство</string>
+    <string name="devices_hwid">ID: %1$s</string>
+    <string name="devices_diag_title">Ответ сервера (диагностика)</string>
+    <string name="devices_diag_http">HTTP: %1$d</string>
+    <string name="devices_diag_empty">Подписка сообщает об устройствах: %1$d, но список пуст. Ответ сервера показан ниже. Пришлите скриншот, чтобы мы исправили.</string>
+    <string name="devices_diag_failed">Не удалось загрузить устройства. Ответ сервера показан ниже. Пришлите скриншот, чтобы мы исправили.</string>
+    <string name="devices_diag_no_body">Пустой ответ сервера.</string>
+</resources>

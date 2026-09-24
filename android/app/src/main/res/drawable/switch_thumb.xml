@@ -1,0 +1,92 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  ============================================================================
+  THE SWITCH THUMB — Material's own, with ONE state left out.
+  ============================================================================
+
+  THE DEFECT. The owner held the IPv6 row down and photographed the switch:
+  «зажал ipv6 вкладку, а в переключателе кружочек увеличился, хотя такого быть не
+  должно». The thumb had grown to 28dp under a finger that was nowhere near it.
+
+  THE CAUSE IS A PLATFORM RULE AND IT IS WORTH STATING EXACTLY, because the obvious
+  fix is the wrong one. ViewGroup.dispatchSetPressed hands the pressed state to its
+  children and SKIPS any child that can be pressed on its own:
+
+      if (!pressed || (!child.isClickable() && !child.isLongClickable())) {
+          child.setPressed(pressed);
+      }
+
+  Every switch in this product is deliberately android:clickable="false" — the WHOLE
+  ROW is the one hit target, which is @style/Widget.Departament.Switch's rule and
+  view_row.xml's — and that is precisely why it DOES inherit the row's press. M3's
+  mtrl_switch_thumb then answers with its state_pressed entry, a 28dp disc, listed
+  FIRST so it outranks both checked and unchecked. So the row's press produced a
+  second, different response on top of @anim/press_row's, on a control the user was
+  not touching.
+
+  Making the switch clickable would stop the dispatch and would also give the row two
+  targets that can disagree — the defect five shipped switch rows already had and the
+  reason the flag is false in the first place. So the state is refused at the drawable
+  instead: this selector simply has no state_pressed entry, a pressed thumb falls
+  through to checked or unchecked, and the row's own press response stays the only one.
+
+  NOTHING ELSE IS DROPPED. Both resting sizes (16dp off / 24dp on) and the 250ms
+  two-leg morph between them are reproduced from material-1.13.0 exactly — see
+  @drawable/switch_thumb_unchecked, _checked and the two transitions, and
+  values/tokens_switch_thumb.xml for the paths and durations they share. Copied rather than
+  referenced because material's public.txt lists styles only: every mtrl_switch_* is
+  private to that library. Colour is untouched and still arrives by tint from
+  @color/switch_thumb_selector, as do the track, its decoration ring and the thumb
+  icon from their own selectors — none of which has ever had a pressed entry.
+
+  THE ONE THING THAT CHANGES BEYOND THE DEFECT: a switch that IS its own target no
+  longer balloons under its own finger either, because a drawable cannot tell whose
+  press it is. That is two controls in the product — view_row_line.xml's and
+  view_row_card.xml's inline toggles on «Настройки правил маршрутизации» — against
+  more than twenty row-owned switches that carried the defect. Consistent, and in the
+  direction the owner asked for: this product's switch does not balloon.
+-->
+<animated-selector xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:width="@dimen/switch_thumb_size"
+    android:height="@dimen/switch_thumb_size">
+
+    <item
+        android:id="@+id/switch_thumb_state_checked"
+        android:drawable="@drawable/switch_thumb_checked"
+        android:state_checked="true" />
+
+    <!-- M3 draws the ON thumb whenever a thumbIcon is present, checked or not, so the
+         glyph has a disc big enough to sit in. This app sets no thumbIcon today (only
+         thumbIconTint, @color/switch_thumb_icon), so the state never fires — kept so
+         that adding one later behaves the way the library does. -->
+    <item
+        android:id="@+id/switch_thumb_state_with_icon"
+        android:drawable="@drawable/switch_thumb_checked"
+        app:state_with_icon="true" />
+
+    <item
+        android:id="@+id/switch_thumb_state_unchecked"
+        android:drawable="@drawable/switch_thumb_unchecked" />
+
+    <transition
+        android:drawable="@drawable/switch_thumb_unchecked_checked"
+        android:fromId="@+id/switch_thumb_state_unchecked"
+        android:toId="@+id/switch_thumb_state_checked" />
+
+    <transition
+        android:drawable="@drawable/switch_thumb_unchecked_checked"
+        android:fromId="@+id/switch_thumb_state_unchecked"
+        android:toId="@+id/switch_thumb_state_with_icon" />
+
+    <transition
+        android:drawable="@drawable/switch_thumb_checked_unchecked"
+        android:fromId="@+id/switch_thumb_state_checked"
+        android:toId="@+id/switch_thumb_state_unchecked" />
+
+    <transition
+        android:drawable="@drawable/switch_thumb_checked_unchecked"
+        android:fromId="@+id/switch_thumb_state_with_icon"
+        android:toId="@+id/switch_thumb_state_unchecked" />
+
+</animated-selector>

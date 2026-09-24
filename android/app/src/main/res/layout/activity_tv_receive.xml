@@ -1,0 +1,118 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  ============================================================================
+  «Приём подписки» (TvReceiveActivity) — handoff README §7, «Единое лекало».
+  ============================================================================
+
+      кнопка назад → «Приём подписки» 24sp/700 → пояснение 13sp
+      → карточка с кодом сопряжения и состоянием
+      → «Показать новый код»
+
+  This is the second half of the TV transfer (П-06): the TV shows a pairing QR and
+  listens on the LAN, the phone scans it and POSTs the subscription. It is opened
+  from «Устройства» in the settings tab, so it is a sub-page like any other and it
+  takes the same header — the screen used to draw a 16sp MaterialToolbar title from
+  activity_base and a centred 18sp paragraph of its own.
+
+  WHAT MOVED WHERE, and nothing was dropped: the instruction paragraph is
+  @id/toolbar_note, which is exactly the slot §7 reserves for one sentence of
+  explanation; @id/tv_status keeps its name and its four states (countdown, success,
+  duplicate, expired, no network, failure) and gains accessibilityLiveRegion, so the
+  countdown and the outcome are announced instead of only drawn; @id/iv_qrcode and
+  @id/btn_regenerate keep their names and their visibility contract.
+
+  TWO THINGS ARE DELIBERATELY NOT THE ROW GRAMMAR HERE.
+
+  · THE QR KEEPS ITS WHITE PLATE. Every other hardcoded colour in the tree is a
+    defect; this one is the scanner's contrast requirement, and it does not follow
+    the theme in either direction — a QR on #141619 does not decode. It sits on a
+    plate with the tile radius so it reads as an object on the card rather than a
+    hole in it.
+
+  · «Показать новый код» IS A BUTTON, NOT A ROW. This screen is driven by a D-pad
+    from across a room: TvReceiveActivity calls requestFocus() on it in all four
+    terminal states, and a Primary button carries a focus ring a row does not. The
+    row grammar assumes a finger.
+
+  OVERSCAN: TVs crop the edges of the panel. The content keeps ~5% of horizontal
+  and vertical padding on top of the screen gutter, which is what the old file's
+  48/27dp was doing.
+-->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="?android:attr/colorBackground"
+    android:fitsSystemWindows="true"
+    android:orientation="vertical"
+    tools:context=".tv.TvReceiveActivity">
+
+    <include
+        android:id="@+id/toolbar"
+        layout="@layout/view_sub_header" />
+
+    <androidx.core.widget.NestedScrollView
+        android:id="@+id/main_content"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:clipToPadding="false"
+        android:paddingStart="@dimen/tv_overscan_horizontal"
+        android:paddingEnd="@dimen/tv_overscan_horizontal"
+        android:paddingBottom="@dimen/tv_overscan_vertical"
+        android:scrollbars="none">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical">
+
+            <com.google.android.material.card.MaterialCardView
+                style="@style/Widget.Departament.CardSection"
+                android:layout_marginTop="@dimen/screen_gutter">
+
+                <LinearLayout
+                    style="@style/Widget.Departament.CardSection.Body"
+                    android:gravity="center_horizontal"
+                    android:paddingTop="@dimen/space_24"
+                    android:paddingBottom="@dimen/space_24">
+
+                    <!-- The white plate is the scanner's, not the theme's — see the note above.
+                         Padding rather than a margin so the quiet zone the decoder needs is part
+                         of the plate. -->
+                    <ImageView
+                        android:id="@+id/iv_qrcode"
+                        android:layout_width="@dimen/tv_pairing_qr"
+                        android:layout_height="@dimen/tv_pairing_qr"
+                        android:background="@drawable/bg_qr_plate"
+                        android:contentDescription="@string/tv_pairing_qr_desc"
+                        android:padding="@dimen/space_12"
+                        android:scaleType="fitCenter" />
+
+                    <!-- Обратный отсчёт и итог. Одна живая область: телевизор читает её вслух,
+                         когда счётчик доходит до конца или подписка приезжает. -->
+                    <TextView
+                        android:id="@+id/tv_status"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="@dimen/space_20"
+                        android:accessibilityLiveRegion="polite"
+                        android:gravity="center"
+                        android:textAppearance="@style/TextAppearance.App.Title"
+                        tools:text="Ожидание телефона… 120 с" />
+
+                    <com.google.android.material.button.MaterialButton
+                        android:id="@+id/btn_regenerate"
+                        style="@style/Widget.Departament.Button.Primary"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="@dimen/space_20"
+                        android:text="@string/tv_receive_regenerate"
+                        android:visibility="gone"
+                        tools:visibility="visible" />
+                </LinearLayout>
+            </com.google.android.material.card.MaterialCardView>
+        </LinearLayout>
+    </androidx.core.widget.NestedScrollView>
+</LinearLayout>

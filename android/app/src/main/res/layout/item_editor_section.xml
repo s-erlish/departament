@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  A section header INSIDE a list (00-rules.md 4.2, 24-tab-conformance.md 0.3 R1).
+
+  Sentence-case bold at the ramp's Section header role - 16sp/700 - at the 16dp
+  gutter, 24 above and 8 below. NOT a tiny ALL-CAPS tracked eyebrow: that trope is
+  banned outright (§1.1) and @style/SettingsSectionLabel already carries the correct
+  padding and `textAllCaps=false`, so this file adds nothing but the id.
+
+  It exists because the grouped lists on these screens (per-app: ваши / системные;
+  routing: правила / наборы) need their headers to scroll WITH the rows, which a
+  header pinned outside the RecyclerView cannot do.
+-->
+<TextView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/section_title"
+    style="@style/SettingsSectionLabel"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    tools:text="Ваши приложения" />

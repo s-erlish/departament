@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Экран «Локальный прокси» (LocalProxyActivity).
+
+         Здесь остались только строки того, чем экран называется: локальный SOCKS5
+         и HTTP на 127.0.0.1, логин с паролем для доступа из локальной сети и сам
+         доступ по сети. Всё остальное, что тут было, переехало:
+
+           лимит памяти           - убран, его никто не применял (см. отчёт волны);
+           «Маршрутизация по домену» - «Дополнительно» -> «Ядро»
+                                    («Только для маршрутизации», adv_route_only_title),
+                                    там же, где живёт определение домена, от которого
+                                    настройка зависит.
+
+         Копирайт по 00-rules.md 9: предложение, а не ярлык; переключатель назван
+         тем, что верно, когда он включён. -->
+
+    <string name="title_local_proxy">Локальный прокси</string>
+
+    <!-- Разделы. Заголовок называет область, строка внутри — сам переключатель: до этого
+         оба раздела повторяли заголовок своей первой строки, а второй повторял ещё и
+         название экрана, так что «Локальный прокси» стояло на экране трижды подряд. -->
+    <string name="lp_section_socks">Учётные данные</string>
+    <string name="lp_section_local">Прокси и доступ</string>
+
+    <!-- SOCKS5-авторизация. Логин и пароль спрашивает только инбаунд, открытый
+         в локальную сеть: петлевой прокси на 127.0.0.1 всегда без авторизации,
+         иначе через него не пройдёт собственный туннель приложения
+         (CoreConfigManager.configureInbounds). -->
+    <string name="lp_socks_auth">SOCKS5-авторизация</string>
+    <string name="lp_socks_auth_sub">Логин и пароль для доступа из локальной сети</string>
+    <string name="lp_socks_login">Имя пользователя</string>
+    <string name="lp_socks_password">Пароль</string>
+    <string name="lp_socks_address">Адрес</string>
+    <string name="lp_socks_port">Порт</string>
+    <!-- Порт вне диапазона не сохраняется: ядро с ним не поднимет инбаунд. -->
+    <string name="lp_socks_port_error">Порт от %1$d до %2$d</string>
+    <string name="lp_socks_reset">Сбросить учётные данные</string>
+    <string name="lp_copy">Копировать</string>
+    <string name="lp_show_password">Показать пароль</string>
+    <string name="lp_hide_password">Скрыть пароль</string>
+    <string name="lp_creds_reset">Имя пользователя и пароль обновлены</string>
+
+    <!-- Локальный прокси -->
+    <string name="lp_udp">UDP через прокси</string>
+    <string name="lp_udp_sub">Пропускать UDP-трафик через локальный прокси</string>
+    <string name="lp_http_proxy">Системный HTTP-прокси</string>
+    <string name="lp_http_proxy_sub">Указывать приложениям HTTP-прокси туннеля</string>
+    <string name="lp_local_proxy">Локальный прокси</string>
+    <string name="lp_local_proxy_sub">SOCKS5 и HTTP на 127.0.0.1</string>
+    <string name="lp_hotspot">Доступ через хотспот</string>
+    <string name="lp_hotspot_sub">Ручной SOCKS5-прокси для устройств в сети</string>
+    <string name="lp_hotspot_hint">Пропишите этот SOCKS5-прокси в настройках другого устройства, и его трафик пойдёт через VPN. Это не сквозной перехват: без ручной настройки прокси ничего не перенаправляется.</string>
+    <string name="lp_hotspot_warning">Прокси открыт для всей локальной сети. Включайте его только в доверенной сети.</string>
+    <string name="lp_hotspot_endpoint">Адрес для других устройств</string>
+    <string name="lp_hotspot_no_ip">Wi-Fi недоступен, включите точку доступа</string>
+</resources>

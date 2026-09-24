@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  R7's OUTER focus ring for a control that is not a MaterialButton and therefore has
+  no stroke to borrow: 2dp colorPrimary at focus_offset 2dp, radius = the control's
+  radius + the offset (16 + 2 = 18, expressed here as radius_card 20's neighbour via
+  the explicit 18dp corner — the one place a literal is correct, because it is
+  derived arithmetic, not a scale value).
+
+  Draw it as an overlay (android:foreground) so it never displaces the control's own
+  background, and gate it on state_focused in the consuming selector.
+-->
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+    <item
+        android:bottom="@dimen/focus_offset"
+        android:left="@dimen/focus_offset"
+        android:right="@dimen/focus_offset"
+        android:top="@dimen/focus_offset">
+        <shape android:shape="rectangle">
+            <solid android:color="@android:color/transparent" />
+        </shape>
+    </item>
+    <item>
+        <shape android:shape="rectangle">
+            <solid android:color="@android:color/transparent" />
+            <stroke
+                android:width="@dimen/stroke_focus"
+                android:color="?attr/colorPrimary" />
+            <corners android:radius="18dp" />
+        </shape>
+    </item>
+</layer-list>

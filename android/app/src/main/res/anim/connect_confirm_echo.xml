@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- ЭТОТ ФАЙЛ БОЛЬШЕ НЕ ПРОИГРЫВАЕТСЯ, И ЭТО НАМЕРЕННО.
+     Сонар подтверждения перешёл на property-аниматоры: движением теперь владеет само
+     кольцо (его RenderNode), а не коробка @id/connect_frame, внутри которой оно летает —
+     см. HomeFragment.emitConfirmRings и причину там же. Числа отсюда перенесены туда
+     слово в слово (1.6 / 1.5 / 0.5, motion_emphasis, ease_out_quint, motion_press_in);
+     файл оставлен как письменная запись их происхождения. Не подключайте его обратно
+     через View.startAnimation: именно этот путь и был дефектом. -->
+<!-- THE ECHO OF THE CONFIRM RING — the second half of the desktop's connect payoff
+     (ConnectHeroView.axaml, Ellipse.Sonar.pulsing-echo, P2-1).
+
+     The lead ring (@anim/connect_confirm) is the prototype's sonar to the number. This
+     one, quieter and a beat behind it, is what makes the moment land as «залочено»
+     rather than as a single blip. Android emitted the lead ring and nothing after it,
+     which is the animation the owner was missing.
+
+     TWO RINGS, NEVER THREE. The desktop's own note is explicit: «максимум ДВА кольца,
+     не радар». A third would turn a confirmation into a sweep. Noted for the owner: the
+     prototype and README §4 both describe ONE sonar; the second ring is a deliberate
+     carry-over from the desktop that he asked for, and it is the one figure on this
+     object that is ours rather than the design's.
+
+     Against @anim/connect_confirm: half the opacity (the desktop's 0.5-of-1.0 ratio),
+     1.5 rather than 1.6 so it settles just inside its leader, and one motion_press_in
+     later (~70ms, the desktop's ~120 on our faster clock). Same 600ms emphasis tempo,
+     same ease_out_quint, ONE iteration, and HomeFragment hides the view on end.
+
+     Reduced motion skips it exactly as it skips the lead ring: neither is emitted. -->
+<set xmlns:android="http://schemas.android.com/apk/res/android"
+    android:duration="@integer/motion_emphasis"
+    android:fillAfter="false"
+    android:interpolator="@interpolator/ease_out_quint"
+    android:startOffset="@integer/motion_press_in">
+
+    <scale
+        android:fromXScale="1.0"
+        android:fromYScale="1.0"
+        android:pivotX="50%"
+        android:pivotY="50%"
+        android:toXScale="1.5"
+        android:toYScale="1.5" />
+
+    <alpha
+        android:fromAlpha="0.5"
+        android:toAlpha="0.0" />
+
+</set>

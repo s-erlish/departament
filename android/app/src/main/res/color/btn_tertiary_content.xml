@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Tertiary (text) button label + icon: the accent on a transparent container.
+  5.66:1 on surface, 6.64:1 on background. 00-rules.md 3.6 caps this at two visible
+  tertiary buttons per screen — the accent is a budget, not a decoration.
+
+  R8 loading row: state_activated takes the content to alpha 0 instead of to empty
+  text, so the label is still measured and the control keeps its width — see
+  @color/btn_primary_content for the full reasoning. The arc arrives from the
+  matching @drawable/btn_overlay_* on the same state.
+-->
+<selector xmlns:android="http://schemas.android.com/apk/res/android">
+    <item
+        android:alpha="0.38"
+        android:color="?attr/colorPrimary"
+        android:state_enabled="false" />
+    <item
+        android:alpha="0"
+        android:color="?attr/colorPrimary"
+        android:state_activated="true" />
+    <item android:color="?attr/colorPrimary" />
+</selector>

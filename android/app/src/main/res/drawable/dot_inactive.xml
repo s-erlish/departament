@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Carousel page indicator, resting state: a quiet outlineVariant dot. -->
+<shape xmlns:android="http://schemas.android.com/apk/res/android"
+    android:shape="oval">
+    <solid android:color="?attr/colorOutlineVariant" />
+    <size
+        android:width="@dimen/dot_size"
+        android:height="@dimen/dot_size" />
+</shape>

@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- §2.1: внешнее кольцо 1.5dp, сплошное. Яркость — alpha на вьюхе (0.18). -->
+<shape xmlns:android="http://schemas.android.com/apk/res/android"
+    android:shape="oval">
+    <stroke
+        android:width="@dimen/ob_stroke"
+        android:color="?attr/colorPrimary" />
+</shape>

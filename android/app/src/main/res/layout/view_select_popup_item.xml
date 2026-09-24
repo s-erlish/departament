@@ -1,0 +1,82 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    ONE OPTION inside @layout/view_select_popup (handoff README §6).
+
+      [ 10 ][ label, weight 1 ][ 6 ][ check 16 ][ 10 ]     min height 38
+
+    …and, when the popup is a list of ACTIONS rather than a list of values:
+
+      [ 10 ][ glyph 18 ][ 10 ][ label, weight 1 ][ 10 ]    min height 38
+
+    The CHECK SLOT IS ALWAYS PRESENT and only its alpha moves, so picking a
+    different option never reflows the popup and never changes its width — the
+    same rule the row marker follows. It is hidden from TalkBack because the
+    option announces its selected state properly (SelectPopup does that), and a
+    check a screen reader has to describe twice is noise.
+
+    THE CHECK GOES AWAY ONLY WHEN NOTHING CAN EVER CARRY IT — an action list,
+    which SelectPopup recognises by `selectedIndex < 0`. There the slot is not
+    holding a column open for a mark that is coming, it is 22dp of dead margin on
+    every row for a mark that cannot arrive; and with no selection there is no
+    re-pick, so nothing can reflow. SelectPopup owns that decision, not a layout.
+
+    THE LEADING GLYPH IS GONE BY DEFAULT and only an action list turns it on. A
+    value picker names values, and a glyph beside a value is decoration; a list of
+    actions names verbs, and there the glyph is the second channel that tells two
+    verbs apart before the label is read.
+
+    The label is the Subtitle role's 13sp/400 metrics in colorOnSurface rather
+    than colorOnSurfaceVariant: this is a value being offered, not a caption
+    about one. That override is what @style/TextAppearance.App.SelectOption is
+    for — a layout never sets a size, a face or a colour by hand.
+
+    Press: @anim/press_button 0.965 (§1 puts an option on the button rung) plus
+    the background step in @drawable/bg_select_item. No ripple.
+-->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/select_option"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:background="@drawable/bg_select_item"
+    android:clickable="true"
+    android:focusable="true"
+    android:gravity="center_vertical"
+    android:minHeight="@dimen/select_option_min_height"
+    android:orientation="horizontal"
+    android:paddingStart="@dimen/select_option_padding_h"
+    android:paddingTop="@dimen/select_option_padding_v"
+    android:paddingEnd="@dimen/select_option_padding_h"
+    android:paddingBottom="@dimen/select_option_padding_v"
+    android:stateListAnimator="@anim/press_button">
+
+    <ImageView
+        android:id="@+id/select_option_glyph"
+        android:layout_width="@dimen/glyph_18"
+        android:layout_height="@dimen/glyph_18"
+        android:layout_marginEnd="@dimen/select_option_padding_h"
+        android:importantForAccessibility="no"
+        android:visibility="gone"
+        app:tint="?attr/colorOnSurfaceVariant"
+        tools:src="@drawable/ic_scan_24dp"
+        tools:visibility="visible" />
+
+    <TextView
+        android:id="@+id/select_option_label"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_weight="1"
+        android:textAppearance="@style/TextAppearance.App.SelectOption"
+        tools:text="Cloudflare + Google" />
+
+    <ImageView
+        android:id="@+id/select_option_check"
+        android:layout_width="@dimen/select_option_check"
+        android:layout_height="@dimen/select_option_check"
+        android:layout_marginStart="@dimen/space_6"
+        android:importantForAccessibility="no"
+        app:srcCompat="@drawable/ic_action_done"
+        app:tint="?attr/colorOnSurface" />
+
+</LinearLayout>

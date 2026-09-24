@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Selected duration/price option on «Купить подписку»: the accent frame plus the 12%
+  accent wash, at @dimen/radius_card_small and @dimen/stroke_frame — THE SAME RADIUS
+  AND THE SAME STROKE WIDTH as @drawable/bg_buy_option, which is the whole point.
+
+  It used to be radius_card 20 against the unselected row's 14, so picking a term
+  rounded its own corners by 6dp on the way in. §11 grabl 2 rules that out
+  («геометрия не меняется при выборе»), and the comment over
+  BuyTariffActivity.paintOption already claims that choosing a term «moves nothing».
+  Now only the two colours change.
+
+  The fill is ?attr/colorAccentFill and not the #1F4C8DFF it was written as: that
+  literal is the DARK theme's 12% accent, so the light theme drew a dark-theme blue
+  over a pale card and the mono theme drew blue at all.
+-->
+<shape xmlns:android="http://schemas.android.com/apk/res/android"
+    android:shape="rectangle">
+    <corners android:radius="@dimen/radius_card_small" />
+    <solid android:color="?attr/colorAccentFill" />
+    <stroke
+        android:width="@dimen/stroke_frame"
+        android:color="?attr/colorPrimary" />
+</shape>

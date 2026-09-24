@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  R7, the OUTER focus case: everything that is not a filled accent surface.
+  The MaterialButton stroke is the ring. strokeWidth is 2dp ALWAYS in the button
+  styles — the stroke draws inside the bounds, so a permanently-declared 2dp stroke
+  costs no layout shift — and this list keeps it invisible until focus arrives.
+  Transparent by default is the whole trick: a state-dependent strokeWidth does not
+  exist on MaterialButton, a state-dependent strokeColor does.
+
+  Android has exactly ONE state_focused drawable in the shipped app today. External
+  keyboards, tablet keyboard cases, TV D-pads and switch access all move focus, so a
+  focusable control that draws nothing is unreachable in practice (00-rules.md 7.1).
+-->
+<selector xmlns:android="http://schemas.android.com/apk/res/android">
+    <item android:color="?attr/colorPrimary" android:state_focused="true" />
+    <item android:color="@android:color/transparent" />
+</selector>

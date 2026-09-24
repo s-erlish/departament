@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- §2.1: внутреннее кольцо, inset 12dp задаётся отступом вьюхи, штрих пунктирный.
+     dashWidth/dashGap работают только при отключённом аппаратном слое у самой
+     вьюхи — LAYER_TYPE_SOFTWARE ставится в GateView для одной этой картинки. -->
+<shape xmlns:android="http://schemas.android.com/apk/res/android"
+    android:shape="oval">
+    <stroke
+        android:width="@dimen/ob_stroke"
+        android:color="?attr/colorPrimary"
+        android:dashWidth="3dp"
+        android:dashGap="4dp" />
+</shape>

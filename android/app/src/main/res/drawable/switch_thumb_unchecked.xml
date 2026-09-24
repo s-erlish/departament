@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  THE OFF THUMB: a 16dp disc centred in the 32dp thumb canvas.
+
+  Geometry read out of material-1.13.0 (mtrl_switch_thumb_unchecked plus the string
+  it draws), not recalled: canvas @dimen/switch_thumb_size, viewport 32, path r8
+  about (16,16). The white fill is M3's too — @style/Widget.Departament.Switch's
+  thumbTint (@color/switch_thumb_selector) is what actually colours it, and a tint
+  needs an opaque source to replace.
+
+  The group carries M3's centre pivot and no transform: a later scale or rotation
+  has a centre to turn about without the path having to move.
+
+  Why this file exists at all: see @drawable/switch_thumb.
+-->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="@dimen/switch_thumb_size"
+    android:height="@dimen/switch_thumb_size"
+    android:viewportWidth="@integer/switch_thumb_viewport"
+    android:viewportHeight="@integer/switch_thumb_viewport">
+
+    <group
+        android:name="thumb_group"
+        android:pivotX="@integer/switch_thumb_viewport_center"
+        android:pivotY="@integer/switch_thumb_viewport_center">
+        <path
+            android:name="thumb"
+            android:fillColor="#FFFFFFFF"
+            android:pathData="@string/switch_thumb_path_unchecked" />
+    </group>
+
+</vector>

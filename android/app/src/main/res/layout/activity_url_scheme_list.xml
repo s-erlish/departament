@@ -1,0 +1,81 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  ============================================================================
+  A-34  settings/about/urlschemes - Схемы URL-адресов.  H3 · R3.
+  24-tab-conformance.md A-34.
+  ============================================================================
+
+  634 lines become this. The old file hand-wrote every one of the nine schemes twice
+  over - five section cards, nine label/uri/button triples, nine 42dp ImageButtons
+  (below the 48dp touch floor), and a «Примечание» card built out of a nested card -
+  so adding a tenth scheme meant editing XML in three places.
+
+  The list is DATA now: UrlSchemeListActivity holds the nine schemes in one table and
+  inflates view_row.xml per entry into @id/scheme_list. This file owns the frame, the
+  one explanatory paragraph, and the empty state.
+-->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="?android:attr/colorBackground"
+    android:fitsSystemWindows="true"
+    android:orientation="vertical"
+    tools:context=".ui.UrlSchemeListActivity">
+
+    <!-- §7's lekalo: back 44dp, then the title at 24sp/700 UNDER it. The ids are
+         view_toolbar's, so ToolbarBinder.bind/attachTo below need no change. -->
+    <include
+        android:id="@+id/toolbar"
+        layout="@layout/view_sub_header" />
+
+    <androidx.core.widget.NestedScrollView
+        android:id="@+id/main_content"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:clipToPadding="false"
+        android:paddingBottom="@dimen/space_32"
+        android:scrollbars="none">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical">
+
+            <!-- One leading paragraph, held to the gutter so the measure stays readable. -->
+            <TextView
+                android:id="@+id/tv_intro"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/space_16"
+                android:paddingStart="@dimen/screen_gutter"
+                android:paddingEnd="@dimen/screen_gutter"
+                android:text="@string/scheme_intro"
+                android:textAppearance="@style/TextAppearance.App.Body" />
+
+            <TextView
+                android:id="@+id/tv_note"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/space_8"
+                android:paddingStart="@dimen/screen_gutter"
+                android:paddingEnd="@dimen/screen_gutter"
+                android:text="@string/url_scheme_note_body"
+                android:textAppearance="@style/TextAppearance.App.Subtitle" />
+
+            <LinearLayout
+                android:id="@+id/scheme_list"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical" />
+
+            <include
+                android:id="@+id/empty_state"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/space_32"
+                layout="@layout/view_empty_state" />
+        </LinearLayout>
+    </androidx.core.widget.NestedScrollView>
+</LinearLayout>

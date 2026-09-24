@@ -1,8 +1,8 @@
 # departament
 
-VPN для Windows: подключение к серверам вашей подписки одним нажатием.
+VPN для Windows и Android: подключение к серверам вашей подписки одним нажатием.
 
-**[Скачать для Windows](https://github.com/s-erlish/departament/releases/latest/download/departament-setup.exe)** · [Все выпуски](https://github.com/s-erlish/departament/releases)
+**[Скачать для Windows](https://github.com/s-erlish/departament/releases/latest/download/departament-setup.exe)** · **[Скачать для Android](https://github.com/s-erlish/departament/releases/latest)** · [Все выпуски](https://github.com/s-erlish/departament/releases)
 
 ## Возможности
 
@@ -24,11 +24,19 @@ VPN для Windows: подключение к серверам вашей под
 
 Программа сама проверяет выпуски на этой странице: сразу после запуска и потом каждый час, пока она открыта. Когда выходит новая версия, в строке окна появляется «Обновить». Программа скачивает обновление, сверяет его контрольную сумму и после вашего подтверждения перезапускается в новую версию. Если VPN был подключён, он подключится снова сам.
 
+## Android
+
+1. Откройте [последний выпуск](https://github.com/s-erlish/departament/releases/latest) и скачайте APK: для большинства телефонов последних лет подходит `departament_<версия>_arm64-v8a.apk`, а `departament_<версия>_universal.apk` — любому телефону.
+2. Откройте файл на телефоне и разрешите установку из этого источника, когда Android спросит.
+
+Новые версии приложение находит само: «Настройки» → «Проверить обновления». Оно скачивает APK с этой страницы, проверяет его и открывает установку. Серверы, подписка и вход при обновлении сохраняются.
+
 ## Системные требования
 
 - Windows 10 или 11, 64 бита.
 - Права администратора: без них не работает режим «весь трафик».
+- Android 7.0 или новее.
 
 ## Лицензия
 
-Программа основана на [v2rayN](https://github.com/2dust/v2rayN) и распространяется по лицензии GPL-3.0: текст лицензии в файле [LICENSE](LICENSE).
+Программа для ПК основана на [v2rayN](https://github.com/2dust/v2rayN), приложение для Android — на [v2rayNG](https://github.com/2dust/v2rayNG). Обе распространяются по лицензии GPL-3.0: текст лицензии в файле [LICENSE](LICENSE).

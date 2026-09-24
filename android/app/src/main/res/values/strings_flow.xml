@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  ЭКРАНЫ ПРОГРУЗКИ — README §3, таблица шагов. Тексты дословно из прототипа.
+
+  Два набора по четыре шага: вход через Telegram и добавление из буфера. Имя
+  подписки не показывается ни в одном из них.
+-->
+<resources>
+    <!-- Поток «Войти через Telegram». -->
+    <string name="flow_tg_0_title">Открываем Telegram</string>
+    <string name="flow_tg_0_note">Подтвердите вход в приложении</string>
+    <string name="flow_tg_1_title">Проверяем вход</string>
+    <string name="flow_tg_1_note">Сверяем аккаунт с сервером</string>
+    <string name="flow_tg_2_title">Добавляем подписку</string>
+    <string name="flow_tg_2_note">Почти готово</string>
+    <string name="flow_tg_3_title">Подписка добавлена</string>
+    <string name="flow_tg_3_note">Аккаунт привязан</string>
+    <string name="flow_tg_toast">Подписка привязана</string>
+
+    <!-- Поток «Добавить из буфера обмена». -->
+    <string name="flow_clip_0_title">Читаем буфер обмена</string>
+    <string name="flow_clip_0_note">Ищем ссылку на подписку</string>
+    <string name="flow_clip_1_title">Нашли подписку</string>
+    <string name="flow_clip_1_note">Загружаем список серверов</string>
+    <string name="flow_clip_2_title">Проверяем серверы</string>
+    <string name="flow_clip_2_note">Измеряем задержку до каждого</string>
+    <string name="flow_clip_3_title">Подписка добавлена</string>
+    <string name="flow_clip_3_note">Серверы готовы</string>
+    <string name="flow_clip_toast">Подписка добавлена</string>
+</resources>

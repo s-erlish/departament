@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Dark rounded surface for the server-actions bottom sheet (Incy style): top corners
+     only, base surface fill with no top rim line — consistent with the cards. -->
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+    <!-- Base sheet surface -->
+    <item>
+        <shape android:shape="rectangle">
+            <solid android:color="?attr/colorSurfaceContainerLow" />
+            <corners
+                android:topLeftRadius="@dimen/radius_sheet"
+                android:topRightRadius="@dimen/radius_sheet" />
+        </shape>
+    </item>
+</layer-list>

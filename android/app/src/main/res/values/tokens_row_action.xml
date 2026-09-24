@@ -1,0 +1,234 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  ============================================================================
+  THE TRAILING SLOT'S OPTICAL PULL — view_row.xml's five trailing glyphs.
+  ============================================================================
+
+  A file of its own and not an addition to values/dimens.xml, because these
+  numbers belong to the universal row alone: nothing else may reach for them, and
+  none of them is a spacing step.
+
+  This is ToolbarBinder.alignInkToGutter's problem again, one component down, and
+  it takes the same answer: what the eye lines a column up by is the GLYPH's last
+  painted pixel, never the edge of the invisible box it is centred in.
+
+  THE LINE THEY LINE UP ON IS THE ROW'S OWN 16dp GUTTER, and getting THAT wrong is
+  what brought the owner back a third time. The slot held five objects at five
+  distances, so the first round measured them all and put the two icon-action
+  glyphs level with the CHEVRON, at 22dp. It closed the gap between them and left
+  every one of them 6dp adrift of the line the rest of the row is measured to:
+  @style/Widget.Departament.Row's paddingEnd is @dimen/screen_gutter, 16, which is
+  where the text column ends, where the card's content edge is, and the ONE gutter
+  the design rules give the product. The chevron had the defect too — it was simply the
+  one nobody could see, because it never stood beside anything to be compared with.
+  On «О приложении» the copy buttons share a card with it and he saw it at once:
+  «выше где кнопки копировать справа тоже видишь ты не доделал, надо их правее
+  также поставить правильно».
+
+  So the datum is not a control any more, it is the gutter, and every trailing
+  glyph's INK ends on it.
+
+  ONLY GLYPHS ARE PULLED. @id/row_check_box, @id/row_switch and @id/row_action are
+  objects with a boundary of their own — a bordered box, a track, a button — and an
+  object aligns by its box, exactly as a card does. A bare glyph has no boundary,
+  so its ink IS its edge. That is the whole rule, and it is why three of the eight
+  trailing slots are absent from this file.
+
+  MEASURED OFF THE DRAWABLES, NOT GUESSED. Every glyph the slot ever holds is a
+  24-unit viewport; an ImageView at @dimen/glyph_18 fitCenters it to 18dp (× 0.75)
+  and the icon button draws it at @dimen/tile_glyph 22dp (× 0.9167). Air is what is
+  left between the last painted unit and the viewport's trailing edge:
+
+                        ink x    air (units)   drawn at   air (dp)   pull
+      ic_chevron_right  7.2…16        8          18dp       6.00     -6.00
+      ic_arrow_drop_down  7…17        7          18dp       5.25     -5.25
+      ic_action_done      3…21        3          18dp       2.25     -2.25
+      ic_copy             2…21        3          22dp       2.75     -9.75  (+7 box)
+      ic_more_vert_24dp  10…14       10          22dp       9.17    -16.00  (+7 box)
+
+  ONE NUMBER CANNOT SERVE THEM, which is the trap the toolbar hit first: «⋮» is a
+  4-unit column of dots in a 24-unit box and «копировать» is a 19-unit frame in
+  one. A single shared pull big enough for the chevron would hang the state marker
+  3.75dp past the gutter, into the padding. The correction belongs to the GLYPH.
+
+  WHERE EACH PULL IS APPLIED FOLLOWS FROM WHO CHOOSES THE GLYPH. @id/row_chevron
+  and @id/row_marker declare their own `android:src` in view_row.xml, so their pull
+  is a static `layout_marginEnd` three lines under the drawable it was measured
+  from, and no recycled row can carry the wrong one. @id/row_trailing_glyph ships
+  with no src on purpose and @id/row_icon_action's icon is the caller's, so those
+  two are pulled at bind time by RowBinder.alignInkToGutter — the one place that
+  knows which glyph is going in — and a glyph it has never seen is reset to NO
+  pull rather than to a guess.
+-->
+<resources>
+
+    <!--
+        THE ICON BUTTON'S BOX, and the number that made this round different from
+        the last one.
+
+        @id/row_icon_action is not an ImageView: it is a MaterialButton carrying the
+        48dp touch minimum, so its 22dp icon sits in 13dp of air on each side. Its
+        ink cannot reach the gutter by moving — «⋮» would need -22.17, and the last
+        6.17 of that is outside the row, where the box is clipped and the press
+        plate is sheared off. Moving a glyph by shearing its plate is a defect the
+        owner has already reported once, on Главная's chevron.
+
+        So the box stops moving and SHRINKS. 36 is the size the подписка card's
+        action discs already draw at (layout_subscription_meta_bar.xml's
+        «Проверить», «Обновить», «Telegram»), which makes it the product's one small
+        icon-button size rather than a sixth number, and it is the largest box that
+        keeps «⋮» inside the row: 22 + 2 × (16 − 9.17) = 35.67, rounded to the
+        shipped 36 and taken up by the pull below. The 22dp glyph keeps 7dp of box
+        around it on every side (@dimen/row_action_glyph_air), which is what leaves
+        room for a plate that is not the box — see @dimen/row_action_plate_inset.
+
+        THE 48dp TARGET IS NOT GIVEN UP, it stops being drawn (00-rules.md 14.2).
+        RowBinder restores it with the TouchDelegate the подписка discs use.
+
+        It also takes 12dp off two rows that were never meant to be tall: a 48dp box
+        is 8dp taller than the 40dp tile, so «Версия» and «Идентификатор» on
+        «О приложении» stood at 68dp beside 60dp neighbours, and every «Файлы
+        ресурсов» line at 68 instead of the prototype's 61. Same cause as
+        3aedd33e's switch, one slot over: a touch minimum drawn as a box.
+    -->
+    <dimen name="row_action_size">36dp</dimen>
+
+    <!--
+        THE SLOT'S PADDING, AND WHAT IT ACTUALLY DOES — which is not what the round that
+        added it wrote here.
+
+        It does NOT place the glyph. @style/Widget.Departament.Button.Icon inherits
+        iconGravity=textStart from Widget.Material3.Button (the library's `start` default
+        never reaches this chain), and textStart CENTRES the icon:
+
+            iconLeft   = (W − textWidth − paddingEnd − iconSize − iconPadding − paddingStart) / 2
+            drawn left = paddingLeft + iconLeft = (W − iconSize) / 2 + (paddingLeft − paddingRight) / 2
+
+        Inflated and measured: box 36, resolved padding 11/11, icon bounds Rect(−4, 0, 18,
+        22) — so the glyph draws at 7 and its centre is the box's. It would draw at 7 for
+        ANY equal pair. What this number has to be is SYMMETRIC, because
+        @dimen/row_action_plate_inset's disc is centred on the box and the glyph is only
+        centred with it while the two sides match. The value 7 is kept because (36 − 22) / 2
+        is the number a reader expects to find.
+
+        ELEVEN AND NOT SEVEN, resolved, because MaterialButtonHelper.loadFromAttributes
+        finishes with setPaddingRelative(paddingStart + insetLeft, …): every inset is ADDED
+        to the matching padding as well as taken off the background. Symmetric insets keep
+        symmetric padding, so the invariant survives — but an asymmetric inset pair would
+        break the concentricity as surely as an asymmetric padding, and that is worth
+        knowing before anyone splits these four.
+    -->
+    <dimen name="row_action_glyph_air">7dp</dimen>
+
+    <!--
+        THE PRESS PLATE, AND THE ONLY THING ABOUT THIS SLOT THAT MAY BE SMALLER THAN
+        ITS BOX.
+
+        With «⋮»'s ink on the gutter the 36dp box ends FLUSH with the row's end edge,
+        which is the card's content edge and the line the card clips on. A
+        MaterialButton paints its background over the whole box, so the plate's edge
+        WAS the card's edge: it covered the card's hairline and the 20dp outline cut
+        the rest of it flat — «вот зажал три точки, а там фон залазит за рамки». The
+        same shear the owner has now reported three times, on three controls.
+
+        The box cannot move (its ink is where he asked for it twice) and the target
+        cannot shrink (14.2), so the PAINT moves. MaterialButton's four insets shrink
+        the drawable it builds and touch neither measurement nor icon placement, which
+        is exactly the lever this needs:
+
+            plate = 36 − 2 × 4 = 28,  clearance = 4 on «⋮», 10.25 on ic_copy
+
+        AND FOR ONE ROUND IT WAS STILL BEING CUT, 12dp of the 28, by something that is
+        not the card at all: the ROW's own 16dp paddingEnd, which clips its children
+        until clipToPadding is turned off. Rendered, the disc painted 296…312 in a 328dp
+        card and stopped exactly on that line rather than on its own 324 — «выделил зажав
+        на три точки и не решилась проблема, обрезается». view_row.xml's root carries the
+        fix; this inset was right and was never what shipped.
+
+        FOUR AND NOT TWO. An inset on the horizontal pair alone leaves a 28×36
+        drawable, and GradientDrawable clamps a pill radius to half the SHORTER side —
+        a vertical stadium where the design says disc. That is the trap the style's own
+        comment records from the other direction.
+
+        AND 28 IS THE FLOOR, NOT A ROUND NUMBER. The plate is concentric with the glyph
+        and «⋮»'s ink centre is 18 from the card's edge, so a clearance of C caps the
+        plate at 2 × (18 − C): 4dp of air is the largest plate this slot can have and
+        the smallest gap that still reads as one. The other end is ic_copy, whose ink
+        is a rounded frame reaching 12.87 from its centre (corner arc at (19,21) r 2,
+        ×22/24) — a 24dp plate would clip it. 28 clears both by about a dp, and it is
+        the same 28 @dimen/toolbar_plate_inset draws in the header, for the same
+        reason, on the same glyph.
+    -->
+    <dimen name="row_action_plate_inset">4dp</dimen>
+
+    <!--
+        ic_copy at 22dp: 7dp of box air plus 2.75dp of its own.
+        16 − 7 − 2.75 = 6.25, so the ink lands on 16.00 exactly and the BOX still
+        clears the card's edge by 6.25 — a quarter of a dp off the 6 that
+        @dimen/optical_nudge_touch_target leaves on the leading side of the
+        subscription card, which is the shipped precedent for this shape. The plate
+        inside it clears by 10.25 (@dimen/row_action_plate_inset).
+
+        MEASURED, NOT ASSERTED: inflated at mdpi in a 328dp card the box lands at
+        286…322 and the glyph at 293…315, so ic_copy's ink ends 15.75dp from the card's
+        edge — a quarter of a dp, spent on getDimensionPixelSize rounding −9.75 to −10.
+    -->
+    <dimen name="row_action_nudge_wide">-9.75dp</dimen>
+
+    <!--
+        ic_more_vert_24dp at 22dp: 7dp of box air plus 9.17dp of its own, so the
+        exact pull is -16.17 and this is the one glyph in the file that is CLAMPED.
+
+        SIXTEEN IS THE ROW'S WHOLE END GUTTER and this control gives all of it back:
+        the glyph is so narrow that its box has to travel the full padding for the
+        ink to reach the line. Stopping at -16 leaves the ink at 16.17 — a sixth of
+        a dp, half a pixel at 3× — and keeps the box FLUSH with the row's edge
+        instead of 0.17 outside it, so nothing of the button is laid out where the
+        card cannot hold it.
+
+        A FLUSH BOX IS NOT A SAFE PLATE, which is what the round that shipped this
+        number got wrong: it read tangency as the good case and it is not. A plate
+        that fills a flush box paints over the card's hairline and is cut by the
+        card's 20dp outline on the last pixel column, and a round plate with one side
+        shorn reads as a rendering fault — «вот зажал три точки, а там фон залазит за
+        рамки», the third report of this shape. What answers it is
+        @dimen/row_action_plate_inset, not a smaller pull: the box stays flush, the
+        PAINT stops 4dp short of the edge.
+
+        AND THE PULL IS WHAT PUTS THE SLOT WHERE THE CLIP WAS. Sixteen inside the row's
+        edge is exactly its paddingEnd, and a ViewGroup clips to its padding by default,
+        so this margin was handing the button to a clip line rather than to empty space.
+        view_row.xml turns that clip off; measured, «⋮»'s ink lands 16.17dp from the
+        card's edge and its disc 4dp, both uncut.
+
+        This is also the owner's standing request on this glyph, already honoured in
+        the toolbar: «три точки которые сверху справа их бы тоже чутка правее
+        сделать и это касается везде где они есть».
+    -->
+    <dimen name="row_action_nudge_overflow">-16dp</dimen>
+
+    <!--
+        THE THREE 18dp GLYPH SLOTS. Their boxes already end on the gutter, so the
+        pull is nothing but the glyph's own air: 8, 7 and 3 units of a 24-unit
+        viewport, at × 0.75.
+
+        The chevron is the biggest of the three because ic_chevron_right is drawn
+        inside a 24-unit box that also has to hold the arrow's other three sides.
+    -->
+    <dimen name="row_glyph_nudge_chevron">-6dp</dimen>
+
+    <!--
+        ic_arrow_drop_down, the cycle caret. Its ink is symmetric about the box
+        centre (7…17 of 24), so SelectPopup turning it 180° while the popup is open
+        does not move the edge this number was measured from.
+    -->
+    <dimen name="row_glyph_nudge_caret">-5.25dp</dimen>
+
+    <!--
+        ic_action_done, the state marker. The smallest pull in the file: the tick
+        very nearly fills its viewport, which is exactly why one shared number could
+        never have served all three.
+    -->
+    <dimen name="row_glyph_nudge_check">-2.25dp</dimen>
+
+</resources>

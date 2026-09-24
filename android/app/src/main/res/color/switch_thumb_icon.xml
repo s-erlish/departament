@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  The check glyph inside the ON thumb: colour is never the only signal (00-rules.md
+  6.3), so the on state carries a mark as well as a hue. Transparent when off, which
+  is how M3 hides the glyph without a second drawable.
+-->
+<selector xmlns:android="http://schemas.android.com/apk/res/android">
+    <item
+        android:alpha="0.38"
+        android:color="?attr/colorPrimary"
+        android:state_checked="true"
+        android:state_enabled="false" />
+    <item android:color="?attr/colorPrimary" android:state_checked="true" />
+    <item android:color="@android:color/transparent" />
+</selector>

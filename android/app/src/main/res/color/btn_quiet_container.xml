@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  THE QUIET BUTTON'S PRESS PLATE — Tertiary and the Outlined retirement shim.
+
+  A transparent-container button had exactly one piece of press feedback before
+  this: the ripple. A ripple is a radial animation that has already faded by the
+  time the finger lifts, and on a device with animator scale at 0 (reduced motion,
+  battery saver, several OEM "performance" modes) it does not draw at all — so the
+  app's quietest buttons could be pressed with no persistent acknowledgement
+  whatsoever. This list is the state layer the ripple was standing in for.
+
+  Material's own state-layer opacities, one step below the ripple that rides on top
+  of it, so plate + ripple together land near the 20% Material spends on a pressed
+  tonal surface rather than doubling it.
+
+  It cannot hurt contrast: the accent is laid at 10% over the surface the label
+  already measures against, and the label is the accent itself at full strength.
+
+  Android has no hover state and 00-rules.md 7.1 forbids designing for one; the row
+  is here, quiet, only because a connected mouse or a Chromebook still reports it.
+-->
+<selector xmlns:android="http://schemas.android.com/apk/res/android">
+    <item
+        android:color="@android:color/transparent"
+        android:state_enabled="false" />
+    <item
+        android:alpha="0.10"
+        android:color="?attr/colorPrimary"
+        android:state_pressed="true" />
+    <item
+        android:alpha="0.08"
+        android:color="?attr/colorPrimary"
+        android:state_focused="true" />
+    <item
+        android:alpha="0.06"
+        android:color="?attr/colorPrimary"
+        android:state_hovered="true" />
+    <item android:color="@android:color/transparent" />
+</selector>

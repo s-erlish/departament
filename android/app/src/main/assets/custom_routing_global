@@ -1,0 +1,27 @@
+[
+  {
+    "remarks": "Блокировать QUIC (UDP 443)",
+    "outboundTag": "block",
+    "port": "443",
+    "network": "udp"
+  },
+  {
+    "remarks": "Обход локальной сети (IP)",
+    "outboundTag": "direct",
+    "ip": [
+      "geoip:private"
+    ]
+  },
+  {
+    "remarks": "Обход локальной сети (домены)",
+    "outboundTag": "direct",
+    "domain": [
+      "geosite:private"
+    ]
+  },
+  {
+    "remarks": "Финальный прокси",
+    "port": "0-65535",
+    "outboundTag": "proxy"
+  }
+]

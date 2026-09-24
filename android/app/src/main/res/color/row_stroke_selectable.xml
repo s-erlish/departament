@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Selection indicator, border axis (22-components.md 18.1). SAME WIDTH in both
+  states — only the colour changes. The shipped price option goes radius 14 -> 20
+  and stroke 1 -> 1.5 on selection, so the row visibly jumps; four axes with zero
+  geometry change is the fix: 12% accent fill, accent border, title weight 700,
+  and a check glyph in an always-reserved slot.
+-->
+<selector xmlns:android="http://schemas.android.com/apk/res/android">
+    <item android:color="?attr/colorPrimary" android:state_activated="true" />
+    <item android:color="?attr/colorPrimary" android:state_checked="true" />
+    <item android:color="?attr/colorOutlineVariant" />
+</selector>

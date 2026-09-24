@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    Заголовок группы на экране «Дополнительно».
+
+    Историческая справка по имени файла: раньше здесь лежала кнопка-ссылка на
+    вики для диалога «Режим». Строка «Режим подключения» переехала на вкладку
+    настроек (12-settings.md 4.2, строка 1.1), диалог с этой кнопкой исчез, и файл
+    переиспользован под то, чего экрану не хватало: заголовок раздела.
+
+    Библиотечный preference_category_material.xml рисует заголовок акцентным синим
+    в мелком кегле. 00-rules.md 5.10 требует обратного: заголовок раздела - это
+    обычный текст в предложении, полужирный, без капса и без цвета. Стиль
+    TextAppearance.App.SectionHeader (styles.xml) задаёт и кегль, и вес, и цвет,
+    и отступы: 16 по бокам (единый жёлоб), 24 сверху, 8 снизу.
+
+    Подключается как android:layout у каждого PreferenceCategory в
+    res/xml/pref_settings.xml. Идентификатор @android:id/title обязателен: по нему
+    Preference.onBindViewHolder() находит текст заголовка.
+-->
+<TextView xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@android:id/title"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    style="@style/TextAppearance.App.SectionHeader"
+    android:textAlignment="viewStart" />

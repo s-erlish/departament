@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Bottom-nav tab, visible only when signed in. -->
+    <string name="bottom_nav_account">Аккаунт</string>
+
+    <!--
+      THE «ПРИВЯЗАТЬ TELEGRAM» BANNER, restored from 5e8cd54.
+
+      It speaks to the one state nothing else on Главная covers: a user who pasted a departament
+      подписка and has never signed in. He has servers, so there is no gate; he is signed out, so
+      the gate's «Привязать Telegram» secondary — which only appears in the signed-in-with-no-
+      подписка shape — never reaches him. Dismissible, because it is an offer and not an error, and
+      the dismissal is remembered so it is offered once and not on every launch.
+    -->
+    <string name="auth_link_telegram_cta">Привяжите Telegram, чтобы управлять подпиской</string>
+    <string name="auth_link_telegram_cta_dismiss">Скрыть</string>
+
+    <!-- Gray status toast shown after subscriptions are auto-imported post-login. -->
+    <string name="toast_subscription_linked">Подписка привязана</string>
+
+    <!-- Title of the picker that holds the add methods «Добавить подписку» no longer carries:
+         a typed link, a hand-built server, a config file. -->
+    <string name="add_other_methods_title">Другие способы добавления</string>
+
+    <!-- Inline errors on the «Ввести ссылку» field, shown before the dialog closes. -->
+    <string name="import_link_required">Вставьте ссылку подписки или конфигурацию сервера</string>
+    <string name="import_link_invalid">Не похоже на ссылку или конфигурацию. Пример: https://departament.site/sub или vless://…</string>
+
+    <!-- Outcomes of an import, from the precise one to the blunt one. -->
+    <string name="import_sub_empty">Не удалось загрузить серверы подписки</string>
+    <string name="import_sub_duplicate">Подписка уже добавлена</string>
+    <string name="import_sub_foreign">Эта ссылка не от departament. Используйте подписку из нашего бота.</string>
+
+    <!-- THE TWO SENTENCES THAT REPLACED THE COUNTERS. See NoticePolicy.kt.
+
+         A successful add and a successful refresh say NOTHING now: the подписка card appears, its
+         timestamp moves and the list repaints under it, which is a better confirmation than a
+         figure covering the thing it counts. What survives is the case where the tap has no
+         visible answer at all — a link that did not parse, an operator that could not be reached —
+         and each one is one sentence with a next step in it, not «Ошибка» and not «Обновлено
+         серверов: 13 (успешно: 1, ошибки: 0, пропущено: 1)». -->
+    <string name="notice_add_failed">Не удалось добавить: ссылка не распознана</string>
+    <string name="notice_refresh_failed">Не удалось обновить подписку. Проверьте сеть и повторите</string>
+    <!-- Copying to the clipboard is one of the two actions in the app that leave the screen
+         exactly as they found it, so it is one of the two that still says something. -->
+    <string name="notice_copied">Скопировано в буфер обмена</string>
+    <string name="notice_copy_failed">Не удалось скопировать</string>
+</resources>

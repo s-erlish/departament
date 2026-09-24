@@ -1,0 +1,531 @@
+<resources xmlns:tools="http://schemas.android.com/tools">
+
+    <!--
+      ==========================================================================
+      THE THEME LAYER
+      ==========================================================================
+
+      Three themes ship and every component is checked in all three
+      (00-rules.md 6.9): blue light (this file), blue dark
+      (values-night/themes.xml, which only flips the system-bar icon polarity —
+      every colour arrives through a values-night colour override), and mono
+      (ThemeOverlay.Mono at the bottom, applied at runtime in BaseActivity via
+      theme.applyStyle, so it inherits everything it does not name).
+
+      Two jobs live here and nowhere else:
+
+      1. BINDING. A semantic colour token becomes a theme attribute here, so a
+         layout writes ?attr/… and never @color/md_theme_… (00-rules.md 11.1).
+         A colour that must also change under MONO has to travel as an attribute,
+         because mono is a runtime overlay and cannot re-point a @color/….
+
+      2. COMPONENT DEFAULTS. materialButtonStyle, materialCardViewStyle and the
+         rest are set here so an instance that declares nothing still draws the
+         Departament control. This is the root-cause fix: it is why a layout no
+         longer needs to restate radius, height, face and inset on every button.
+         Setting a default changes every screen at once, so each block below
+         records what it touches.
+
+      Dynamic Color (Material You) is OFF and stays off (00-rules.md 6.10). The
+      parent is Theme.Material3.DayNight, not …DayNight.DynamicColors; there is
+      no DynamicColors.applyToActivitiesIfAvailable() call anywhere in
+      app/src/main/java. Verified 2026-07-26. The brand's single blue is the
+      product; a wallpaper-derived scheme would erase it. Do not "modernise" this.
+    -->
+
+    <!-- Common base theme: put all shared items here so day/night can reuse -->
+    <style name="AppThemeBase" parent="Theme.Material3.DayNight">
+        <!-- Primary colors - main tone: departament blue -->
+        <item name="colorPrimary">@color/md_theme_primary</item>
+        <item name="colorOnPrimary">@color/md_theme_onPrimary</item>
+        <item name="colorPrimaryContainer">@color/md_theme_primaryContainer</item>
+        <item name="colorOnPrimaryContainer">@color/md_theme_onPrimaryContainer</item>
+
+        <!-- Secondary colors -->
+        <item name="colorSecondary">@color/md_theme_secondary</item>
+        <item name="colorOnSecondary">@color/md_theme_onSecondary</item>
+        <item name="colorSecondaryContainer">@color/md_theme_secondaryContainer</item>
+        <item name="colorOnSecondaryContainer">@color/md_theme_onSecondaryContainer</item>
+
+        <!-- Tertiary colors - success / connected: green -->
+        <item name="colorTertiary">@color/md_theme_tertiary</item>
+        <item name="colorOnTertiary">@color/md_theme_onTertiary</item>
+        <item name="colorTertiaryContainer">@color/md_theme_tertiaryContainer</item>
+        <item name="colorOnTertiaryContainer">@color/md_theme_onTertiaryContainer</item>
+
+        <!-- Error colors -->
+        <item name="colorError">@color/md_theme_error</item>
+        <item name="colorOnError">@color/md_theme_onError</item>
+        <item name="colorErrorContainer">@color/md_theme_errorContainer</item>
+        <item name="colorOnErrorContainer">@color/md_theme_onErrorContainer</item>
+
+        <!-- Surface colors -->
+        <item name="colorSurface">@color/md_theme_surface</item>
+        <item name="colorOnSurface">@color/md_theme_onSurface</item>
+        <item name="colorSurfaceVariant">@color/md_theme_surfaceVariant</item>
+        <item name="colorOnSurfaceVariant">@color/md_theme_onSurfaceVariant</item>
+        <item name="colorSurfaceInverse">@color/md_theme_inverseSurface</item>
+        <item name="colorOnSurfaceInverse">@color/md_theme_inverseOnSurface</item>
+        <!-- Tonal surface ramp -> depth layers. Elevation is expressed by tone,
+             not shadow (00-rules.md 4.7). Night ramp:
+               L0 base page     = android:colorBackground   #0A0B0D
+               L1 colorSurfaceContainerLow    #111316  (sunken / rows on a card)
+               L2 colorSurfaceContainer       #141619  (the default card surface)
+               L3 colorSurfaceContainerHigh   #1A1D21  (raised: sheets, menus)
+                  colorSurfaceContainerHighest#20242B  (neutral tiles, hover)
+             WP3/WP5: reference ?attr/colorSurfaceContainerLow|…|High(est) —
+             never raw hex — so light/mono resolve automatically. -->
+        <item name="colorSurfaceContainer">@color/md_theme_surfaceContainer</item>
+        <item name="colorSurfaceContainerHigh">@color/md_theme_surfaceContainerHigh</item>
+        <item name="colorSurfaceContainerHighest">@color/md_theme_surfaceContainerHighest</item>
+        <item name="colorSurfaceContainerLow">@color/md_theme_surfaceContainerLow</item>
+        <item name="colorSurfaceContainerLowest">@color/md_theme_surfaceContainerLowest</item>
+
+        <!-- Background colors -->
+        <item name="android:colorBackground">@color/md_theme_background</item>
+        <item name="colorOnBackground">@color/md_theme_onBackground</item>
+
+        <!-- Outline colors. colorOutline and colorOutlineVariant are STRUCTURAL
+             (row separators, card borders, 1.16:1 dark) and may never draw the
+             boundary of a control — that is colorOutlineControl, below (D-9). -->
+        <item name="colorOutline">@color/md_theme_outline</item>
+        <item name="colorOutlineVariant">@color/md_theme_outlineVariant</item>
+
+        <!-- Other colors -->
+        <item name="colorPrimaryInverse">@color/md_theme_inversePrimary</item>
+
+        <!-- ================================================================ -->
+        <!-- 2026-07 TOKEN WAVE. Six semantic roles that existed in            -->
+        <!-- values/colors.xml + values-night/colors.xml with nothing wired to  -->
+        <!-- them. Both files already carry the light and dark values, so the   -->
+        <!-- night theme inherits these lines unchanged; only mono restates     -->
+        <!-- them (see ThemeOverlay.Mono). 10-design-system.md 4.7.             -->
+        <!-- ================================================================ -->
+
+        <!-- D-9. The 3:1 control boundary. #7D8BA3 light / #646C7C dark. -->
+        <item name="colorOutlineControl">@color/md_theme_outlineControl</item>
+        <!-- The dimmed glyph tone: recedes without reading as disabled. -->
+        <item name="colorOnSurfaceDim">@color/md_theme_onSurfaceDim</item>
+        <!-- «истекает» / «ждёт оплаты», and nothing else. -->
+        <item name="warning">@color/warning</item>
+        <item name="warningText">@color/warning_text</item>
+        <item name="warningContainer">@color/warning_container</item>
+        <!-- Loading placeholder fill. -->
+        <item name="colorSkeleton">@color/skeleton</item>
+        <!-- The press plane (handoff README §1). A held row steps DOWN to it. -->
+        <item name="colorPressBg">@color/press_bg</item>
+        <!-- Destructive TEXT (not the fill red) and the 12% selection wash.
+             Both used to be read straight off @color/…, which the runtime mono
+             overlay cannot re-point — see attrs.xml beside each. -->
+        <item name="colorDestructiveText">@color/color_destructive_text</item>
+        <item name="colorAccentFill">@color/accent_fill_12</item>
+
+        <!-- ================================================================ -->
+        <!-- THE RIPPLE IS OFF, PRODUCT-WIDE. Handoff README, «Главное         -->
+        <!-- правило»: «В сборке НЕТ ... ripple как отклика на нажатие», and   -->
+        <!-- §1 spells out what replaces it — a scale from the press ladder    -->
+        <!-- plus a background step DOWN to ?attr/colorPressBg. A ripple is a  -->
+        <!-- radial splash that reads as light coming OFF the surface; this    -->
+        <!-- design pushes the object IN.                                      -->
+        <!--                                                                   -->
+        <!-- One line, and it is deliberately here rather than in sixty        -->
+        <!-- layouts. ?attr/selectableItemBackground, its borderless twin, and -->
+        <!-- every platform widget that draws its own ripple all tint it with  -->
+        <!-- colorControlHighlight; transparent means none of them can paint   -->
+        <!-- one, whether or not the layout that asked for it has been visited -->
+        <!-- yet. A screen still swaps its background to @drawable/bg_row when -->
+        <!-- its wave reaches it — that is what adds the press STEP — but no   -->
+        <!-- screen can be left with a glow in the meantime.                   -->
+        <!--                                                                   -->
+        <!-- The @color/ripple_* ColorStateLists stay in res/color/ untouched: -->
+        <!-- they are still the tone a future opt-in would use, and deleting   -->
+        <!-- a token to prove a point is not how anything here is removed.     -->
+        <!-- ================================================================ -->
+        <item name="colorControlHighlight">@android:color/transparent</item>
+
+        <!-- THE BLUE THEMES DO NOT MOVE. Each of these three aliases exactly
+             what the surface it feeds already resolved to, and the plate's
+             outline is transparent, so light and dark render bit-identically
+             before and after the mono fix. Only ThemeOverlay.Mono restates
+             them. See the block over these attrs in attrs.xml. -->
+        <item name="colorPlateContainer">@color/md_theme_primaryContainer</item>
+        <item name="colorPlateOutline">@android:color/transparent</item>
+        <item name="colorAccentFigure">@color/md_theme_primary</item>
+
+        <!-- Edge-to-edge: fully transparent system bars so the page draws
+             underneath them. Disable the auto contrast scrim (API 29+). -->
+        <item name="android:statusBarColor">@android:color/transparent</item>
+        <item name="android:navigationBarColor">@android:color/transparent</item>
+        <item name="android:windowDrawsSystemBarBackgrounds">true</item>
+        <item name="android:enforceStatusBarContrast" tools:targetApi="29">false</item>
+        <item name="android:enforceNavigationBarContrast" tools:targetApi="29">false</item>
+
+        <!-- Connect button state colors. color_fab_active/_inactive are already
+             night-qualified, so these three resolve per theme as they stand. -->
+        <item name="connectIdleColor">@color/color_fab_inactive</item>
+        <item name="connectActiveColor">@color/color_fab_active</item>
+        <item name="connectedColor">@color/color_fab_active</item>
+
+        <!-- ================================================================ -->
+        <!-- R11 — THE ACCENT RESOLVES PER THEME.                              -->
+        <!--                                                                   -->
+        <!-- 22-components.md R11 calls this "the only P1 accessibility defect  -->
+        <!-- in the whole token system" and orders it fixed before any          -->
+        <!-- component work. The desktop shape of the bug is accent keys        -->
+        <!-- declared outside the theme dictionaries; the Android shape is      -->
+        <!-- exactly the same mistake in a different file: icon_blue #4C8DFF    -->
+        <!-- and icon_red #F04452 are declared ONLY in values/colors.xml with   -->
+        <!-- no values-night twin, so the DARK accent was hard-coded into the   -->
+        <!-- LIGHT theme too and the light glyphs measured:                     -->
+        <!--                                                                   -->
+        <!--   before  #4C8DFF on light background #F4F7FC   2.98:1  FAIL       -->
+        <!--           #4C8DFF on the blue tile fill #DBE8FF 2.59:1  FAIL       -->
+        <!--           #F04452 on the red  tile fill #FCDADC 2.87:1  FAIL       -->
+        <!--   after   #1E5FC7 on light background #F4F7FC   5.56:1  PASS       -->
+        <!--           #1E5FC7 on the blue tile fill #DBE8FF 4.83:1  PASS       -->
+        <!--           #BA1A1A on the red  tile fill #FCDADC 4.98:1  PASS       -->
+        <!--                                                                   -->
+        <!-- Dark is unchanged to the hex: md_theme_primary is #4C8DFF and      -->
+        <!-- md_theme_error is #F04452 in values-night, which is what these     -->
+        <!-- attrs already resolved to. 86 call sites across res/ and java/ are -->
+        <!-- corrected by the six lines below with zero layout edits.           -->
+        <!--                                                                   -->
+        <!-- Incy keeps ONE accent, and the retirement debt is now paid: the    -->
+        <!-- Green / Orange / Purple / Yellow tints were aliases of the accent  -->
+        <!-- kept alive only until their last call site migrated. The counts    -->
+        <!-- this comment used to record (Green 11, Purple 11, Orange 9,        -->
+        <!-- Yellow 2) are all zero, so the aliases are gone with them. The     -->
+        <!-- coloured tile system is exactly three: accent, destructive,        -->
+        <!-- neutral (D-5) — and neutral is an attribute, not a hue.            -->
+        <!-- ================================================================ -->
+        <item name="iconTintBlue">@color/md_theme_primary</item>
+        <item name="iconTintRed">@color/md_theme_error</item>
+
+        <!-- The tile FILLS stay on icon_tile_* for now. They are 20% washes and
+             a fill delta, not a boundary, so WCAG 1.4.11 does not apply to them,
+             and the glyph-on-fill pairs above already clear 3:1 after the tint
+             fix. Closing the last of R11 needs one light-theme value each —
+             icon_tile_blue #331E5FC7, icon_tile_red #33BA1A1A — in
+             values/colors.xml, with the current hexes moved to
+             values-night/colors.xml. That file is not owned by this change;
+             reported as follow-up. -->
+        <item name="iconTileBgBlue">@color/icon_tile_blue</item>
+        <item name="iconTileBgRed">@color/icon_tile_red</item>
+
+        <!-- Latency text on the server row. 00-rules.md 3.5 binds these two
+             attrs to the D-10 *text* tokens, not to the status fills: on dark,
+             error text is #FF6069 (6.15:1 on surface) and never the #F04452 fill
+             (4.88:1); on light, success text is #065132 rather than the #0B7D4A
+             hue. ping_good / ping_bad keep their own values for any legacy
+             @color/ reference — nothing is renamed. -->
+        <item name="pingGood">@color/color_success_text</item>
+        <item name="pingBad">@color/color_destructive_text</item>
+
+        <!-- Server selection indicator; alias of md_theme_primary, per theme. -->
+        <item name="indicatorColor">@color/colorIndicator</item>
+
+        <!-- Protocol / JSON chips on the server row. chipType is already
+             night-qualified. chipJson* are retirement debt (superseded by
+             Widget.Departament.Chip.Technical) and stay alive for 1 drawable. -->
+        <item name="chipTypeText">@color/chip_type_text</item>
+        <item name="chipJsonText">@color/chip_json_text</item>
+        <item name="chipJsonBg">@color/chip_json_bg</item>
+
+        <!-- ================================================================ -->
+        <!-- SHAPE LOCK, applied theme-wide (D-6, D-7).                        -->
+        <!--   12 fittings · 16 controls · 20 objects · 24 sheet lip · full     -->
+        <!--   round only where width == height or the shape is a track.        -->
+        <!--                                                                   -->
+        <!-- Material 1.13 reads BOTH families: the legacy *Component trio      -->
+        <!-- (Widget.MaterialComponents.* styles) and the Corner* trio that the -->
+        <!-- M3 macros resolve through — m3_comp_outlined_card_container_shape  -->
+        <!-- is ?attr/shapeAppearanceCornerMedium, assist chip is CornerSmall.  -->
+        <!-- Setting only one family would leave the lock half-applied, so both -->
+        <!-- are set to the same three shapes.                                  -->
+        <!--   was  4 / 8 / 8   (legacy trio)                                   -->
+        <!--   was  8 / 12 / 16 (Corner trio)                                   -->
+        <!--   now 12 / 16 / 20 in both                                         -->
+        <!-- CornerExtraSmall (4) and CornerExtraLarge (28) are deliberately    -->
+        <!-- untouched: nothing in the Departament vocabulary falls back to     -->
+        <!-- them — the sheet lip is 24 via ThemeOverlay.Departament.BottomSheet -->
+        <!-- and the field is 16 via Widget.Departament.TextField. -->
+        <!-- ================================================================ -->
+        <item name="shapeAppearanceSmallComponent">@style/ShapeAppearance.Departament.Fitting</item>
+        <item name="shapeAppearanceMediumComponent">@style/ShapeAppearance.Departament.Button</item>
+        <item name="shapeAppearanceLargeComponent">@style/ShapeAppearance.Departament.Object</item>
+        <item name="shapeAppearanceCornerSmall">@style/ShapeAppearance.Departament.Fitting</item>
+        <item name="shapeAppearanceCornerMedium">@style/ShapeAppearance.Departament.Button</item>
+        <item name="shapeAppearanceCornerLarge">@style/ShapeAppearance.Departament.Object</item>
+
+        <!-- ================================================================ -->
+        <!-- COMPONENT DEFAULTS (10-design-system.md 4.7, migration step 2).    -->
+        <!-- Each line below is the reason a layout no longer has to restate    -->
+        <!-- radius, height, inset, face and colour on every instance. What     -->
+        <!-- each one touches, measured on this tree 2026-07-26:                -->
+        <!-- ================================================================ -->
+
+        <!-- 11 MaterialButtons and 1 <Button> declare no style. They already
+             drew as filled accent buttons; what changes is the SHAPE (M3's
+             fully-round default -> radius_button 16, the capsule the owner
+             rejected), minHeight 48, insetTop/Bottom 0 (the reason declared
+             heights drew short), the Golos Title label, sentence case and the
+             0.97 press. Screens with two of them (login, home empty, tv send)
+             now show two filled accent buttons — that is pre-existing and is an
+             accent-budget fix for the layout owner, not a theme fix (R14). -->
+        <item name="materialButtonStyle">@style/Widget.Departament.Button.Primary</item>
+        <!-- 8 call sites reference ?attr/materialButtonOutlinedStyle directly
+             (the memory segmented group in activity_local_proxy). They move off
+             M3's pill onto radius 16 and onto md_theme_outlineControl, which is
+             the only outline that clears 3:1. "Outlined" is retirement debt,
+             not a sixth variant (R15). -->
+        <item name="materialButtonOutlinedStyle">@style/Widget.App.Button.Outlined</item>
+        <!-- Nothing references ?attr/borderlessButtonStyle today; wired so that
+             anything that starts to lands on Tertiary rather than on AppCompat's
+             all-caps borderless button. Dialog buttons are NOT affected: the
+             dialog overlay names buttonBarPositive/Negative/NeutralButtonStyle. -->
+        <item name="borderlessButtonStyle">@style/Widget.Departament.Button.Tertiary</item>
+
+        <!-- All 50 MaterialCardViews in the tree declare no style and every one
+             of them already sets cardCornerRadius, cardBackgroundColor and
+             cardElevation inline, so the instance wins on those three and the
+             visible gain is the hairline stroke on the 3-4 cards that lack one.
+             DELIBERATE DEVIATION from 4.7's literal Widget.App.Card: the theme
+             default is the .Group variant, which is the same card with
+             contentPadding 0. Widget.Departament.Card carries contentPadding 16,
+             and all 50 shipped cards already pad their own content (an inner
+             LinearLayout at space_16) or are full-bleed row groups whose rows and
+             hairlines must reach the card edge. As a theme default that 16 is
+             applied a second time on every card in the app — 32dp gutters and
+             inset row groups on 24 screens. Padding is an instance decision; the
+             theme owns the container geometry. A card that wants the padded
+             variant writes style="@style/Widget.Departament.Card". -->
+        <item name="materialCardViewStyle">@style/Widget.Departament.Card.Group</item>
+        <!-- Zero MaterialDividers exist yet; wired ahead of the row work so the
+             first one lands on the 1dp hairline inset to the 68dp text origin. -->
+        <item name="materialDividerStyle">@style/Widget.Departament.Divider</item>
+
+        <!-- 23 MaterialSwitches, none styled. This is the largest single visual
+             change in the file: every switch moves to the Departament thumb and
+             track selectors (off thumb onSurfaceVariant at 6.00:1 instead of M3's
+             colorOutline at 1.45:1, on thumb carrying the accent check so colour
+             is never the only signal) and loses its ripple background. -->
+        <item name="materialSwitchStyle">@style/Widget.Departament.Switch</item>
+        <!-- The 4 TextInputLayouts in the tree name
+             Widget.Material3.TextInputLayout.OutlinedBox explicitly, so they are
+             untouched and stay as instance debt for the field migration. This
+             default governs everything added from here on: radius 16, 56 min
+             height, the outlineControl boundary, the Golos EditText. -->
+        <item name="textInputStyle">@style/Widget.Departament.TextField</item>
+        <!-- Zero Chips exist yet (chips are TextViews with drawables today).
+             The default is the Golos-faced chip, not the Latin one: most chips
+             here carry Russian status words and Space Grotesk has no Cyrillic. -->
+        <item name="chipStyle">@style/Widget.Departament.Chip</item>
+
+        <!-- Both MaterialToolbars (activity_base, activity_main) set
+             titleTextAppearance and layout_height inline, so they keep the
+             wordmark and their height; what they gain is the seamless treatment
+             of 00-rules.md 4.8 — page background, zero elevation, no divider,
+             16dp content inset, onSurface navigation glyph.
+             ONE KNOWN REGRESSION: activity_main's toolbar declares no
+             background, so it moves from "nothing drawn" to ?android:colorBackground
+             and will paint a flat band over @drawable/bg_home_gradient until that
+             gradient is deleted (F1 already schedules it; gradients are banned by
+             00-rules.md 6.5). Interim one-liner for the layout owner:
+             android:background="@android:color/transparent" on that toolbar. -->
+        <item name="toolbarStyle">@style/Widget.Departament.Toolbar</item>
+        <!-- No BottomNavigationView / NavigationRailView instances exist — the
+             bottom bar is a hand-rolled weighted LinearLayout in activity_main.
+             Wired so the rebuild onto the real component inherits the no-ripple
+             rule (owner request 0.4.8) and the 3-axis active state. -->
+        <item name="bottomNavigationStyle">@style/Widget.Departament.NavigationBar</item>
+        <item name="navigationRailStyle">@style/Widget.Departament.NavigationRail</item>
+        <!-- Every BottomSheetDialogFragment gets the 24dp top lip and the
+             colorSurface body without naming a theme at the call site. -->
+        <item name="bottomSheetDialogTheme">@style/ThemeOverlay.Departament.BottomSheet</item>
+
+        <!-- 21 Snackbar.make call sites. THE TEXT STYLE IS NOT OPTIONAL: M3's
+             snackbar text is colorOnSurfaceInverse, which pairs with M3's
+             colorSurfaceInverse background. Widget.Departament.Snackbar changes
+             the background to colorSurfaceContainerHigh, so leaving the text on
+             the M3 default would draw #141619 on #1A1D21 (1.06:1) in dark and
+             #F1F4FA on #EAEFF7 (1.05:1) in light — 21 invisible snackbars. With
+             all three lines: 15.36:1 dark, 15.38:1 light, action label 5.28:1
+             dark / 5.17:1 light. -->
+        <item name="snackbarStyle">@style/Widget.Departament.Snackbar</item>
+        <item name="snackbarTextViewStyle">@style/Widget.Departament.Snackbar.TextView</item>
+        <item name="snackbarButtonStyle">@style/Widget.Departament.Snackbar.Button</item>
+        <!-- 1 instance (the activity_base top loading bar). It keeps its own
+             indeterminate="true" and gains the 6dp track with round ends. -->
+        <item name="linearProgressIndicatorStyle">@style/Widget.Departament.Progress.Linear</item>
+
+        <!-- App-wide AlertDialog styling (departament design). Applies to every
+             androidx.appcompat AlertDialog.Builder dialog; adapts per theme via
+             ?attr colours. Inherited by both the light and night AppThemeDayNight. -->
+        <item name="alertDialogTheme">@style/ThemeOverlay.Departament.Dialog</item>
+        <item name="android:alertDialogTheme">@style/ThemeOverlay.Departament.Dialog</item>
+        <item name="materialAlertDialogTheme">@style/ThemeOverlay.Departament.Dialog</item>
+    </style>
+
+    <!-- Day/Night theme: inherit common values and set light-mode-specific items -->
+    <style name="AppThemeDayNight" parent="AppThemeBase">
+        <!-- day/night-specific overrides (light/default) -->
+        <item name="android:windowLightStatusBar">true</item>
+        <item name="android:windowLightNavigationBar" tools:targetApi="27">true</item>
+    </style>
+
+    <!-- Theme without ActionBar -->
+    <style name="AppThemeDayNight.NoActionBar" parent="AppThemeDayNight">
+        <item name="windowActionBar">false</item>
+        <item name="windowNoTitle">true</item>
+    </style>
+
+    <style name="AppThemeDayNight.NoActionBar.Translucent">
+        <item name="android:windowBackground">@android:color/transparent</item>
+        <item name="android:colorBackgroundCacheHint">@null</item>
+        <item name="android:windowIsTranslucent">true</item>
+    </style>
+
+    <!-- The registry names. 00-rules.md 11.1 and 22-components.md 19 call this
+         theme Theme.Departament; the manifest calls it AppThemeDayNight. These
+         are aliases, not a fork — one theme, two spellings, so neither document
+         nor the manifest can be wrong. values-night redefines AppThemeDayNight,
+         so the night variant follows these automatically. -->
+    <style name="Theme.Departament" parent="AppThemeDayNight" />
+    <style name="Theme.Departament.NoActionBar" parent="AppThemeDayNight.NoActionBar" />
+
+    <style name="BrandedSwitch" parent="AppThemeDayNight">
+        <item name="colorPrimary">@color/color_fab_active</item>
+    </style>
+
+    <!--
+      Mono (black & white) overlay, applied at runtime in BaseActivity with
+      theme.applyStyle(R.style.ThemeOverlay_Mono, true). Because it is an
+      overlay it inherits every component default, every shape and every
+      unnamed attribute from AppThemeBase — only the colour roles below are
+      re-aliased, which is why it composes with NoActionBar / Translucent.
+
+      Mono is NOT a colour strip (00-rules.md 6.9). It remaps the accent to ink
+      and keeps the same hierarchy: the surface ramp, the container fills, the
+      control boundary and the dimmed glyph tone all survive as distinct steps,
+      because with no hue left the ink ramp is the only thing carrying depth
+      and state. A token missing here does not fall back to grey — it falls
+      back to BLUE, which is the bug this block exists to prevent.
+    -->
+    <style name="ThemeOverlay.Mono" parent="">
+        <item name="colorPrimary">@color/mono_primary</item>
+        <item name="colorOnPrimary">@color/mono_onPrimary</item>
+        <item name="colorPrimaryContainer">@color/mono_primaryContainer</item>
+        <item name="colorOnPrimaryContainer">@color/mono_onPrimaryContainer</item>
+        <item name="colorSecondary">@color/mono_secondary</item>
+        <item name="colorOnSecondary">@color/mono_onSecondary</item>
+        <item name="colorSecondaryContainer">@color/mono_secondaryContainer</item>
+        <item name="colorOnSecondaryContainer">@color/mono_onSecondaryContainer</item>
+        <item name="colorTertiary">@color/mono_tertiary</item>
+        <item name="colorOnTertiary">@color/mono_onTertiary</item>
+        <item name="colorTertiaryContainer">@color/mono_primaryContainer</item>
+        <item name="colorOnTertiaryContainer">@color/mono_onPrimaryContainer</item>
+
+        <!-- Destructive, in ink. Without these four the mono theme leaked the
+             blue theme's red through every ?attr/colorError and
+             ?attr/colorErrorContainer — the status-error chip, the destructive
+             button and the field error stroke all drew #F04452 on a greyscale
+             screen. 10-design-system.md 2.2 maps mono destructive to the ink
+             tone and the destructive container to the inset plane; the meaning
+             is carried by the word and the glyph instead of the hue
+             (00-rules.md 6.3, "never colour alone"). mono_onSurface on
+             mono_surfaceContainerHighest is 14.26:1 dark / 15.18:1 light. -->
+        <item name="colorError">@color/mono_onSurface</item>
+        <item name="colorOnError">@color/mono_surface</item>
+        <item name="colorErrorContainer">@color/mono_surfaceContainerHighest</item>
+        <item name="colorOnErrorContainer">@color/mono_onSurface</item>
+        <!-- The fifth: destructive TEXT had no attribute at all, so «Выйти из
+             аккаунта», «Удалить», the field-error line and the expired-меter
+             marker stayed red on the greyscale screen. §5.7: «красная в цветной
+             теме, белая в моно». -->
+        <item name="colorDestructiveText">@color/mono_destructiveText</item>
+        <!-- 12% of the ink accent, so a selected row is an ink wash and not the
+             blue theme's #1F4C8DFF leaking through (60-mono-home.png). -->
+        <item name="colorAccentFill">@color/mono_accentFill</item>
+
+        <item name="colorSurface">@color/mono_surface</item>
+        <item name="colorOnSurface">@color/mono_onSurface</item>
+        <item name="colorSurfaceVariant">@color/mono_surfaceVariant</item>
+        <item name="colorOnSurfaceVariant">@color/mono_onSurfaceVariant</item>
+        <item name="colorSurfaceContainer">@color/mono_surfaceContainer</item>
+        <item name="colorSurfaceContainerHigh">@color/mono_surfaceContainerHigh</item>
+        <item name="colorSurfaceContainerHighest">@color/mono_surfaceContainerHighest</item>
+        <item name="colorSurfaceContainerLow">@color/mono_surfaceContainerLow</item>
+        <item name="colorSurfaceContainerLowest">@color/mono_surfaceContainerLowest</item>
+        <!-- Inverse pair, ink-flipped. M3 internals (tooltip, and any snackbar
+             that does not pick up snackbarStyle) read these; unset, they kept
+             the blue theme's #2A3142 / #F1F4FA. -->
+        <item name="colorSurfaceInverse">@color/mono_onSurface</item>
+        <item name="colorOnSurfaceInverse">@color/mono_surface</item>
+        <!-- ...and the third of that family, which was the ONE colour attribute
+             AppThemeBase declares and this overlay did not answer. Unset it kept
+             @color/md_theme_inversePrimary — #AEC7FF / #1E5FC7, a literal blue on
+             the screen whose entire point is that there is no hue on it. Nothing
+             in this product's own layouts names it, which is exactly why it
+             survived: M3 reads it for the accent drawn ON the inverse plane
+             (a snackbar action that misses snackbarStyle, tooltips, sliders).
+             mono_surface is that ink in both modes for the same reason it is
+             colorOnSurfaceInverse above — the inverse plane is mono_onSurface, so
+             what reads on it is mono_surface. -->
+        <item name="colorPrimaryInverse">@color/mono_surface</item>
+        <item name="android:colorBackground">@color/mono_background</item>
+        <item name="colorOnBackground">@color/mono_onBackground</item>
+        <item name="colorOutline">@color/mono_outline</item>
+        <item name="colorOutlineVariant">@color/mono_outlineVariant</item>
+
+        <!-- The 2026-07 wave, in mono. colorOutlineControl matters most here:
+             once the accent is greyscale there is no hue left to mark the edge
+             of an input, so #6A6A6E (3.47:1 on mono_surface dark) / #767679
+             (4.53:1 light) is the only thing separating a field from its plane. -->
+        <item name="colorOutlineControl">@color/mono_outlineControl</item>
+        <item name="colorOnSurfaceDim">@color/mono_onSurfaceDim</item>
+        <item name="warning">@color/mono_warning</item>
+        <item name="warningText">@color/mono_warningText</item>
+        <item name="warningContainer">@color/mono_warningContainer</item>
+        <item name="colorSkeleton">@color/mono_skeleton</item>
+        <!-- §8's mono column gives the press plane its own value (#0B0B0C dark),
+             so it is restated here rather than inherited. -->
+        <item name="colorPressBg">@color/mono_press_bg</item>
+
+        <item name="android:statusBarColor">@android:color/transparent</item>
+        <item name="android:navigationBarColor">@android:color/transparent</item>
+        <item name="android:enforceStatusBarContrast" tools:targetApi="29">false</item>
+        <item name="android:enforceNavigationBarContrast" tools:targetApi="29">false</item>
+        <item name="connectIdleColor">@color/mono_fab_inactive</item>
+        <item name="connectActiveColor">@color/mono_fab_active</item>
+        <item name="connectedColor">@color/mono_connected</item>
+
+        <!-- Accents neutralised to greyscale (mono_* colours vary day/night).
+             pingGood / pingBad keep the ink tone: latency is read from the
+             number, and in mono the sign of the value is the only honest
+             signal — a grey "good" and a grey "bad" would be a lie if they
+             were the same tone, so bad takes the stronger onSurface step. -->
+        <item name="chipTypeText">@color/mono_onPrimaryContainer</item>
+        <item name="chipJsonText">@color/mono_onSurface</item>
+        <item name="chipJsonBg">@color/mono_surfaceContainerHighest</item>
+
+        <!-- The three roles that carry mono's contract. Values and the measured
+             figures are in colors.xml / values-night/colors.xml beside them. -->
+        <item name="colorPlateContainer">@color/mono_plateContainer</item>
+        <item name="colorPlateOutline">@color/mono_plateOutline</item>
+        <item name="colorAccentFigure">@color/mono_accentFigure</item>
+        <item name="pingGood">@color/mono_onSurfaceVariant</item>
+        <item name="pingBad">@color/mono_onSurface</item>
+        <item name="indicatorColor">@color/mono_primary</item>
+        <item name="iconTintBlue">@color/mono_onSurfaceVariant</item>
+        <item name="iconTintRed">@color/mono_onSurfaceVariant</item>
+        <item name="iconTileBgBlue">@color/mono_surfaceContainerHighest</item>
+        <item name="iconTileBgRed">@color/mono_surfaceContainerHighest</item>
+
+        <!-- Keep app-wide dialog styling under the mono overlay too. The overlay's
+             greyscale ?attr colours flow into the same dialog theme automatically. -->
+        <item name="alertDialogTheme">@style/ThemeOverlay.Departament.Dialog</item>
+        <item name="android:alertDialogTheme">@style/ThemeOverlay.Departament.Dialog</item>
+        <item name="materialAlertDialogTheme">@style/ThemeOverlay.Departament.Dialog</item>
+    </style>
+
+</resources>

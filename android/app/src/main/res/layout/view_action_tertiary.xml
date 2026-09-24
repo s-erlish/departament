@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  One action, TERTIARY tier: the quiet action. Transparent container, accent label.
+  22-components.md 2.1, 32-master-plan-android.md 8.5.
+
+  This is the ERROR state's «Повторить» (22-components.md 15) and the status strip's
+  action (32 8.10): an offer the screen makes without claiming the screen. At most
+  two visible at once. It is the only button allowed inside a row, and when it is
+  there the row itself is not a target.
+
+  Tier is a file because a Material style is bound at inflation; see
+  view_action_primary.xml for the reasoning.
+-->
+<com.google.android.material.button.MaterialButton
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/action_button"
+    style="@style/Widget.Departament.Button.Tertiary"
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content"
+    tools:text="Повторить" />

@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Segmented-control track. radius_control 16 (D-7 puts the track on the same radius
+  as the buttons beside it), fill colorSurfaceContainerHighest, padding space_4 4
+  applied by the style. Concentricity holds: a 16 track with 4 padding holds the
+  12-radius segment inside it exactly (00-rules.md 3.2).
+-->
+<shape xmlns:android="http://schemas.android.com/apk/res/android"
+    android:shape="rectangle">
+    <solid android:color="?attr/colorSurfaceContainerHighest" />
+    <corners android:radius="@dimen/radius_control" />
+</shape>

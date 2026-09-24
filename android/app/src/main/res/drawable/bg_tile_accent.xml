@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Accent icon tile: the ONE lit row on a screen, if any (D-5). Counts against the
+  accent budget of 00-rules.md 3.6 alongside the primary CTA and the nav indicator.
+  Replaces bg_icon_blue, which stays alive until its references migrate.
+-->
+<shape xmlns:android="http://schemas.android.com/apk/res/android"
+    android:shape="rectangle">
+    <solid android:color="?attr/iconTileBgBlue" />
+    <corners android:radius="@dimen/radius_tile" />
+</shape>

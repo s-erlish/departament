@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- §2.1: мягкое радиальное свечение под кольцом щита и под кольцом прогрузки.
+     Цвет берётся из темы, а сила — прозрачностью на самой вьюхе (0.28 по §8
+     «Свечение rgba(76,141,255,.28)»), поэтому ни одного зашитого числа. -->
+<shape xmlns:android="http://schemas.android.com/apk/res/android"
+    android:shape="oval">
+    <gradient
+        android:type="radial"
+        android:gradientRadius="50%"
+        android:centerX="0.5"
+        android:centerY="0.5"
+        android:startColor="?attr/colorPrimary"
+        android:endColor="@android:color/transparent" />
+</shape>

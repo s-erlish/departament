@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Text-field boundary (00-rules.md 7.4, decision D-9).
+
+  The rest boundary is @color/md_theme_outlineControl — #646C7C dark (3.43:1 on
+  surface), #7D8BA3 light (3.45:1). It is NOT ?attr/colorOutline: that token
+  measures 1.45:1 on the dark ground and fails WCAG 1.4.11's 3:1 floor for the
+  boundary of a UI component. colorOutlineVariant keeps the 1dp hairline role on
+  row separators and card borders, which is structural decoration and exempt.
+  Knowing which of the two a given line is is the single most-missed accessibility
+  point in this build.
+
+  Focus is the accent, at boxStrokeWidthFocused 2dp. Error is handled separately by
+  boxStrokeErrorColor so a field can be both errored and focused without the two
+  states fighting.
+-->
+<selector xmlns:android="http://schemas.android.com/apk/res/android">
+    <item
+        android:alpha="0.38"
+        android:color="?attr/colorOutlineControl"
+        android:state_enabled="false" />
+    <item android:color="?attr/colorPrimary" android:state_focused="true" />
+    <item android:color="?attr/colorOnSurfaceVariant" android:state_hovered="true" />
+    <item android:color="?attr/colorOutlineControl" />
+</selector>

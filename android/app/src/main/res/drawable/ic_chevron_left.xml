@@ -1,0 +1,31 @@
+<!--
+  THE BACK AFFORDANCE'S GLYPH. @drawable/ic_chevron_right mirrored about x=12, drawn
+  rather than flipped at runtime.
+
+  WHY THIS FILE EXISTS AT ALL. Both headers used to carry ic_chevron_right under
+  android:scaleX="-1", and that mirror does not survive: every icon button in the
+  product wears @anim/press_icon (via @style/Widget.Departament.Button.Icon), whose
+  DEFAULT item — the resting one, not the pressed one — animates scaleX to 1.0. The
+  state list animator fires the moment the view attaches, so the arrow flipped itself
+  back to pointing RIGHT before the user ever saw it, on all 17 sub-pages plus every
+  screen on @layout/view_toolbar. An arrow's direction is the entire message a back
+  control carries, so this was never cosmetic.
+
+  autoMirrored, not scaleX: in RTL a back control points the other way, and the
+  platform does that here — in the drawable, where TalkBack, the press animator and
+  the touch target all stay untouched. A negative scaleX on the VIEW mirrors the
+  container too, which moves the glyph inside its own target and fights RTL.
+
+  The path is ic_chevron_right's with every x replaced by 24 − x, so the two glyphs
+  are the same stroke weight, the same 8.8×14.8 ink and the same optical mass:
+      right  M8.6,4.6 L7.2,6 l6,6 l-6,6 l1.4,1.4 L16,12 z    ink x 7.2 … 16
+      left   M15.4,4.6 L16.8,6 l-6,6 l6,6 l-1.4,1.4 L8,12 z  ink x 8 … 16.8
+  That ink matches the prototype's back glyph exactly (docs/design2026/port-shots-2/
+  40-perapp.geo.json: path w 8.8, h 14.8, 8dp inside its 24dp box).
+-->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="24dp" android:height="24dp" android:viewportWidth="24" android:viewportHeight="24"
+    android:autoMirrored="true"
+    android:tint="?attr/colorControlNormal">
+    <path android:fillColor="@android:color/white" android:pathData="M15.4,4.6L16.8,6l-6,6l6,6l-1.4,1.4L8,12z" />
+</vector>

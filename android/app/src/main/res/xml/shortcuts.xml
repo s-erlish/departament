@@ -1,0 +1,74 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Launcher long-press shortcuts.
+
+  android:targetPackage IS A LITERAL AND HAS TO BE. `${applicationId}` was tried here and it does
+  NOT work: manifest placeholders are substituted by the manifest merger and by nothing else, so a
+  res/xml file keeps the text «${applicationId}» verbatim into the packaged APK (verified with
+  `aapt2 dump xmltree`). Every shortcut then points at a package that does not exist and the
+  launcher answers with «Приложение не установлено» on all four of them.
+
+  So the value below is this flavour's real applicationId — build.gradle.kts `applicationId`
+  ("com.departamentvpn.app"), with the fdroid flavour's `.fdroid` suffix in
+  src/fdroid/res/xml/shortcuts.xml. If applicationId ever changes, both files change with it.
+  android:targetClass stays on the NAMESPACE (com.v2ray.ang), which is where the classes live and
+  is deliberately not the applicationId.
+-->
+<shortcuts xmlns:android="http://schemas.android.com/apk/res/android">
+    <shortcut
+        android:enabled="true"
+        android:icon="@drawable/ic_qu_switch_24dp"
+        android:shortcutDisabledMessage="@string/app_widget_name"
+        android:shortcutId="shortcuts_switch"
+        android:shortcutLongLabel="@string/app_widget_name"
+        android:shortcutShortLabel="@string/app_widget_name">
+
+        <intent
+            android:action="android.intent.action.VIEW"
+            android:targetClass="com.v2ray.ang.ui.ScSwitchActivity"
+            android:targetPackage="com.departamentvpn.app" />
+        <categories android:name="android.shortcut.conversation" />
+    </shortcut>
+    <shortcut
+        android:enabled="true"
+        android:icon="@drawable/ic_qu_scan_24dp"
+        android:shortcutDisabledMessage="@string/menu_item_import_config_qrcode"
+        android:shortcutId="shortcuts_scan"
+        android:shortcutLongLabel="@string/menu_item_import_config_qrcode"
+        android:shortcutShortLabel="@string/menu_item_import_config_qrcode">
+
+        <intent
+            android:action="android.intent.action.VIEW"
+            android:targetClass="com.v2ray.ang.ui.ScScannerActivity"
+            android:targetPackage="com.departamentvpn.app" />
+        <categories android:name="android.shortcut.conversation" />
+    </shortcut>
+    <shortcut
+        android:enabled="true"
+        android:icon="@drawable/ic_qu_start_24dp"
+        android:shortcutDisabledMessage="@string/toast_services_start"
+        android:shortcutId="shortcuts_start"
+        android:shortcutLongLabel="@string/toast_services_start"
+        android:shortcutShortLabel="@string/toast_services_start">
+
+        <intent
+            android:action="android.intent.action.VIEW"
+            android:targetClass="com.v2ray.ang.ui.ScStartActivity"
+            android:targetPackage="com.departamentvpn.app" />
+        <categories android:name="android.shortcut.conversation" />
+    </shortcut>
+    <shortcut
+        android:enabled="true"
+        android:icon="@drawable/ic_qu_stop_24dp"
+        android:shortcutDisabledMessage="@string/toast_services_stop"
+        android:shortcutId="shortcuts_stop"
+        android:shortcutLongLabel="@string/toast_services_stop"
+        android:shortcutShortLabel="@string/toast_services_stop">
+
+        <intent
+            android:action="android.intent.action.VIEW"
+            android:targetClass="com.v2ray.ang.ui.ScStopActivity"
+            android:targetPackage="com.departamentvpn.app" />
+        <categories android:name="android.shortcut.conversation" />
+    </shortcut>
+</shortcuts>

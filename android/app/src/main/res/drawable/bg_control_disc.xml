@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  A CONTROL'S FEEDBACK, BOUNDED TO THE CONTROL. For the icon affordances that sit ON a
+  card — the subscription card's chevron, ping, refresh, pin and Telegram.
+
+  IT IS NO LONGER A RIPPLE, and the history is worth keeping because it is the same
+  defect twice, from two directions.
+
+  First it was ?attr/selectableItemBackgroundBorderless, which is `<ripple>` with NO
+  layers at all. A RippleDrawable with no layers is UNBOUNDED: it neither clips to its
+  own view nor stops at it, drawing a disc sized off the view's larger side and
+  projecting onto the nearest ancestor that has a background. On this card that
+  ancestor is the card, so one tap on a 22dp chevron lit a 20dp-radius card corner to
+  corner:
+
+      «кнопка скрытия раскрытия слишком сильно подсвечивается слишком огромный свет
+       появляется при нажатии»
+
+  A mask layer fixed the AREA — bounded, inside the control's own box — but not the
+  KIND. The handoff README's «Главное правило» removes the kind: «В сборке нет ... ripple
+  как отклика на нажатие». What the owner objected to was light appearing around a
+  control, and a smaller splash is still a splash.
+
+  So it is a state list now: while the finger is down, an oval of
+  ?attr/colorPressBg fills the control's own box, and nothing animates outward from the
+  touch point. Pair it with @anim/press_icon 0.88 on the same view — §1's borderless-icon
+  rung — and the affordance is pushed IN rather than lit up. The oval is kept because
+  these controls are square boxes holding a round glyph, and a rectangular plate inside a
+  round affordance reads as a rendering fault.
+
+  Fades on the press clock (70 in / 200 out), so the plate and the scale move together.
+-->
+<selector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:enterFadeDuration="@integer/motion_press_in"
+    android:exitFadeDuration="@integer/motion_press_out">
+    <item android:state_pressed="true">
+        <shape android:shape="oval">
+            <solid android:color="?attr/colorPressBg" />
+        </shape>
+    </item>
+    <item android:state_focused="true">
+        <shape android:shape="oval">
+            <solid android:color="@android:color/transparent" />
+            <stroke
+                android:width="@dimen/stroke_focus"
+                android:color="?attr/colorPrimary" />
+        </shape>
+    </item>
+    <item>
+        <shape android:shape="oval">
+            <solid android:color="@android:color/transparent" />
+        </shape>
+    </item>
+</selector>

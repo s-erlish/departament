@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  THE CHOSEN TERM, in «Купить подписку». The accent ring with a filled core, which
+  is how the prototype draws it: the ring keeps the geometry of
+  @drawable/ic_option_dot_off exactly, so selecting a term changes colour and fill
+  and moves nothing (§11 grabl 2 — a list must not shift when you choose in it).
+
+  2dp ring rather than the unselected 1.5: selection is the one state in this list
+  allowed to gain weight, and it gains it inside the same 22dp box.
+-->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="22dp"
+    android:height="22dp"
+    android:viewportWidth="24"
+    android:viewportHeight="24">
+    <path
+        android:fillColor="@android:color/transparent"
+        android:pathData="M12,3.25a8.75,8.75 0 1,0 0,17.5a8.75,8.75 0 1,0 0,-17.5z"
+        android:strokeColor="?attr/colorPrimary"
+        android:strokeWidth="2" />
+    <path
+        android:fillColor="?attr/colorPrimary"
+        android:pathData="M12,7.5a4.5,4.5 0 1,0 0,9a4.5,4.5 0 1,0 0,-9z" />
+</vector>

@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Destructive icon tile: delete, unlink, reset (D-5). NOT for Row.Destructive, whose
+  title is already red — a red tile plus red text is the same signal twice and turns
+  the row into an alarm (22-components.md 8.6). Replaces bg_icon_red.
+-->
+<shape xmlns:android="http://schemas.android.com/apk/res/android"
+    android:shape="rectangle">
+    <solid android:color="?attr/iconTileBgRed" />
+    <corners android:radius="@dimen/radius_tile" />
+</shape>

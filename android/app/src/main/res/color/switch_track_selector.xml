@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  MaterialSwitch track. Off = colorSurfaceContainerHighest #20242B, on = the accent.
+  The track is a genuine track, so 22-components.md R1's carve-out applies and its
+  shape stays fully round; that is the M3 default and no override is needed.
+-->
+<selector xmlns:android="http://schemas.android.com/apk/res/android">
+    <item
+        android:alpha="0.38"
+        android:color="?attr/colorPrimary"
+        android:state_checked="true"
+        android:state_enabled="false" />
+    <item
+        android:alpha="0.38"
+        android:color="?attr/colorSurfaceContainerHighest"
+        android:state_enabled="false" />
+    <item android:color="?attr/colorPrimary" android:state_checked="true" />
+    <item android:color="?attr/colorSurfaceContainerHighest" />
+</selector>

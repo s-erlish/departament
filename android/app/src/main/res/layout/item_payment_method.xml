@@ -1,0 +1,95 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    ============================================================================
+    ONE PAYMENT METHOD — a row in PaymentMethodSheet.
+    ============================================================================
+
+        плитка 40dp -> 16dp -> «СБП» / «Карта» / «С баланса — 1 500 ₽» -> шеврон
+
+    Flat, never a card in a sheet: the sheet IS the surface. The row grammar is the
+    product's, which is what the two attributes below now buy —
+
+      · @drawable/bg_row, not ?attr/selectableItemBackground. The ripple is off
+        product-wide, so selectableItemBackground had stopped drawing anything at
+        all; bg_row is the step DOWN the ramp that replaced it (TOKENS.md, «шаг фона
+        под нажатием появится только когда владелец экрана поменяет фон»).
+      · @anim/press_row, not @anim/press_scale. A row with text is not scaled —
+        Widget.Departament.Row says so, and grabl 1 says the label tears on the
+        rebound without a hardware layer, which the row form takes care of.
+
+    THE TILE IS NEUTRAL, and it is neutral through ATTRIBUTES. D-5 closes the
+    coloured tile set at three (accent, destructive, neutral) and a payment method is
+    none of those; the GLYPH is the differentiator — wallet, СБП, card — and it does
+    that job at any tile colour. It was a blue plate under a blue glyph (and a GREEN
+    one under the balance row, a fourth colour with no meaning behind it). The fill
+    and the glyph tint both resolve from the theme, so the mono overlay reaches them.
+
+    Icon and label are set at runtime by PaymentMethodSheet; the click listener is
+    attached to this root (@id/card_pay_method), which keeps its id.
+-->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/card_pay_method"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:background="@drawable/bg_row"
+    android:clickable="true"
+    android:focusable="true"
+    android:orientation="vertical"
+    android:stateListAnimator="@anim/press_row">
+
+    <!-- The rule between two rows, carried by the row BELOW it and hidden on the
+         first one by PaymentMethodSheet — a line across the top of the list would
+         separate the methods from the title they belong to. -->
+    <View
+        android:id="@+id/pay_method_divider"
+        android:layout_width="match_parent"
+        android:layout_height="@dimen/stroke_hairline"
+        android:layout_marginHorizontal="@dimen/space_16"
+        android:background="?attr/colorOutlineVariant" />
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:gravity="center_vertical"
+        android:minHeight="@dimen/row_min_height"
+        android:orientation="horizontal"
+        android:paddingHorizontal="@dimen/space_16"
+        android:paddingVertical="@dimen/space_12">
+
+        <FrameLayout
+            android:id="@+id/fl_pay_tile"
+            android:layout_width="@dimen/tile_size"
+            android:layout_height="@dimen/tile_size"
+            android:background="@drawable/bg_tile_neutral"
+            android:backgroundTint="?attr/colorSurfaceContainerHighest">
+
+            <ImageView
+                android:id="@+id/iv_pay_icon"
+                android:layout_width="@dimen/tile_glyph"
+                android:layout_height="@dimen/tile_glyph"
+                android:layout_gravity="center"
+                android:contentDescription="@string/pay_method_icon_cd"
+                app:srcCompat="@drawable/ic_pay_card"
+                app:tint="?attr/colorOnSurfaceVariant" />
+        </FrameLayout>
+
+        <TextView
+            android:id="@+id/tv_pay_label"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="@dimen/space_16"
+            android:layout_weight="1"
+            android:textAppearance="@style/TextAppearance.App.Body"
+            tools:text="СБП" />
+
+        <ImageView
+            android:id="@+id/iv_pay_chevron"
+            android:layout_width="20dp"
+            android:layout_height="20dp"
+            android:contentDescription="@string/pay_method_chevron_cd"
+            app:srcCompat="@drawable/ic_chevron_right"
+            app:tint="?attr/colorOnSurfaceVariant" />
+    </LinearLayout>
+</LinearLayout>

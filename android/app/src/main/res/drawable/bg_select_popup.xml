@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  THE SELECT POPUP BODY (handoff README §6, «Выбор из списка»).
+
+  SOLID, and §11 grabl 5 is the reason it is written down twice: the popup used
+  to be drawn with a translucent fill, which let the rows underneath read
+  straight through it. ?attr/colorSurfaceContainerHighest is #20242B on dark and
+  #232326 in mono — in both themes exactly the value §8 gives for «Фон окошка»,
+  and one full step above the section card's colorSurface it hangs over.
+
+  radius @dimen/radius_popup 16, stroke 1dp ?attr/colorOutline (#2A2E36 dark,
+  #38383C mono — again §8's own numbers). colorOutline and not
+  colorOutlineVariant: this flyout floats over content, so its edge is a real
+  boundary rather than a hairline between two things already touching.
+
+  The shadow is NOT here — a GradientDrawable cannot cast one. It comes from
+  @dimen/select_popup_elevation on the view, and this drawable's corners are
+  what the outline provider clips that shadow to.
+-->
+<shape xmlns:android="http://schemas.android.com/apk/res/android"
+    android:shape="rectangle">
+    <solid android:color="?attr/colorSurfaceContainerHighest" />
+    <corners android:radius="@dimen/radius_popup" />
+    <stroke
+        android:width="@dimen/stroke_hairline"
+        android:color="?attr/colorOutline" />
+</shape>

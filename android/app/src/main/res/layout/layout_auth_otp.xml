@@ -1,0 +1,137 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  ============================================================================
+  THE SIX-CELL CODE GROUP.  14-auth.md §7.
+  ============================================================================
+
+  Ported from the desktop's treatment, which has the right mechanics: THE CELLS
+  ARE DECORATION AND A SINGLE REAL INPUT IS THE SOURCE OF TRUTH. @id/otp_input
+  spans the whole group, is transparent, and is the only focusable, only
+  autofillable, only accessible node here — the cells are
+  importantForAccessibility="no" and are painted from the buffer.
+
+  That is what makes this both usable and accessible: TalkBack reads ONE field
+  named «Код из приложения, 6 цифр» instead of six anonymous boxes, a password
+  manager fills it in one go, and the 56dp-tall full-width input clears the 48dp
+  touch floor that six 41dp cells would not.
+
+  Cell width is 0dp + weight 1, so on a 320dp screen each cell is
+  (320 − 32 gutter − 20 gaps) / 6 ≈ 44dp and the group never scrolls sideways. At
+  font scale 200% the cell grows in HEIGHT (minHeight, never a fixed height) and
+  the tabular digit still fits the width.
+
+  The digits are TextAppearance.App.Numeric — Space Grotesk with tnum/lnum on —
+  so changing 111111 to 888888 moves nothing.
+
+  STATE, WITHOUT A NEW DRAWABLE. The next-to-fill cell and the error flash are
+  drawn by putting @drawable/focus_ring (R7's outer 2dp ring, the exact drawable
+  the design system already ships for this) in the cell's FOREGROUND and tinting
+  it: accent for next-to-fill, colorError for the 220ms error flash. The resting
+  cell keeps @drawable/bg_field, which is the field fill plus the 3.43:1 control
+  boundary. See LoginActivity.paintOtp().
+-->
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/otp_group"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:minHeight="@dimen/field_min_height">
+
+    <LinearLayout
+        android:id="@+id/otp_cells"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:baselineAligned="false"
+        android:importantForAccessibility="no"
+        android:orientation="horizontal">
+
+        <TextView
+            android:id="@+id/otp_cell_1"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:background="@drawable/bg_field"
+            android:gravity="center"
+            android:minHeight="@dimen/field_min_height"
+            android:textAppearance="@style/TextAppearance.App.Numeric"
+            tools:text="1" />
+
+        <TextView
+            android:id="@+id/otp_cell_2"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="@dimen/space_8"
+            android:layout_weight="1"
+            android:background="@drawable/bg_field"
+            android:gravity="center"
+            android:minHeight="@dimen/field_min_height"
+            android:textAppearance="@style/TextAppearance.App.Numeric"
+            tools:text="2" />
+
+        <TextView
+            android:id="@+id/otp_cell_3"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="@dimen/space_8"
+            android:layout_weight="1"
+            android:background="@drawable/bg_field"
+            android:gravity="center"
+            android:minHeight="@dimen/field_min_height"
+            android:textAppearance="@style/TextAppearance.App.Numeric"
+            tools:text="3" />
+
+        <TextView
+            android:id="@+id/otp_cell_4"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="@dimen/space_8"
+            android:layout_weight="1"
+            android:background="@drawable/bg_field"
+            android:gravity="center"
+            android:minHeight="@dimen/field_min_height"
+            android:textAppearance="@style/TextAppearance.App.Numeric"
+            tools:text="4" />
+
+        <TextView
+            android:id="@+id/otp_cell_5"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="@dimen/space_8"
+            android:layout_weight="1"
+            android:background="@drawable/bg_field"
+            android:gravity="center"
+            android:minHeight="@dimen/field_min_height"
+            android:textAppearance="@style/TextAppearance.App.Numeric"
+            tools:text="5" />
+
+        <TextView
+            android:id="@+id/otp_cell_6"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="@dimen/space_8"
+            android:layout_weight="1"
+            android:background="@drawable/bg_field"
+            android:gravity="center"
+            android:minHeight="@dimen/field_min_height"
+            android:textAppearance="@style/TextAppearance.App.Numeric"
+            tools:text="6" />
+    </LinearLayout>
+
+    <!-- The real field. Invisible ink on top of the cells, full bleed, one node. -->
+    <EditText
+        android:id="@+id/otp_input"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:background="@null"
+        android:contentDescription="@string/auth_2fa_a11y"
+        android:cursorVisible="false"
+        android:importantForAutofill="yes"
+        android:autofillHints="smsOTPCode"
+        android:imeOptions="actionDone"
+        android:inputType="number"
+        android:maxLength="6"
+        android:maxLines="1"
+        android:textColor="@android:color/transparent"
+        android:textCursorDrawable="@null"
+        tools:ignore="LabelFor" />
+</FrameLayout>
