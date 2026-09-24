@@ -221,3 +221,39 @@ jobs:
           read -r id tag <<< "$pc"
           gh api -X PATCH "repos/$GH_REPO/releases/$id" -f make_latest=true >/dev/null
           echo "Отметка «Latest» у выпуска для ПК $tag" >> "$GITHUB_STEP_SUMMARY"
+
+  # «Скачать для Android» в README ведёт на страницу выпуска по тегу: у GitHub нет адреса «последний
+  # выпуск для Android», /releases/latest — выпуск для ПК. Вышел новый выпуск — ссылка переезжает на
+  # него. Предварительные выпуски ссылку не трогают, как и выпуск старее того, на который она ведёт.
+  readme:
+    if: >-
+      github.event_name == 'release' && startsWith(github.event.release.tag_name, 'android-v')
+      && !github.event.release.prerelease && !contains(github.event.release.tag_name, '-rc')
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+
+      - name: Point the Android download link at the new release
+        env:
+          TAG: ${{ github.event.release.tag_name }}
+        run: |
+          set -euo pipefail
+          current="$(grep -oE 'releases/tag/android-v[0-9]+\.[0-9]+\.[0-9]+' README.md | head -n 1 | sed 's|releases/tag/||')" || true
+          if [ -n "$current" ] && [ "$(printf '%s\n%s\n' "${current#android-v}" "${TAG#android-v}" | sort -V | tail -n 1)" != "${TAG#android-v}" ]; then
+            echo "::notice::README уже ведёт на $current — он новее $TAG"
+            exit 0
+          fi
+          sed -i -E "s#releases/tag/android-v[0-9]+\.[0-9]+\.[0-9]+#releases/tag/$TAG#g" README.md
+          if git diff --quiet; then
+            echo "::notice::README уже ведёт на $TAG"
+            exit 0
+          fi
+          git config user.name erlish
+          git config user.email 90829910+s-erlish@users.noreply.github.com
+          git commit -qam "README: «Скачать для Android» ведёт на ${TAG#android-v}"
+          git push origin HEAD:main
+          echo "README: «Скачать для Android» ведёт на $TAG" >> "$GITHUB_STEP_SUMMARY"
