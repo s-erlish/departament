@@ -2,7 +2,7 @@
 
 VPN для Windows и Android: подключение к серверам вашей подписки одним нажатием.
 
-**[Скачать для Windows](https://github.com/s-erlish/departament/releases/latest/download/departament-setup.exe)** · **[Скачать для Android](https://github.com/s-erlish/departament/releases/tag/android-v1.0.4)** · [Все выпуски](https://github.com/s-erlish/departament/releases)
+**[Скачать для Windows](https://github.com/s-erlish/departament/releases/latest/download/departament-setup.exe)** · **[Скачать для Android](https://github.com/s-erlish/departament/releases/tag/android-v1.0.5)** · [Все выпуски](https://github.com/s-erlish/departament/releases)
 
 ## Возможности
 
@@ -26,7 +26,7 @@ VPN для Windows и Android: подключение к серверам ваш
 
 ## Android
 
-1. Откройте [выпуск для Android](https://github.com/s-erlish/departament/releases/tag/android-v1.0.4) и скачайте APK: для большинства телефонов последних лет подходит `departament_<версия>_arm64-v8a.apk`, а `departament_<версия>_universal.apk` — любому телефону.
+1. Откройте [выпуск для Android](https://github.com/s-erlish/departament/releases/tag/android-v1.0.5) и скачайте APK: для большинства телефонов последних лет подходит `departament_<версия>_arm64-v8a.apk`, а `departament_<версия>_universal.apk` — любому телефону.
 2. Откройте файл на телефоне и разрешите установку из этого источника, когда Android спросит.
 
 Новые версии приложение находит само: «Настройки» → «Проверить обновления». Оно скачивает APK из выпусков для Android, проверяет его и открывает установку. Серверы, подписка и вход при обновлении сохраняются.
