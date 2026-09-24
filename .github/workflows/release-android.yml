@@ -1,0 +1,223 @@
+name: Выпуск Android
+
+# Выпуск departament для Android: APK из android/ (сборка — android.yml) и отдельный релиз на странице
+# Releases. У программы для ПК выпуски свои («Выпуск», release.yml), номера версий у них не связаны.
+#
+# Как выпустить версию (подробно — RELEASING.md):
+#   • Actions → «Выпуск Android» → Run workflow → версия, например 1.2.3. Через 10–15 минут на странице
+#     Releases появится черновик «departament для Android 1.2.3» с APK. «Publish release» — и выпуск вышел.
+#   • Или сразу Releases → Draft a new release → тег android-v1.2.3 → Publish release. APK сборка
+#     приложит к выпуску сама через 10–15 минут.
+# Черновик можно пересобрать: запуск с тем же номером заменяет его новой сборкой. Опубликованный выпуск
+# не пересобирается: люди, возможно, уже скачали его файлы. Для исправления нужна новая версия.
+#
+# «ПОСЛЕДНИЙ ВЫПУСК» НА GITHUB ОСТАЁТСЯ ЗА ПК. Программа для ПК 1.0.4 и новее без предварительных
+# выпусков спрашивает у GitHub именно его (/releases/latest). Стань им выпуск для Android, программа
+# на ПК не увидела бы своих обновлений, пока не выйдет следующая версия для ПК. Поэтому после
+# публикации выпуска для Android отметка «Latest» возвращается последнему выпуску для ПК. Приложение
+# для Android на эту отметку не смотрит: оно ищет в списке выпусков теги android-v….
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: Версия для Android, например 1.2.3 (для предварительного выпуска 1.2.3-rc.1)
+        required: true
+        type: string
+  release:
+    types:
+      - published
+
+permissions:
+  contents: read
+
+concurrency:
+  group: release-android
+  cancel-in-progress: false
+
+jobs:
+  plan:
+    runs-on: ubuntu-latest
+    # Черновики выпусков видны только с правом записи. Без него проверка «такой выпуск уже есть»
+    # не заметила бы черновик, и повторный запуск сделал бы второй.
+    permissions:
+      contents: write
+    outputs:
+      go: ${{ steps.plan.outputs.go }}
+      mode: ${{ steps.plan.outputs.mode }}
+      tag: ${{ steps.plan.outputs.tag }}
+      version: ${{ steps.plan.outputs.version }}
+      replace: ${{ steps.plan.outputs.replace }}
+    steps:
+      - id: plan
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+          IN_VERSION: ${{ inputs.version }}
+          RELEASE_TAG: ${{ github.event.release.tag_name }}
+        run: |
+          set -euo pipefail
+          echo "go=false" >> "$GITHUB_OUTPUT"
+          if [ "$GITHUB_EVENT_NAME" = "release" ]; then
+            # Выпуск создан на странице Releases: собрать и приложить к нему APK.
+            mode=upload
+            tag="$RELEASE_TAG"
+            if [[ "$tag" != android-* ]]; then
+              echo "::notice::$tag — выпуск для ПК, Android его не касается"
+              exit 0
+            fi
+            version="${tag#android-}"
+            version="${version#[vV]}"
+          else
+            # Запуск из Actions: собрать и положить черновик, опубликует его владелец.
+            mode=draft
+            version="$(printf '%s' "$IN_VERSION" | tr -d '[:space:]')"
+            version="${version#android-}"
+            version="${version#[vV]}"
+            tag="android-v$version"
+          fi
+          # Строгая форма: по номеру приложение решает, новее ли выпуск, чем оно само.
+          if ! [[ "$version" =~ ^[0-9]+\.[0-9]+\.[0-9]+(-rc\.[0-9]+)?$ ]]; then
+            echo "::error::Версия '$version' не подходит: нужна вида 1.2.3 или 1.2.3-rc.1, тег выпуска — android-v1.2.3"
+            exit 1
+          fi
+          if [ "$mode" = upload ]; then
+            # Опубликовали черновик, который эта же сборка и сделала: APK уже на месте, собирать нечего.
+            assets=" $(gh release view "$tag" --json assets -q '[.assets[].name] | join(" ")') "
+            if [[ "$assets" == *" departament_${version}_universal.apk "* ]]; then
+              echo "::notice::У выпуска $tag APK уже есть, собирать нечего"
+              exit 0
+            fi
+          else
+            replace=false
+            if draft="$(gh release view "$tag" --json isDraft -q .isDraft 2>/dev/null)"; then
+              if [ "$draft" != "true" ]; then
+                echo "::error::Выпуск $tag уже опубликован. Укажите следующую версию."
+                exit 1
+              fi
+              # Черновик люди не видели и не скачивали: его можно заменить новой сборкой.
+              echo "::notice::Черновик $tag будет заменён новой сборкой"
+              replace=true
+            fi
+            if git ls-remote --exit-code --tags "https://github.com/$GH_REPO.git" "refs/tags/$tag" >/dev/null; then
+              echo "::error::Тег $tag уже есть. Укажите следующую версию."
+              exit 1
+            fi
+          fi
+          {
+            echo "go=true"
+            echo "mode=$mode"
+            echo "tag=$tag"
+            echo "version=$version"
+            echo "replace=${replace:-false}"
+          } >> "$GITHUB_OUTPUT"
+          echo "Выпуск Android $tag ($mode) из $GITHUB_SHA"
+
+  apk:
+    needs: plan
+    if: needs.plan.outputs.go == 'true'
+    uses: ./.github/workflows/android.yml
+    with:
+      version: ${{ needs.plan.outputs.version }}
+      package_release: true
+    secrets: inherit
+
+  publish:
+    needs: [plan, apk]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          sparse-checkout: release-notes
+
+      - uses: actions/download-artifact@v4
+        with:
+          name: android-release-assets
+
+      - name: Publish
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+          MODE: ${{ needs.plan.outputs.mode }}
+          TAG: ${{ needs.plan.outputs.tag }}
+          REPLACE: ${{ needs.plan.outputs.replace }}
+          VERSION: ${{ needs.plan.outputs.version }}
+        run: |
+          set -euo pipefail
+          # По одному APK на процессор и универсальный — приложение выберет свой.
+          shopt -s nullglob
+          files=(departament_"$VERSION"_*.apk)
+          if [ "${#files[@]}" -eq 0 ]; then
+            echo "::error::Нет APK версии $VERSION"
+            exit 1
+          fi
+
+          if [ "$MODE" = upload ]; then
+            gh release upload "$TAG" "${files[@]}" --clobber
+          else
+            body="$RUNNER_TEMP/notes.md"
+            {
+              if [ -f "release-notes/$TAG.md" ]; then
+                cat "release-notes/$TAG.md"
+              else
+                echo "Описание выпуска: что нового для людей. Отредактируйте его перед публикацией."
+              fi
+              printf '\n---\n\nПриложение распространяется по лицензии GPL-3.0.\n'
+            } > "$body"
+            if [ "$REPLACE" = "true" ]; then
+              # Пока шла сборка, черновик могли опубликовать: тогда его не трогаем.
+              if [ "$(gh release view "$TAG" --json isDraft -q .isDraft)" != "true" ]; then
+                echo "::error::Выпуск $TAG опубликован, пока шла сборка. Новая сборка не выложена."
+                exit 1
+              fi
+              gh release delete "$TAG" --yes
+            fi
+            flags=(--draft --latest=false --title "departament для Android $VERSION" --notes-file "$body")
+            [[ "$VERSION" == *-rc.* ]] && flags+=(--prerelease)
+            # Тег появится при публикации, на собранном коммите. Если токену сборки нельзя указать коммит,
+            # тег встанет на main в момент публикации.
+            if ! gh release create "$TAG" "${files[@]}" --target "$GITHUB_SHA" "${flags[@]}"; then
+              if gh release view "$TAG" >/dev/null 2>&1; then
+                gh release upload "$TAG" "${files[@]}" --clobber
+              else
+                echo "::warning::Коммит $GITHUB_SHA не удалось указать для тега: тег встанет на main при публикации"
+                gh release create "$TAG" "${files[@]}" "${flags[@]}"
+              fi
+            fi
+          fi
+          url="$(gh release view "$TAG" --json url -q .url)"
+          if [ "$MODE" = upload ]; then
+            echo "APK приложены к выпуску $TAG: $url" >> "$GITHUB_STEP_SUMMARY"
+          else
+            echo "Черновик $TAG готов: $url — откройте его и нажмите «Publish release»." >> "$GITHUB_STEP_SUMMARY"
+          fi
+
+  # Опубликовали выпуск для Android — отметка «Latest» возвращается последнему выпуску для ПК
+  # (почему — в шапке файла). Идёт и тогда, когда собирать было нечего.
+  keep-pc-latest:
+    if: github.event_name == 'release' && startsWith(github.event.release.tag_name, 'android-')
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Mark the newest PC release as latest
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+        run: |
+          set -euo pipefail
+          # Выпуски для ПК — теги v1.2.3 без хвоста -rc: только такой GitHub и отдаёт как «последний».
+          pc="$(gh api "repos/$GH_REPO/releases?per_page=100" --jq '
+            [.[] | select(.draft == false and .prerelease == false)
+                 | select(.tag_name | test("^v[0-9]+\\.[0-9]+\\.[0-9]+$"))]
+            | sort_by(.tag_name | ltrimstr("v") | split(".") | map(tonumber)) | last
+            | "\(.id) \(.tag_name)"')"
+          if [ -z "$pc" ] || [ "$pc" = "null null" ]; then
+            echo "::notice::Выпусков для ПК нет — возвращать отметку некому"
+            exit 0
+          fi
+          read -r id tag <<< "$pc"
+          gh api -X PATCH "repos/$GH_REPO/releases/$id" -f make_latest=true >/dev/null
+          echo "Отметка «Latest» у выпуска для ПК $tag" >> "$GITHUB_STEP_SUMMARY"

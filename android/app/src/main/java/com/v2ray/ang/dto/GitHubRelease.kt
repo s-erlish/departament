@@ -9,6 +9,8 @@ data class GitHubRelease(
     val body: String,
     @SerializedName("assets")
     val assets: List<Asset>,
+    @SerializedName("draft")
+    val draft: Boolean = false,
     @SerializedName("prerelease")
     val prerelease: Boolean = false,
     @SerializedName("published_at")

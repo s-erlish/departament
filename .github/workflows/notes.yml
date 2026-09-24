@@ -1,12 +1,21 @@
 name: Описание выпуска
 
-# Заменяет описание выпуска (вышедшего или черновика) текстом из release-notes/vX.Y.Z.md и той же
-# строкой о лицензии, что пишет «Выпуск». Файлы выпуска не трогает. Поправить описание можно и прямо на
+# Заменяет описание выпуска (вышедшего или черновика) текстом из release-notes/vX.Y.Z.md (для ПК) или
+# release-notes/android-vX.Y.Z.md (для Android) и той же строкой о лицензии, что пишет «Выпуск» или
+# «Выпуск Android». Файлы выпуска не трогает. Поправить описание можно и прямо на
 # странице выпуска карандашом Edit; этот запуск нужен, когда текст правят в репозитории.
 
 on:
   workflow_dispatch:
     inputs:
+      app:
+        description: Чей выпуск
+        required: true
+        type: choice
+        options:
+          - ПК
+          - Android
+        default: ПК
       version:
         description: Версия, например 1.0.0
         required: true
@@ -29,12 +38,20 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
           GH_REPO: ${{ github.repository }}
+          IN_APP: ${{ inputs.app }}
           IN_VERSION: ${{ inputs.version }}
         run: |
           set -euo pipefail
           version="$(printf '%s' "$IN_VERSION" | tr -d '[:space:]')"
+          version="${version#android-}"
           version="${version#[vV]}"
-          tag="v$version"
+          if [ "$IN_APP" = "Android" ]; then
+            tag="android-v$version"
+            license='Приложение распространяется по лицензии GPL-3.0.'
+          else
+            tag="v$version"
+            license='Программа распространяется по лицензии GPL-3.0.'
+          fi
           if [ ! -f "release-notes/$tag.md" ]; then
             echo "::error::Нет файла release-notes/$tag.md"
             exit 1
@@ -42,7 +59,7 @@ jobs:
           body="$RUNNER_TEMP/notes.md"
           {
             cat "release-notes/$tag.md"
-            printf '\n---\n\nПрограмма распространяется по лицензии GPL-3.0.\n'
+            printf '\n---\n\n%s\n' "$license"
           } > "$body"
           gh release edit "$tag" --notes-file "$body"
           echo "Описание $tag обновлено: $(gh release view "$tag" --json url -q .url)" >> "$GITHUB_STEP_SUMMARY"

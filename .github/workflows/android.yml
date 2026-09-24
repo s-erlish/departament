@@ -5,8 +5,11 @@ name: Сборка Android
 # версия — по тегу подмодуля android/AndroidLibXrayLite).
 #
 # Запускается на пуш в main и на запросы на слияние, когда меняется android/: тестовый APK для arm64
-# лежит в артефактах запуска (departament-android-apk). Её же вызывает выпуск (release.yml): тогда
-# собираются APK для всех процессоров и универсальный, и они уходят в релиз рядом с файлами для ПК.
+# лежит в артефактах запуска (departament-android-apk). Её же вызывает «Выпуск Android»
+# (release-android.yml): тогда собираются APK для всех процессоров и универсальный.
+#
+# НОМЕР ВЕРСИИ у Android свой, не такой, как у программы для ПК, и выпуски у них отдельные: у ПК тег
+# v1.2.3, у Android — android-v1.2.3. Тестовая сборка получает номер «<последний выпуск Android>-dev».
 #
 # ПОДПИСЬ. Android ставит обновление, только если оно подписано тем же ключом, что и установленное
 # приложение. Ключ выпуска — в секретах репозитория: APP_KEYSTORE_BASE64, APP_KEYSTORE_PASSWORD,
@@ -15,8 +18,7 @@ name: Сборка Android
 # (поверх выпуска такой APK не встанет, в имени файла -debugsigned), а выпуск не собирается вовсе.
 #
 # ИМЕНА ФАЙЛОВ — договор с приложением: departament_<версия>_<abi>.apk. По ним проверка обновлений
-# в приложении находит свой файл в выпуске (UpdateCheckerManager.selectAsset); файлы для ПК
-# называются иначе и ей не попадаются.
+# в приложении находит свой файл в выпуске (UpdateCheckerManager.selectAsset).
 
 on:
   push:
@@ -35,7 +37,7 @@ on:
   workflow_call:
     inputs:
       version:
-        description: Версия X.Y.Z или X.Y.Z-rc.N; пусто — «<последний выпуск>-dev»
+        description: Версия X.Y.Z или X.Y.Z-rc.N; пусто — «<последний выпуск Android>-dev»
         type: string
         required: false
         default: ''
@@ -52,7 +54,7 @@ jobs:
   apk:
     runs-on: ubuntu-latest
     steps:
-      # Полная история: номер тестовой сборки берётся из последнего тега выпуска, а версия ядра — из
+      # Полная история: номер тестовой сборки берётся из последнего тега android-v…, а версия ядра — из
       # тега подмодуля AndroidLibXrayLite.
       - name: Checkout
         uses: actions/checkout@v4
@@ -69,8 +71,8 @@ jobs:
           version="$(printf '%s' "$REQUESTED_VERSION" | tr -d '[:space:]')"
           version="${version#[vV]}"
           if [ -z "$version" ]; then
-            last="$(git describe --tags --abbrev=0 --match 'v[0-9]*' 2>/dev/null || echo v0.0.0)"
-            version="${last#v}-dev"
+            last="$(git describe --tags --abbrev=0 --match 'android-v[0-9]*' 2>/dev/null || echo android-v0.0.0)"
+            version="${last#android-v}-dev"
           fi
           if ! [[ "$version" =~ ^[0-9]+\.[0-9]+\.[0-9]+(-rc\.[0-9]+)?(-dev)?$ ]]; then
             echo "::error::Версия '$version' не подходит: нужна вида 1.2.3 или 1.2.3-rc.1"

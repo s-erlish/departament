@@ -1,13 +1,11 @@
 name: Выпуск
 
-# Выпуск departament для ПК и Android: сборка из кода этого репозитория (build.yml и android.yml) и
-# один релиз на странице Releases с файлами обеих программ под одним номером. Программы у людей читают
-# выпуски только отсюда и видят только опубликованные.
+# Выпуск departament для ПК: сборка из кода этого репозитория (build.yml) и релиз на странице Releases.
+# Программы у людей читают выпуски только отсюда и видят только опубликованные.
 #
 # Как выпустить версию (подробно — RELEASING.md):
 #   • Actions → «Выпуск» → Run workflow → версия, например 1.2.3. Через 10–15 минут на странице
-#     Releases появится черновик с установщиком и архивом обновления для ПК и APK для Android.
-#     «Publish release» — и выпуск вышел.
+#     Releases появится черновик с установщиком и архивом обновления. «Publish release» — и выпуск вышел.
 #   • Или сразу Releases → Draft a new release → тег v1.2.3 → Publish release. Установщик и архив
 #     обновления сборка приложит к выпуску сама через 10–15 минут.
 # Черновик можно пересобрать: запуск с тем же номером заменяет его новой сборкой. Опубликованный выпуск
@@ -58,6 +56,11 @@ jobs:
             # Выпуск создан на странице Releases: собрать и приложить к нему файлы.
             mode=upload
             tag="$RELEASE_TAG"
+            # Выпуск для Android (тег android-v…) собирает «Выпуск Android», программе для ПК тут делать нечего.
+            if [[ "$tag" == android-* ]]; then
+              echo "::notice::$tag — выпуск для Android, программа для ПК его не касается"
+              exit 0
+            fi
             version="${tag#[vV]}"
           else
             # Запуск из Actions: собрать и положить черновик, опубликует его владелец.
@@ -74,7 +77,7 @@ jobs:
           if [ "$mode" = upload ]; then
             # Опубликовали черновик, который эта же сборка и сделала: файлы уже на месте, собирать нечего.
             assets=" $(gh release view "$tag" --json assets -q '[.assets[].name] | join(" ")') "
-            if [[ "$assets" == *" departament-windows-x64.zip "* && "$assets" == *" departament-windows-x64.zip.sha256 "* && "$assets" == *" departament-setup.exe "* && "$assets" == *" departament_${version}_universal.apk "* ]]; then
+            if [[ "$assets" == *" departament-windows-x64.zip "* && "$assets" == *" departament-windows-x64.zip.sha256 "* && "$assets" == *" departament-setup.exe "* ]]; then
               echo "::notice::У выпуска $tag файлы уже есть, собирать нечего"
               exit 0
             fi
@@ -111,17 +114,8 @@ jobs:
       version: ${{ needs.plan.outputs.version }}
       package_release: true
 
-  android:
-    needs: plan
-    if: needs.plan.outputs.go == 'true'
-    uses: ./.github/workflows/android.yml
-    with:
-      version: ${{ needs.plan.outputs.version }}
-      package_release: true
-    secrets: inherit
-
   publish:
-    needs: [plan, build, android]
+    needs: [plan, build]
     runs-on: ubuntu-latest
     permissions:
       contents: write
@@ -133,10 +127,6 @@ jobs:
       - uses: actions/download-artifact@v4
         with:
           name: release-assets
-
-      - uses: actions/download-artifact@v4
-        with:
-          name: android-release-assets
 
       - name: Publish
         env:
@@ -152,14 +142,6 @@ jobs:
           set -euo pipefail
           sha256sum -c departament-windows-x64.zip.sha256
           files=(departament-setup.exe departament-windows-x64.zip departament-windows-x64.zip.sha256)
-          # APK для Android: по одному на процессор и универсальный — приложение выберет свой.
-          shopt -s nullglob
-          apks=(departament_"$VERSION"_*.apk)
-          if [ "${#apks[@]}" -eq 0 ]; then
-            echo "::error::Нет APK для Android версии $VERSION"
-            exit 1
-          fi
-          files+=("${apks[@]}")
 
           if [ "$MODE" = upload ]; then
             gh release upload "$TAG" "${files[@]}" --clobber

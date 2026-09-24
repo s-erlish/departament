@@ -190,11 +190,15 @@ object AppConfig {
      * below, the browser fallback when the in-app install path is unavailable, and the audit trail
      * in the log. Changing the owner or the name here retargets the whole updater in one edit.
      *
-     * Выпуски Android лежат в том же репозитории, что и программа для ПК: один выпуск — один номер
-     * и файлы обеих программ. Файлы для ПК называются иначе (departament-setup.exe и архив), и
-     * [com.v2ray.ang.handler.UpdateCheckerManager] их не выбирает.
+     * Выпуски Android лежат в том же репозитории, что и программа для ПК, но выходят отдельно и со
+     * своими номерами: у Android тег [APP_RELEASE_TAG_PREFIX]1.2.3, у ПК — v1.2.3. Поэтому
+     * [com.v2ray.ang.handler.UpdateCheckerManager] читает весь список выпусков и берёт только свои
+     * теги, а «последний выпуск» GitHub (/releases/latest) не спрашивает: он принадлежит ПК.
      */
     const val APP_RELEASE_REPO = "s-erlish/departament"
+
+    /** Начало тега выпуска для Android (android-v1.2.3). Выпуски с другими тегами — чужие. */
+    const val APP_RELEASE_TAG_PREFIX = "android-v"
 
     /**
      * The self-update feed: departament's own GitHub releases.
@@ -222,8 +226,11 @@ object AppConfig {
      */
     const val APP_API_URL = "https://api.github.com/repos/$APP_RELEASE_REPO/releases"
 
-    /** The releases page, for the browser fallback when the device refuses the in-app install. */
-    const val APP_RELEASES_URL = "$GITHUB_URL/$APP_RELEASE_REPO/releases/latest"
+    /**
+     * The releases page, for the browser fallback when the device refuses the in-app install.
+     * Filtered to Android releases: `/releases/latest` would open the release for the PC.
+     */
+    const val APP_RELEASES_URL = "$GITHUB_URL/$APP_RELEASE_REPO/releases?q=$APP_RELEASE_TAG_PREFIX&expanded=true"
 
     /** Customer support. Was upstream's GitHub issue tracker — a stranger's inbox for our users. */
     const val APP_ISSUES_URL = "https://t.me/departamentvpnbot"

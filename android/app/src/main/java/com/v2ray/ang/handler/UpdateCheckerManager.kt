@@ -10,7 +10,6 @@ import com.v2ray.ang.dto.CheckUpdateResult
 import com.v2ray.ang.dto.GitHubRelease
 import com.v2ray.ang.dto.UpdateFailure
 import com.v2ray.ang.dto.UrlContentRequest
-import com.v2ray.ang.extension.concatUrl
 import com.v2ray.ang.util.HttpUtil
 import com.v2ray.ang.util.JsonUtil
 import com.v2ray.ang.util.LogUtil
@@ -50,6 +49,9 @@ object UpdateCheckerManager {
 
     private const val TIMEOUT_MS = 15000
 
+    /** Releases per feed request: enough to reach past a run of PC releases to the newest Android one. */
+    private const val FEED_PAGE_SIZE = 100
+
     /** What GitHub answers for a repository that has published no release. Not an error. */
     private const val HTTP_NOT_FOUND = 404
     private const val HTTP_NO_CONTENT = 204
@@ -60,8 +62,11 @@ object UpdateCheckerManager {
     /**
      * Asks the feed whether there is a newer departament build than this one.
      *
-     * @param includePreRelease when true the newest release of any kind wins; otherwise only the
-     *   one GitHub marks `latest`.
+     * The feed is shared with the PC program, whose releases are tagged `v1.2.3` and own GitHub's
+     * `latest` mark, so the whole list is read and only [AppConfig.APP_RELEASE_TAG_PREFIX] tags count.
+     *
+     * @param includePreRelease when true the newest release of any kind wins; otherwise only
+     *   releases that are not pre-releases.
      * @throws UpdateFailure with the reason, never a bare exception.
      */
     suspend fun checkForUpdate(includePreRelease: Boolean = false): CheckUpdateResult =
@@ -69,13 +74,12 @@ object UpdateCheckerManager {
             val feed = AppConfig.APP_API_URL
             if (feed.isBlank()) throw UpdateFailure(UpdateFailure.Reason.NO_CHANNEL)
 
-            val url = if (includePreRelease) feed else feed.concatUrl("latest")
-            val response = fetch(url)
+            val response = fetch("$feed?per_page=$FEED_PAGE_SIZE")
 
             val release = parse(response, includePreRelease)
                 ?: throw UpdateFailure(UpdateFailure.Reason.NO_RELEASE)
 
-            val latestVersion = release.tagName.removePrefix("v").trim()
+            val latestVersion = release.version()
             LogUtil.i(
                 AppConfig.TAG,
                 "Update feed ${AppConfig.APP_RELEASE_REPO}: $latestVersion " +
@@ -97,7 +101,7 @@ object UpdateCheckerManager {
                 releaseNotes = release.body,
                 downloadUrl = asset.browserDownloadUrl,
                 assetName = asset.name,
-                isPreRelease = release.prerelease,
+                isPreRelease = release.isPreRelease(),
             )
         }
 
@@ -256,13 +260,22 @@ object UpdateCheckerManager {
         throw UpdateFailure(UpdateFailure.Reason.UNREACHABLE)
     }
 
+    /**
+     * The newest Android release in the list: our tag, published, with files, and — unless the user
+     * asked for them — not a pre-release (GitHub's mark *or* an `-rc` tail, so an rc published without
+     * the mark still reaches nobody who did not ask). Newest by version, not by list order: GitHub
+     * sorts by date, and a fix to an older line can be published after a newer version.
+     */
     private fun parse(response: String, includePreRelease: Boolean): GitHubRelease? =
-        if (includePreRelease) {
-            JsonUtil.fromJsonSafe(response, Array<GitHubRelease>::class.java)
-                ?.firstOrNull { it.assets.isNotEmpty() }
-        } else {
-            JsonUtil.fromJsonSafe(response, GitHubRelease::class.java)
-        }
+        JsonUtil.fromJsonSafe(response, Array<GitHubRelease>::class.java)
+            ?.filter { it.tagName.startsWith(AppConfig.APP_RELEASE_TAG_PREFIX) && !it.draft }
+            ?.filter { it.assets.isNotEmpty() && (includePreRelease || !it.isPreRelease()) }
+            ?.maxWithOrNull { a, b -> compareVersions(a.version(), b.version()) }
+
+    private fun GitHubRelease.version(): String =
+        tagName.removePrefix(AppConfig.APP_RELEASE_TAG_PREFIX).trim()
+
+    private fun GitHubRelease.isPreRelease(): Boolean = prerelease || version().contains('-')
 
     /**
      * Compares two dotted versions without trusting either of them to be well-formed.
