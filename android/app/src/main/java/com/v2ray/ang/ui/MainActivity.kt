@@ -42,6 +42,7 @@ import com.v2ray.ang.extension.toastError
 import com.v2ray.ang.handler.AngConfigManager
 import com.v2ray.ang.handler.MmkvManager
 import com.v2ray.ang.handler.SettingsChangeManager
+import com.v2ray.ang.handler.AppUpdateWatcher
 import com.v2ray.ang.handler.SubscriptionUpdater
 import com.v2ray.ang.template.TemplateManager
 import com.v2ray.ang.ui.component.SelectPopup
@@ -442,6 +443,8 @@ class MainActivity : HelperBaseActivity(), MainHost {
 
         setupViewModel()
         SubscriptionUpdater.sync()
+        // «Вышла версия X» раз в час в фоне, уведомлением. Уже стоящую проверку не сдвигает.
+        AppUpdateWatcher.schedule()
         mainViewModel.reloadServerList()
 
         checkAndRequestPermission(PermissionType.POST_NOTIFICATIONS) {
@@ -1672,6 +1675,22 @@ class MainActivity : HelperBaseActivity(), MainHost {
         // A login or a subscription change from another screen can add or remove the Аккаунт item
         // and, in the onboarding state, the bar itself.
         refreshNavGates()
+        // Новая версия: точка на «Настройках» по тому, что уже известно, и проверка при заходе — не
+        // чаще раза в час. Ответ перерисовывает все три места, где о версии говорится.
+        paintNavUpdateBadge()
+        AppUpdateWatcher.checkOnLaunch(lifecycleScope) {
+            paintNavUpdateBadge()
+            homeFragment?.refreshUpdateCta()
+            settingsFragment?.paintUpdateRow()
+        }
+    }
+
+    /** The accent dot on the Настройки tab while a newer version of the app is out. */
+    private fun paintNavUpdateBadge() {
+        val available = AppUpdateWatcher.availableVersion() != null
+        binding.navSettingsBadge.isVisible = available
+        binding.navSettings.contentDescription =
+            if (available) getString(R.string.nav_settings_update_badge) else null
     }
 
     override fun onCreateOptionsMenu(menu: Menu): Boolean {

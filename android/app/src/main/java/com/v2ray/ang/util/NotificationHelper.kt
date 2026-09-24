@@ -3,6 +3,7 @@ package com.v2ray.ang.util
 import android.app.Notification
 import android.app.NotificationChannel
 import android.app.NotificationManager
+import android.app.PendingIntent
 import android.app.Service
 import android.content.Context
 import android.os.Build
@@ -39,6 +40,27 @@ object NotificationHelper {
         val notificationManager = getNotificationManager(context)
         val builder = buildNotificationBuilder(channelType, context, title, content)
         notificationManager.notify(channelType.notificationId, builder.build())
+    }
+
+    /**
+     * «Доступна версия X». Unlike the service notifications this helper otherwise posts, it is heard
+     * (once — see [NotificationChannelType.APP_UPDATE]), a tap on it opens the update screen, and the
+     * tap also clears it.
+     */
+    fun notifyAppUpdate(context: Context, title: String, content: String, tap: PendingIntent) {
+        val channelType = NotificationChannelType.APP_UPDATE
+        ensureChannelCreated(channelType, context)
+        val channelId = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) channelType.channelId else ""
+        val builder = NotificationCompat.Builder(context, channelId)
+            .setSmallIcon(R.drawable.ic_stat_name)
+            .setContentTitle(title)
+            .setContentText(content)
+            .setContentIntent(tap)
+            .setAutoCancel(true)
+            .setOnlyAlertOnce(true)
+            .setPriority(NotificationCompat.PRIORITY_DEFAULT)
+            .setCategory(NotificationCompat.CATEGORY_RECOMMENDATION)
+        getNotificationManager(context).notify(channelType.notificationId, builder.build())
     }
 
     /**

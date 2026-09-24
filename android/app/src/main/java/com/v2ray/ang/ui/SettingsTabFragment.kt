@@ -21,6 +21,7 @@ import com.v2ray.ang.databinding.FragmentSettingsTabBinding
 import com.v2ray.ang.enums.PingMethod
 import com.v2ray.ang.extension.toast
 import com.v2ray.ang.extension.toastError
+import com.v2ray.ang.handler.AppUpdateWatcher
 import com.v2ray.ang.handler.MmkvManager
 import com.v2ray.ang.handler.SettingsManager
 import com.v2ray.ang.handler.SubscriptionUpdater
@@ -106,6 +107,17 @@ class SettingsTabFragment : BaseFragment<FragmentSettingsTabBinding>() {
     override fun onResume() {
         super.onResume()
         bindSettingsState()
+        paintUpdateRow()
+    }
+
+    /** «Доступна версия X» under «Проверить обновления», while [AppUpdateWatcher] knows of one. */
+    fun paintUpdateRow() {
+        if (view == null) return
+        val version = AppUpdateWatcher.availableVersion()
+        binding.tvCheckUpdateAvailable.isVisible = version != null
+        if (version != null) {
+            binding.tvCheckUpdateAvailable.text = getString(R.string.settings_update_available, version)
+        }
     }
 
     /**

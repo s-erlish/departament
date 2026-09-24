@@ -24,6 +24,14 @@
     <!-- Channel names, as the user reads them in Android's own notification settings. -->
     <string name="notification_channel_subscription">Обновление подписки</string>
     <string name="notification_channel_core_test">Проверка серверов</string>
+    <string name="notification_channel_app_update">Новая версия приложения</string>
+    <string name="app_update_notification_title">Доступна версия %1$s</string>
+    <string name="app_update_notification_text">Нажмите, чтобы скачать и установить</string>
+    <string name="home_update_cta_title">Вышла версия %1$s</string>
+    <string name="home_update_cta_action">Обновить</string>
+    <string name="home_update_cta_dismiss">Скрыть до следующей версии</string>
+    <string name="settings_update_available">Вышла %1$s</string>
+    <string name="nav_settings_update_badge">Настройки, доступно обновление</string>
     <!-- The ongoing VPN notification, expanded: the live rate and nothing else. -->
     <string name="notification_speed" translatable="false">↓ %1$s   ↑ %2$s</string>
     <string name="toast_permission_denied">Разрешение не получено</string>

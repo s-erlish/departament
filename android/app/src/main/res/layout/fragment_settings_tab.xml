@@ -1743,9 +1743,26 @@
                         android:layout_width="0dp"
                         android:layout_height="wrap_content"
                         android:layout_marginStart="@dimen/space_16"
+                        android:layout_marginEnd="@dimen/space_12"
                         android:layout_weight="1"
                         android:text="@string/settings_check_update"
                         android:textAppearance="@style/TextAppearance.App.Body" />
+
+                    <!-- The new version as the row's VALUE, in the accent, the way «О приложении»
+                         carries the installed one — not as a second line: every row on this tab is
+                         one height (see the class comment in SettingsTabFragment). Shown while
+                         AppUpdateWatcher knows of a newer version (paintUpdateRow). -->
+                    <TextView
+                        android:id="@+id/tv_check_update_available"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:ellipsize="end"
+                        android:maxLines="1"
+                        android:textAppearance="@style/TextAppearance.App.Subtitle"
+                        android:textColor="?attr/colorPrimary"
+                        android:visibility="gone"
+                        tools:text="Вышла 1.0.1"
+                        tools:visibility="visible" />
 
                     <ImageView
                         android:layout_width="18dp"

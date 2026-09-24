@@ -21,6 +21,7 @@ import com.v2ray.ang.dto.CheckUpdateResult
 import com.v2ray.ang.dto.UpdateFailure
 import com.v2ray.ang.extension.toast
 import com.v2ray.ang.handler.MmkvManager
+import com.v2ray.ang.handler.AppUpdateWatcher
 import com.v2ray.ang.handler.UpdateCheckerManager
 import com.v2ray.ang.ui.component.EmptyStateBinder
 import com.v2ray.ang.ui.component.Haptic
@@ -180,6 +181,8 @@ class CheckUpdateActivity : BaseActivity() {
         job = lifecycleScope.launch {
             try {
                 val result = UpdateCheckerManager.checkForUpdate(includePreRelease())
+                // Главная и «Настройки» говорят о той же версии, что нашёл этот экран.
+                AppUpdateWatcher.remember(result.latestVersion?.takeIf { result.hasUpdate })
                 if (result.hasUpdate) {
                     offer = result
                     showUpdateAvailable(result)

@@ -224,13 +224,29 @@
                         android:paddingBottom="9dp"
                         android:stateListAnimator="@anim/nav_press">
 
-                        <ImageView
-                            android:id="@+id/nav_settings_icon"
+                        <!-- The glyph plus an 8dp accent dot at its corner while a new version
+                             of the app is out (MainActivity.paintNavUpdateBadge). -->
+                        <FrameLayout
                             android:layout_width="26dp"
-                            android:layout_height="26dp"
-                            android:importantForAccessibility="no"
-                            app:srcCompat="@drawable/ic_nav_settings"
-                            app:tint="?attr/colorOnSurfaceVariant" />
+                            android:layout_height="26dp">
+
+                            <ImageView
+                                android:id="@+id/nav_settings_icon"
+                                android:layout_width="26dp"
+                                android:layout_height="26dp"
+                                android:importantForAccessibility="no"
+                                app:srcCompat="@drawable/ic_nav_settings"
+                                app:tint="?attr/colorOnSurfaceVariant" />
+
+                            <View
+                                android:id="@+id/nav_settings_badge"
+                                android:layout_width="8dp"
+                                android:layout_height="8dp"
+                                android:layout_gravity="top|end"
+                                android:background="@drawable/bg_nav_badge"
+                                android:importantForAccessibility="no"
+                                android:visibility="gone" />
+                        </FrameLayout>
 
                         <TextView
                             android:id="@+id/nav_settings_label"

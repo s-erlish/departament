@@ -13,11 +13,13 @@ import com.v2ray.ang.R
  * Service» as English literals here, so a Russian-only product listed two English service names in
  * the system UI. They are resources now, so they speak the interface's language like everything else.
  *
- * **THE SHADE CARRIES ONE THING FROM THIS APP, AND IT IS THE ПОДПИСКА REFRESH.** The owner, looking
- * at «Запущено проверок: 10 / 10» on his lock screen: «переделать уведомления в шторке, этого так
- * быть не должно, там просто должно быть обновление подписки и все». That counter was the latency
+ * **THE SHADE CARRIES TWO THINGS FROM THIS APP: THE ПОДПИСКА REFRESH AND A NEW VERSION.** The owner,
+ * looking at «Запущено проверок: 10 / 10» on his lock screen: «переделать уведомления в шторке, этого
+ * так быть не должно, там просто должно быть обновление подписки и все». That counter was the latency
  * check's internal progress, pushed to the shade several times a second by a batch the user had not
- * started — the провайдер refresh runs it unattended. It is gone; see [CORE_TEST].
+ * started — the провайдер refresh runs it unattended. It is gone; see [CORE_TEST]. The new version
+ * was added later, by the owner too: «и в уведомлениях тоже чтобы приходило … чтобы писало, что
+ * доступно обновление» — see [APP_UPDATE].
  */
 enum class NotificationChannelType(
     val channelId: String,
@@ -36,6 +38,18 @@ enum class NotificationChannelType(
         channelNameRes = R.string.notification_channel_subscription,
         notificationId = 13,
         importance = NotificationManager.IMPORTANCE_LOW,
+    ),
+
+    /**
+     * «Доступна версия X»: posted by the hourly check (AppUpdateWatcher) once per version, and only
+     * when the app has not already shown it on Главная. DEFAULT, so it is heard once — it is news the
+     * person has to act on, unlike the silent подписка refresh.
+     */
+    APP_UPDATE(
+        channelId = "app_update_channel",
+        channelNameRes = R.string.notification_channel_app_update,
+        notificationId = 14,
+        importance = NotificationManager.IMPORTANCE_DEFAULT,
     ),
 
     /**

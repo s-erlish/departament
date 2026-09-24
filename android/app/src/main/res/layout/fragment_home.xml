@@ -259,6 +259,88 @@
         </LinearLayout>
 
         <!--
+          «Вышла версия X» — the owner: «чтобы при заходе показывало, что вышло обновление».
+          Same shape as the Telegram banner above (card, 40dp-tile glyph, a ✕ beside a row that is
+          itself the action): the whole banner opens the update screen, the ✕ hides it until the
+          NEXT version. HomeFragment.paintUpdateCta owns the visibility; AppUpdateWatcher owns the
+          version. The second line is the verb, in the accent, so the banner reads as an action and
+          not as a status.
+        -->
+        <LinearLayout
+            android:id="@+id/cta_update"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="@dimen/screen_gutter"
+            android:layout_marginTop="@dimen/space_8"
+            android:layout_marginEnd="@dimen/screen_gutter"
+            android:background="@drawable/bg_server_card"
+            android:baselineAligned="false"
+            android:clickable="true"
+            android:focusable="true"
+            android:gravity="center_vertical"
+            android:minHeight="@dimen/row_min_height"
+            android:orientation="horizontal"
+            android:paddingStart="@dimen/space_12"
+            android:paddingTop="@dimen/space_8"
+            android:paddingEnd="@dimen/space_4"
+            android:paddingBottom="@dimen/space_8"
+            android:stateListAnimator="@anim/press_scale"
+            android:visibility="gone"
+            tools:visibility="visible">
+
+            <FrameLayout
+                android:layout_width="@dimen/tile_size"
+                android:layout_height="@dimen/tile_size"
+                android:background="@drawable/bg_tile_neutral"
+                android:backgroundTint="?attr/colorSurfaceContainerHighest">
+
+                <ImageView
+                    android:layout_width="@dimen/tile_glyph"
+                    android:layout_height="@dimen/tile_glyph"
+                    android:layout_gravity="center"
+                    android:importantForAccessibility="no"
+                    app:srcCompat="@drawable/ic_cloud_download_24dp"
+                    app:tint="?attr/colorPrimary" />
+            </FrameLayout>
+
+            <LinearLayout
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="@dimen/space_12"
+                android:layout_weight="1"
+                android:orientation="vertical">
+
+                <TextView
+                    android:id="@+id/tv_cta_update_title"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:textAppearance="@style/TextAppearance.App.Title"
+                    tools:text="Вышла версия 1.0.1" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="2dp"
+                    android:text="@string/home_update_cta_action"
+                    android:textAppearance="@style/TextAppearance.App.Subtitle"
+                    android:textColor="?attr/colorPrimary" />
+            </LinearLayout>
+
+            <TextView
+                android:id="@+id/btn_cta_update_dismiss"
+                android:layout_width="@dimen/view_height_dp48"
+                android:layout_height="@dimen/view_height_dp48"
+                android:background="@null"
+                android:clickable="true"
+                android:contentDescription="@string/home_update_cta_dismiss"
+                android:focusable="true"
+                android:gravity="center"
+                android:text="✕"
+                android:textAppearance="@style/TextAppearance.App.Subtitle"
+                android:textColor="?attr/colorOnSurfaceVariant" />
+        </LinearLayout>
+
+        <!--
           THERE IS NO HAIRLINE HERE ANY MORE, and its removal is the owner's:
           «полоска появляется под плюсиком и над кнопкой подключения».
 

@@ -285,7 +285,7 @@ object UpdateCheckerManager {
      * that exception surfaced as «не удалось проверить обновления», i.e. a tagging typo looked
      * exactly like a network outage. Non-numeric tails are ignored; a missing component is 0.
      */
-    private fun compareVersions(a: String, b: String): Int {
+    internal fun compareVersions(a: String, b: String): Int {
         val left = a.split('.')
         val right = b.split('.')
         for (i in 0 until maxOf(left.size, right.size)) {

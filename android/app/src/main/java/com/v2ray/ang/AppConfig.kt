@@ -96,6 +96,18 @@ object AppConfig {
     const val PREF_MODE = "pref_mode"
     const val PREF_IS_BOOTED = "pref_is_booted"
     const val PREF_CHECK_UPDATE_PRE_RELEASE = "pref_check_update_pre_release"
+
+    /** Новая версия, которую нашла последняя проверка обновлений (AppUpdateWatcher). */
+    const val PREF_APP_UPDATE_VERSION = "pref_app_update_version"
+
+    /** Версия, о которой уже сказали — уведомлением или плашкой на главной. Второй раз не говорим. */
+    const val PREF_APP_UPDATE_ANNOUNCED = "pref_app_update_announced"
+
+    /** Версия, плашку которой закрыли крестиком. Следующая версия плашку вернёт. */
+    const val PREF_APP_UPDATE_DISMISSED = "pref_app_update_dismissed"
+
+    /** Когда последний раз спрашивали ленту выпусков, мс. */
+    const val PREF_APP_UPDATE_CHECKED_AT = "pref_app_update_checked_at"
     const val PREF_GEO_FILES_SOURCES = "pref_geo_files_sources"
     const val PREF_USE_HEV_TUNNEL = "pref_use_hev_tunnel_v2"
     const val PREF_HEV_TUNNEL_LOGLEVEL = "pref_hev_tunnel_loglevel"
