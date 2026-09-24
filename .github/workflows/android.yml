@@ -216,7 +216,8 @@ jobs:
           set -euo pipefail
           for apk in dist/departament_*.apk; do
             name=$(basename "$apk")
-            abi=${name%.apk}; abi=${abi%-debugsigned}; abi=${abi##*_}
+            # departament_<версия>_<abi>.apk: в версии «_» не бывает, а в abi бывает (x86_64).
+            abi=${name%.apk}; abi=${abi%-debugsigned}; abi=${abi#departament_*_}
             if [ "$abi" = "universal" ]; then pattern='lib/[a-z0-9_-]*/'; else pattern="lib/$abi/"; fi
             for lib in libhev-socks5-tunnel.so libgojni.so; do
               unzip -l "$apk" | grep -qE "$pattern$lib" \
