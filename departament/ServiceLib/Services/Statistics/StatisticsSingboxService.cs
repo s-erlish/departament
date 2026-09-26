@@ -20,7 +20,7 @@ public class StatisticsSingboxService
         _ = Task.Run(Run);
     }
 
-    // idle/perf B2: cadence when sing-box is the active core AND the window is visible (1 s speed);
+    // idle/perf B2: retry cadence while sing-box is the active core (connect / reconnect the socket);
     // idle/perf B2: back-off cadence when sing-box is NOT running so the loop stops waking every
     // second (and holding a websocket) for the whole app lifetime while disconnected / Xray-active.
     private const int ActiveDelayMs = 1000;
@@ -100,14 +100,11 @@ public class StatisticsSingboxService
                     continue;
                 }
 
-                // idle/perf B2+B5: hidden to tray OR minimized → the sample is discarded downstream,
-                // so don't pump traffic frames (read/parse/marshal). The socket is left open and reads
-                // resume on the next visible tick.
-                if (AppManager.Instance.IsUiHidden)
-                {
-                    continue;
-                }
-
+                //  Читаем и пока окно спрятано. sing-box шлёт замер каждую секунду, читают его или нет, и
+                //  раньше, пока окно было в трее, непрочитанные копились в сокете: возвращение после
+                //  долгого простоя начиналось с тысяч устаревших замеров разом, и каждый уходил на экран.
+                //  Прочитанный в трее замер идёт только в итог за день (StatisticsManager), экран его
+                //  отбрасывает (MainWindowViewModel.UpdateStatisticsHandler).
                 var buffer = new byte[1024];
                 var res = await webSocket.ReceiveAsync(new ArraySegment<byte>(buffer), CancellationToken.None);
                 while (!res.CloseStatus.HasValue)
@@ -125,9 +122,7 @@ public class StatisticsSingboxService
                             ProxyDown = (long)(down / 1024)
                         });
                     }
-                    // Stop draining the moment the app exits or goes hidden/minimized; the outer loop
-                    // re-guards (idle back-off + hidden skip) instead of blocking on ReceiveAsync.
-                    if (_exitFlag || AppManager.Instance.IsUiHidden)
+                    if (_exitFlag)
                     {
                         break;
                     }

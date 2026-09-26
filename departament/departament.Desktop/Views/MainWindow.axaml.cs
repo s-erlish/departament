@@ -1,3 +1,4 @@
+using System.Diagnostics;
 using System.Reactive.Disposables;
 using Avalonia.Animation;
 using Avalonia.Animation.Easings;
@@ -2553,6 +2554,7 @@ public partial class MainWindow : WindowBase<MainWindowViewModel>
         var bl = blShow ?? (!IsVisible || WindowState == WindowState.Minimized);
         if (bl)
         {
+            var trayStay = EndTrayStay();
             //  Геометрию возвращаем ДО показа, пока окно ещё скрыто. Раньше она ставилась после Show():
             //  окно сперва проявлялось в том размере, какой дала система (иногда развёрнутым), раскладка
             //  успевала перестроиться под него, а потом ещё раз под прежний размер. Две полные раскладки
@@ -2586,6 +2588,10 @@ public partial class MainWindow : WindowBase<MainWindowViewModel>
             }
             Activate();
             Focus();
+            if (trayStay is { } stay)
+            {
+                LogBackFromTray(stay);
+            }
         }
         else
         {
@@ -2614,9 +2620,102 @@ public partial class MainWindow : WindowBase<MainWindowViewModel>
                 }
                 Hide();
             }
+            BeginTrayStay();
         }
 
         AppManager.Instance.ShowInTaskbar = bl;
+    }
+
+    //  Окно в трее: с какого момента и сколько памяти держала программа, когда осела там
+    //  (SettleInTrayAsync), — для строки в журнале при возвращении. 0 — окно не в трее.
+    private long _trayStayStart;
+    private long _trayStayWorkingSet;
+    private CancellationTokenSource? _traySettleCts;
+
+    //  Через сколько после ухода в трей окно «оседает» там: скрыли и тут же вернули — осадка не нужна.
+    private static readonly TimeSpan TraySettleDelay = TimeSpan.FromSeconds(10);
+
+    /// <summary>
+    /// Окно ушло в трей. Если через <see cref="TraySettleDelay"/> оно всё ещё там — осадка
+    /// (<see cref="SettleInTrayAsync"/>). Лаг при возвращении из трея после долгого простоя — это
+    /// чтение с диска памяти, которую Windows у спрятанного окна отобрала (WorkingSetGuard).
+    /// </summary>
+    private void BeginTrayStay()
+    {
+        if (_trayStayStart == 0)
+        {
+            _trayStayStart = Environment.TickCount64;
+            _trayStayWorkingSet = Environment.WorkingSet;
+        }
+        _traySettleCts?.Cancel();
+        var cts = _traySettleCts = new CancellationTokenSource();
+        _ = SettleInTrayAsync(cts.Token);
+    }
+
+    /// <summary>
+    /// Полная сборка мусора со сжатием кучи и возвратом освободившегося системе — всё, что окно набрало
+    /// за показ и что в трее не нужно (на стенде — с 355 до 335 МБ), — и на Windows защита оставшегося от
+    /// выгрузки на диск (<see cref="WorkingSetGuard"/>): после сборки защищается только живое, то, что
+    /// окну понадобится. Идёт в фоне; окно в это время спрятано, так что пауза сборки никому не видна.
+    /// </summary>
+    private async Task SettleInTrayAsync(CancellationToken ct)
+    {
+        try
+        {
+            await Task.Delay(TraySettleDelay, ct).ConfigureAwait(false);
+            GC.Collect(2, GCCollectionMode.Aggressive, blocking: true, compacting: true);
+            if (ct.IsCancellationRequested)
+            {
+                return;
+            }
+            Interlocked.Exchange(ref _trayStayWorkingSet, Environment.WorkingSet);
+            if (OperatingSystem.IsWindows())
+            {
+                WorkingSetGuard.Apply();
+            }
+        }
+        catch (OperationCanceledException)
+        {
+        }
+        catch (Exception ex)
+        {
+            Logging.SaveLog("TraySettle", ex);
+        }
+    }
+
+    /// <summary>
+    /// Окно возвращается: осадку отменить, пребывание в трее закрыть — до Show(), чтобы в «окно готово
+    /// через» вошла и раскладка, которую Show() делает сразу. null — окно не было в трее.
+    /// </summary>
+    private (long HiddenMs, long TrayWorkingSet, long WorkingSet, long ShowStarted)? EndTrayStay()
+    {
+        _traySettleCts?.Cancel();
+        _traySettleCts = null;
+        if (_trayStayStart == 0)
+        {
+            return null;
+        }
+        var stay = (Environment.TickCount64 - _trayStayStart, Interlocked.Read(ref _trayStayWorkingSet),
+            Environment.WorkingSet, Stopwatch.GetTimestamp());
+        _trayStayStart = 0;
+        return stay;
+    }
+
+    /// <summary>
+    /// Строка в журнале о возвращении из трея: сколько окно там пробыло, сколько памяти держала
+    /// программа в трее и сколько у неё осталось к возвращению (заметно меньше — система выгружала её на
+    /// диск), и через сколько окно было нарисовано и снова отвечало. По ней видно, откуда взялся лаг,
+    /// если он всё же есть.
+    /// </summary>
+    private void LogBackFromTray((long HiddenMs, long TrayWorkingSet, long WorkingSet, long ShowStarted) stay)
+    {
+        RequestAnimationFrame(_ => Dispatcher.UIThread.Post(() =>
+        {
+            var ready = (long)Stopwatch.GetElapsedTime(stay.ShowStarted).TotalMilliseconds;
+            var hidden = stay.HiddenMs >= 60_000 ? $"{stay.HiddenMs / 60_000} мин" : $"{stay.HiddenMs / 1000} с";
+            Logging.SaveLog($"Окно из трея: пробыло там {hidden}, память программы в трее {stay.TrayWorkingSet >> 20} МБ, "
+                + $"к возвращению {stay.WorkingSet >> 20} МБ, окно готово через {ready} мс");
+        }, DispatcherPriority.Background));
     }
 
     //  Значок в трее — вместе с первым кадром окна, не раньше (App.ShowTrayIcon). Кадр ловим через
