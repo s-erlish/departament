@@ -7,7 +7,6 @@ import android.app.PendingIntent
 import android.app.Service
 import android.content.Context
 import android.content.Intent
-import android.graphics.Color
 import android.os.Build
 import androidx.annotation.RequiresApi
 import androidx.core.app.NotificationCompat
@@ -271,7 +270,9 @@ object NotificationManager {
             // альфы и красит setColor'ом. Одного раза достаточно.
             .setColor(ContextCompat.getColor(service, R.color.notification_badge))
             .setContentTitle(shadeTitle)
-            .setPriority(NotificationCompat.PRIORITY_LOW)
+            // Высший приоритет: в верхнем разделе шторки строка встаёт над обычными уведомлениями
+            // той же важности (на Android 7, где каналов нет, это вообще единственный порядок).
+            .setPriority(NotificationCompat.PRIORITY_MAX)
             .setOngoing(true)
             .setOnlyAlertOnce(true)
             .setContentIntent(contentPendingIntent)
@@ -403,7 +404,7 @@ object NotificationManager {
             .setSmallIcon(R.drawable.ic_stat_name)
             .setColor(ContextCompat.getColor(service, R.color.notification_badge))
             .setContentTitle(service.getString(R.string.app_name))
-            .setPriority(NotificationCompat.PRIORITY_LOW)
+            .setPriority(NotificationCompat.PRIORITY_MAX)
             .setOngoing(true)
             .setOnlyAlertOnce(true)
             .build()
@@ -448,16 +449,34 @@ object NotificationManager {
     private fun createNotificationChannel(): String {
         val channelId = AppConfig.RAY_NG_CHANNEL_ID
         val channelName = AppConfig.RAY_NG_CHANNEL_NAME
-        // IMPORTANCE_LOW keeps the ongoing notification pinned and visible (with the live
-        // uptime chronometer) while staying silent.
+        // IMPORTANCE_DEFAULT, А НЕ LOW. Владелец: «уведомление впн вниз куда-то уходит, хотел бы
+        // чтобы оно в самом верху было». Шторку Android делит по важности канала: всё, что ниже
+        // DEFAULT, уходит в раздел «Без звука» под остальными уведомлениями, и строка подключения
+        // терялась под шагомером и чатами. DEFAULT ставит её в верхний раздел, а тихой она остаётся:
+        // у канала нет звука и вибрации, и строка всё равно звучит не больше раза (setOnlyAlertOnce).
+        // Всплывающим баннером DEFAULT не бывает — это только у HIGH.
         val chan = NotificationChannel(
             channelId,
-            channelName, NotificationManager.IMPORTANCE_LOW
+            channelName, NotificationManager.IMPORTANCE_DEFAULT
         )
-        chan.lightColor = Color.DKGRAY
+        chan.setSound(null, null)
+        chan.enableVibration(false)
+        chan.enableLights(false)
         chan.setShowBadge(false)
         chan.lockscreenVisibility = Notification.VISIBILITY_PRIVATE
-        getNotificationManager()?.createNotificationChannel(chan)
+        getNotificationManager()?.let { manager ->
+            // Прежний канал (LOW) — прочь, иначе в настройках уведомлений висели бы два канала на одно.
+            // Отдельно от создания: канал, на котором ещё висит строка работающей службы, Android
+            // удалить не даёт (SecurityException), а без нового канала служба не вышла бы на передний план.
+            try {
+                if (manager.getNotificationChannel(AppConfig.RAY_NG_CHANNEL_ID_LEGACY) != null) {
+                    manager.deleteNotificationChannel(AppConfig.RAY_NG_CHANNEL_ID_LEGACY)
+                }
+            } catch (e: Exception) {
+                LogUtil.w(AppConfig.TAG, "Old notification channel is still in use; leaving it", e)
+            }
+            manager.createNotificationChannel(chan)
+        }
         return channelId
     }
 

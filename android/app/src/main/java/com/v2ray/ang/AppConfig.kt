@@ -353,8 +353,13 @@ object AppConfig {
      */
     const val MSG_STATE_SERVERS_CHANGED = 81
 
-    /** Notification channel IDs and names. */
-    const val RAY_NG_CHANNEL_ID = "DEPARTAMENT_VPN_CH_ID"
+    /**
+     * Канал уведомления о подключении. Идентификатор сменился вместе с важностью канала: её задают при
+     * создании, и потом приложение её уже не меняет, так что поднять уведомление можно только новым
+     * каналом (NotificationManager.createNotificationChannel). Прежний канал удаляется.
+     */
+    const val RAY_NG_CHANNEL_ID = "DEPARTAMENT_VPN_CH_V2"
+    const val RAY_NG_CHANNEL_ID_LEGACY = "DEPARTAMENT_VPN_CH_ID"
     const val RAY_NG_CHANNEL_NAME = "departament VPN"
 
     /** Protocols Scheme **/
