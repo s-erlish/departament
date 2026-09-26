@@ -70,7 +70,7 @@
                 android:id="@+id/tv_offer_whats_new_title"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="@dimen/space_32"
+                android:layout_marginTop="@dimen/space_24"
                 android:paddingStart="@dimen/screen_gutter"
                 android:paddingEnd="@dimen/screen_gutter"
                 android:text="@string/update_offer_whats_new"

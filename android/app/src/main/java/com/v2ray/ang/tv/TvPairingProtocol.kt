@@ -2,7 +2,10 @@ package com.v2ray.ang.tv
 
 import android.net.Uri
 import android.util.Base64
+import com.v2ray.ang.util.Utils
 import org.json.JSONObject
+import java.net.Inet6Address
+import java.net.InetAddress
 import java.security.SecureRandom
 
 /**
@@ -93,9 +96,29 @@ object TvPairingProtocol {
             val port = uri.getQueryParameter(KEY_PORT)?.trim()?.toIntOrNull() ?: return null
             val token = uri.getQueryParameter(KEY_TOKEN)?.trim().orEmpty()
             if (ip.isEmpty() || token.isEmpty() || port !in 1..65535) return null
+            if (!isLocalNetworkAddress(ip)) return null
             PairInfo(ip, port, token)
         } catch (e: Exception) {
             null
+        }
+    }
+
+    /**
+     * Телевизор всегда в той же домашней сети, что и телефон, то есть у него локальный адрес. Телефон
+     * отправляет адрес подписки — а в нём личный ключ доступа — обычным HTTP, без шифрования, на адрес
+     * из QR-кода. Раньше подходил любой адрес: подсунутый QR с адресом в интернете получал подписку
+     * человека открытым текстом. Теперь только локальные адреса, и только цифрами — имя пришлось бы
+     * спрашивать у DNS, а ответить тот может чем угодно.
+     */
+    fun isLocalNetworkAddress(ip: String): Boolean {
+        val literal = ip.removePrefix("[").removeSuffix("]")
+        if (!Utils.isPureIpAddress(literal)) return false
+        return try {
+            val address = InetAddress.getByName(literal)
+            address.isSiteLocalAddress || address.isLinkLocalAddress
+                || (address is Inet6Address && (address.address[0].toInt() and 0xfe) == 0xfc)
+        } catch (e: Exception) {
+            false
         }
     }
 

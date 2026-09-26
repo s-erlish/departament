@@ -547,6 +547,8 @@ class AccountFragment : Fragment() {
                 // A top-up in flight owns the «Пополнить» control until the provider answers, so
                 // a slow connection cannot be mistaken for a dead button and paid for twice (D10).
                 launch { viewModel.paymentInFlight.collect { renderTopUpBusy(it) } }
+                // Оплату открывает тот экран, что жив сейчас, а не тот, что её начал.
+                launch { viewModel.checkout.collect { if (it != null) viewModel.takeCheckout()?.let(::openCheckout) } }
                 // Skeleton is driven by loading (+ the first-load gate) via renderHeroState.
                 launch { viewModel.loading.collect { renderHeroState() } }
                 // The OTHER half of the first-load gate, and it needs its own collector: when the
@@ -1495,24 +1497,28 @@ class AccountFragment : Fragment() {
             return
         }
         if (viewModel.paymentInFlight.value) return
+        // Ответы приходят позже, и экран к тому времени может быть уже другим (поворот, смена темы):
+        // ответ не трогает этот экран — только модель и контекст приложения. См. AccountViewModel.checkout.
+        val vm = viewModel
+        val appContext = requireContext().applicationContext
         if (id == PaymentMethodSheet.ID_BALANCE) {
-            viewModel.payWithBalance(PaymentRequestDto(amount = amount, currency = "RUB")) { outcome ->
+            vm.payWithBalance(PaymentRequestDto(amount = amount, currency = "RUB")) { outcome ->
                 // «Баланс пополнён» is a claim that the money moved, so it is said only when the
                 // backend says so. A payment the provider is still settling gets its own line —
                 // the reload below then brings the real figure in when it lands.
                 if (outcome == PaymentOutcome.PENDING) {
-                    toast(R.string.account_pay_pending)
+                    appContext.toast(R.string.account_pay_pending)
                 } else {
-                    toastSuccess(R.string.account_top_up_success)
+                    appContext.toastSuccess(R.string.account_top_up_success)
                 }
-                viewModel.refreshProfile()
-                viewModel.loadSubscriptions()
+                vm.refreshProfile()
+                vm.loadSubscriptions()
             }
         } else {
             awaitingPaymentError = true
-            viewModel.buy(
+            vm.buy(
                 PaymentRequestDto(amount = amount, currency = "RUB", paymentMethod = id.toIntOrNull()),
-                onInit = ::openCheckout,
+                onInit = { init -> vm.offerCheckout(init) },
             )
         }
     }

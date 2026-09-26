@@ -42,7 +42,31 @@ data class PaymentInitDto(
 data class PaymentResultDto(
     val status: String = "",
     val orderId: String = "",
-)
+    // What POST /client/payments/balance actually returns for a tariff purchase or renewal:
+    // {message, paymentId, newBalance}, with no status at all.
+    val message: String? = null,
+    val paymentId: String? = null,
+    val newBalance: Double? = null,
+) {
+    /**
+     * Чем кончилась оплата с баланса — по телу ответа, а не по коду 200: этот запрос отвечает 200 и
+     * когда списал деньги, и когда отказал («insufficient_funds» или вовсе без статуса). Раньше
+     * незнакомый или пустой статус считался оплатой: при нехватке денег экран покупки закрывался, как
+     * будто подписка продлена, и человек узнавал правду, когда доступ кончался. Теперь так же, как на
+     * ПК (PaymentResultDto.Settlement): известный статус решает сам; пустой — по следам списания
+     * (новый баланс или номер платежа); всё прочее — «в обработке», а не «оплачено». Экраны после
+     * этого перечитывают профиль, так что осторожное «в обработке» исправится само.
+     */
+    fun balanceOutcome(): PaymentOutcome {
+        if (status.isNotBlank()) {
+            return when (val outcome = paymentOutcomeOf(status)) {
+                PaymentOutcome.UNKNOWN -> PaymentOutcome.PENDING
+                else -> outcome
+            }
+        }
+        return if (newBalance != null || !paymentId.isNullOrBlank()) PaymentOutcome.SETTLED else PaymentOutcome.PENDING
+    }
+}
 
 /** What a raw backend payment status means to this app. @see paymentOutcomeOf */
 enum class PaymentOutcome {
@@ -75,9 +99,9 @@ enum class PaymentOutcome {
  * that file now maps this outcome to its label and colour rather than re-deriving it.
  */
 fun paymentOutcomeOf(status: String): PaymentOutcome = when (status.trim().lowercase(java.util.Locale.US)) {
-    "paid", "success", "succeeded", "completed", "confirmed" -> PaymentOutcome.SETTLED
+    "paid", "success", "succeeded", "completed", "confirmed", "done" -> PaymentOutcome.SETTLED
     "pending", "processing", "new", "created", "waiting", "in_progress" -> PaymentOutcome.PENDING
-    "failed", "error", "declined", "rejected" -> PaymentOutcome.FAILED
+    "failed", "error", "declined", "rejected", "insufficient_funds" -> PaymentOutcome.FAILED
     "canceled", "cancelled", "expired" -> PaymentOutcome.CANCELED
     else -> PaymentOutcome.UNKNOWN
 }

@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    Резервная копия и перенос на новый телефон (Android 12 и новее). Вход в аккаунт не копируется —
+    почему, см. backup_rules.xml.
+-->
+<data-extraction-rules>
+    <cloud-backup>
+        <exclude domain="file" path="mmkv/departament_auth" />
+        <exclude domain="file" path="mmkv/departament_auth.crc" />
+        <exclude domain="file" path="mmkv/departament_keyholder" />
+        <exclude domain="file" path="mmkv/departament_keyholder.crc" />
+    </cloud-backup>
+    <device-transfer>
+        <exclude domain="file" path="mmkv/departament_auth" />
+        <exclude domain="file" path="mmkv/departament_auth.crc" />
+        <exclude domain="file" path="mmkv/departament_keyholder" />
+        <exclude domain="file" path="mmkv/departament_keyholder.crc" />
+    </device-transfer>
+</data-extraction-rules>

@@ -32,6 +32,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.async
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.getAndUpdate
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withTimeoutOrNull
 
@@ -115,6 +116,22 @@ class AccountViewModel : ViewModel() {
      */
     private val _paymentInFlight = MutableStateFlow(false)
     val paymentInFlight: StateFlow<Boolean> = _paymentInFlight.asStateFlow()
+
+    /**
+     * Оплата, которую пора открыть в браузере. Её держит модель, а открывает экран, который жив в эту
+     * минуту (AccountFragment собирает [checkout]). Раньше ответ сервера сразу звал функцию того
+     * экрана, что оплату начинал, а после поворота экрана или смены темы это уже был отцепленный
+     * экран: requireContext() бросал, и приложение падало посреди пополнения.
+     */
+    private val _checkout = MutableStateFlow<PaymentInitDto?>(null)
+    val checkout: StateFlow<PaymentInitDto?> = _checkout.asStateFlow()
+
+    fun offerCheckout(init: PaymentInitDto) {
+        _checkout.value = init
+    }
+
+    /** Забирает оплату ровно один раз: открыть её должен один экран. */
+    fun takeCheckout(): PaymentInitDto? = _checkout.getAndUpdate { null }
 
     fun clearError() {
         _error.value = null
@@ -482,12 +499,11 @@ class AccountViewModel : ViewModel() {
      * the same one the payment history renders — so one operation cannot be «Оплачено» here and
      * «В обработке» in the ledger.
      *
-     * **UNKNOWN counts as settled, deliberately.** A spelling this build does not recognise (and
-     * an absent field, which deserialises to "") is not evidence of failure, and turning it into
-     * one would break a flow that works today for the sake of a word we have not seen yet. The
-     * safe direction here is the opposite of the ledger's: refuse only what the backend explicitly
-     * NAMES as not-happening. Both callers re-read the profile afterwards, so the balance figure on
-     * screen comes from the server either way.
+     * **Only a receipt counts as settled** ([PaymentResultDto.balanceOutcome]). This used to take
+     * an unknown or absent status as a payment — and the endpoint answers exactly that way when it
+     * refuses for lack of funds, so the buy screen closed over a purchase that never happened and
+     * the user learnt it when access ran out. A reply that shows no debit is reported as still being
+     * processed; both callers re-read the profile afterwards, so it corrects itself at once.
      *
      * A FAILED / CANCELED status is reported through [error] like any other payment failure, so it
      * lands in the diagnostic dialog with the raw status in it, ready to be screenshotted.
@@ -500,9 +516,9 @@ class AccountViewModel : ViewModel() {
         try {
             repo.payWithBalance(req)
                 .onSuccess { result ->
-                    when (val outcome = paymentOutcomeOf(result.status)) {
-                        PaymentOutcome.SETTLED, PaymentOutcome.UNKNOWN -> onDone(PaymentOutcome.SETTLED)
-                        PaymentOutcome.PENDING -> onDone(outcome)
+                    when (val outcome = result.balanceOutcome()) {
+                        PaymentOutcome.SETTLED, PaymentOutcome.PENDING -> onDone(outcome)
+                        PaymentOutcome.UNKNOWN -> onDone(PaymentOutcome.PENDING)
                         PaymentOutcome.FAILED, PaymentOutcome.CANCELED ->
                             // Server(200) is not a lie: the request WAS answered 200, and the
                             // refusal is in the body. The code and the raw status both reach the

@@ -38,7 +38,7 @@ import java.security.MessageDigest
  */
 object AuthTokenStore {
 
-    private const val ID = "departament_auth"
+    internal const val ID = "departament_auth"
 
     private const val KEY_TOKEN = "token"
 

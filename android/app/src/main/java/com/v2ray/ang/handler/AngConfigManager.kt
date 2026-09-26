@@ -1094,11 +1094,19 @@ object AngConfigManager {
                 return SubscriptionUpdateResult(failureCount = 1)
             }
 
+            // ЗАПРОС ШЁЛ ДО ТРИДЦАТИ СЕКУНД, и за это время подписку могли удалить — вручную или
+            // выходом из аккаунта. Ответ раньше всё равно раскладывался, а поверх записи ложился
+            // снимок, взятый ДО запроса: удалённая подписка возвращалась вместе с серверами, а то, что
+            // человек успел в ней поменять (автообновление), откатывалось. Теперь ответ идёт только
+            // в подписку, которая есть сейчас, и в её нынешнюю запись.
+            val current = MmkvManager.decodeSubscription(it.guid)
+                ?: return SubscriptionUpdateResult(skipCount = 1)
+
             // Resolve the hidden/locked state (header or in-body directive) and persist it
             // BEFORE parsing, so imported profiles inherit sub.locked and store their raw
             // template obfuscated/encrypted. Single entry point into the template module.
-            if (TemplateManager.applyLockState(it.subscription, result?.hidden, configText)) {
-                MmkvManager.encodeSubscription(it.guid, it.subscription)
+            if (TemplateManager.applyLockState(current, result?.hidden, configText)) {
+                MmkvManager.encodeSubscription(it.guid, current)
             }
 
             // ============================================================================
@@ -1128,10 +1136,10 @@ object AngConfigManager {
             // подписки have, which come through here too.
             val userInfo = SubscriptionUserInfo.parse(result?.subscriptionUserInfo)
             if (userInfo != null && userInfo.isExpired()) {
-                applySubUserInfo(it.subscription, userInfo)
-                applySubDirectives(it.subscription, result)
-                it.subscription.lastUpdated = System.currentTimeMillis()
-                MmkvManager.encodeSubscription(it.guid, it.subscription)
+                applySubUserInfo(current, userInfo)
+                applySubDirectives(current, result)
+                current.lastUpdated = System.currentTimeMillis()
+                MmkvManager.encodeSubscription(it.guid, current)
                 LogUtil.i(
                     AppConfig.TAG,
                     "Subscription term is over: the answer is a notice, keeping the stored servers"
@@ -1145,8 +1153,8 @@ object AngConfigManager {
             val count = parseConfigViaSub(configText, it.guid, false)
             if (count > 0) {
                 // Persist traffic/expiry metadata from the subscription-userinfo header, if present.
-                userInfo?.let { info -> applySubUserInfo(it.subscription, info) }
-                applySubDirectives(it.subscription, result)
+                userInfo?.let { info -> applySubUserInfo(current, info) }
+                applySubDirectives(current, result)
                 // Adopt that provider title as the подписка's stored name too, but only while the
                 // подписка is still unnamed — a name that identifies THIS подписка must never be
                 // clobbered.
@@ -1157,12 +1165,12 @@ object AngConfigManager {
                 // replaces each of them with what the провайдер actually calls the подписка
                 // («🍀 erlish»). There is no rename to fall back on (OWNER-DECISION-2026-08-02 §5),
                 // so this is the only route by which a bad stored name can ever be corrected.
-                val providerTitle = it.subscription.profileTitle.trim()
-                if (providerTitle.isNotEmpty() && SubscriptionNaming.isUnnamed(it.subscription)) {
-                    it.subscription.remarks = providerTitle
+                val providerTitle = current.profileTitle.trim()
+                if (providerTitle.isNotEmpty() && SubscriptionNaming.isUnnamed(current)) {
+                    current.remarks = providerTitle
                 }
-                it.subscription.lastUpdated = System.currentTimeMillis()
-                MmkvManager.encodeSubscription(it.guid, it.subscription)
+                current.lastUpdated = System.currentTimeMillis()
+                MmkvManager.encodeSubscription(it.guid, current)
                 LogUtil.i(AppConfig.TAG, "Subscription updated: $count configs")
                 return SubscriptionUpdateResult(
                     configCount = count,

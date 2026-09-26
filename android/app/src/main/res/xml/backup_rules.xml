@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    Резервная копия Android (до Android 12). Вход в аккаунт не копируется: он зашифрован секретом,
+    запечатанным ключом Keystore этого телефона, а ключи Keystore не переносятся. На новом телефоне
+    такой вход не открывался, и войти заново было нельзя (KeystoreKeyProvider). Там просто входят снова.
+-->
+<full-backup-content>
+    <exclude domain="file" path="mmkv/departament_auth" />
+    <exclude domain="file" path="mmkv/departament_auth.crc" />
+    <exclude domain="file" path="mmkv/departament_keyholder" />
+    <exclude domain="file" path="mmkv/departament_keyholder.crc" />
+</full-backup-content>

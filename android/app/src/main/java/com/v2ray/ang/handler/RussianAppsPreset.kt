@@ -299,10 +299,31 @@ object RussianAppsPreset {
      */
     fun applyTo(current: Set<String>): Set<String> {
         val added = packageSet - current
-        MmkvManager.encodeSettings(AppConfig.PREF_RU_BYPASS_PRESET_OWNED, added.forStore())
+        //  Набор уже включён — это возвращение в «Кроме выбранных» (PerAppProxyActivity.applyMode): то,
+        //  что набор добавил раньше, остаётся его, иначе выключение набора этого бы не убрало.
+        val owned = if (isApplied()) ownedSet() + added else added
+        MmkvManager.encodeSettings(AppConfig.PREF_RU_BYPASS_PRESET_OWNED, owned.forStore())
         MmkvManager.encodeSettings(AppConfig.PREF_RU_BYPASS_PRESET_ON, true)
         return added
     }
+
+    /**
+     * Набор в режиме «Только выбранные». Набор значит «российские приложения — мимо туннеля», а
+     * выбранные в этом режиме идут ЧЕРЕЗ туннель, поэтому набор их не добавляет, а убирает из
+     * выбранных. Раньше он добавлял и здесь: банки, Госуслуги и маркетплейсы уходили через
+     * заграничный сервер — ровно то, от чего набор должен был спасать.
+     *
+     * @param current the selection as it stands
+     * @return the packages to REMOVE from the selection
+     */
+    fun excludeFrom(current: Set<String>): Set<String> {
+        MmkvManager.encodeSettings(AppConfig.PREF_RU_BYPASS_PRESET_OWNED, HashSet<String>())
+        MmkvManager.encodeSettings(AppConfig.PREF_RU_BYPASS_PRESET_ON, true)
+        return current intersect packageSet
+    }
+
+    private fun ownedSet(): Set<String> =
+        MmkvManager.decodeSettingsStringSet(AppConfig.PREF_RU_BYPASS_PRESET_OWNED)?.toSet().orEmpty()
 
     /**
      * The packages to REMOVE when the preset is switched off: only what [applyTo] added.
@@ -311,9 +332,7 @@ object RussianAppsPreset {
      * — un-applying a preset must never take away a decision the user made themselves.
      */
     fun removeFrom(): Set<String> {
-        val owned = MmkvManager.decodeSettingsStringSet(AppConfig.PREF_RU_BYPASS_PRESET_OWNED)
-            ?.toSet()
-            .orEmpty()
+        val owned = ownedSet()
         MmkvManager.encodeSettings(AppConfig.PREF_RU_BYPASS_PRESET_OWNED, HashSet<String>())
         MmkvManager.encodeSettings(AppConfig.PREF_RU_BYPASS_PRESET_ON, false)
         return owned

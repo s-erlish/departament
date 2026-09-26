@@ -10,11 +10,8 @@ import com.v2ray.ang.databinding.ActivityLogcatBinding
 import com.v2ray.ang.core.CoreServiceManager
 import com.v2ray.ang.extension.toast
 import com.v2ray.ang.extension.toastError
-import com.v2ray.ang.extension.toastSuccess
 import com.v2ray.ang.handler.AngConfigManager
-import com.v2ray.ang.handler.SettingsManager
 import com.v2ray.ang.util.LogUtil
-import com.v2ray.ang.util.MessageUtil
 import com.v2ray.ang.util.Utils
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -23,6 +20,9 @@ import java.net.URLDecoder
 
 class UrlSchemeActivity : BaseActivity() {
     private val binding by lazy { ActivityLogcatBinding.inflate(layoutInflater) }
+
+    /** Ссылка уже открыла свой экран поверх Главной ([openRoutingImport]) — второй раз Главную не открываем. */
+    private var handedOff = false
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -75,7 +75,9 @@ class UrlSchemeActivity : BaseActivity() {
             // A link we could not act on still ends where every link ends. The failure is reported
             // by the branch that hit it (`toastError`), and Главная is where the user can see what
             // did or did not arrive.
-            startActivity(Intent(this, MainActivity::class.java))
+            if (!handedOff) {
+                startActivity(Intent(this, MainActivity::class.java))
+            }
             finish()
         }
     }
@@ -89,8 +91,8 @@ class UrlSchemeActivity : BaseActivity() {
      *  - toggle                    -> stop if running, otherwise start
      *  - import/{base64}           -> Base64 -> batch import (auto-detect)
      *  - add/{url}                 -> import subscription / config by URL
-     *  - routing/add/{base64}      -> Base64 JSON -> import routing rulesets
-     *  - routing/onadd/{base64}    -> import routing rulesets and apply (restart if running)
+     *  - routing/add/{base64}      -> Base64 JSON -> offer to replace the routing rulesets
+     *  - routing/onadd/{base64}    -> the same, and restart a running tunnel after the replacement
      */
     private fun handleDepvScheme(uri: Uri?) {
         if (uri == null) {
@@ -138,7 +140,7 @@ class UrlSchemeActivity : BaseActivity() {
                     val op = segments.first()
                     val json = Utils.decode(segments.last())
                     if ((op == "add" || op == "onadd") && json.isNotEmpty()) {
-                        importRoutingRules(json, apply = op == "onadd")
+                        openRoutingImport(json, restart = op == "onadd")
                     } else {
                         toastError(R.string.editor_failed)
                     }
@@ -171,25 +173,20 @@ class UrlSchemeActivity : BaseActivity() {
     }
 
     /**
-     * Import routing rulesets from a JSON payload; optionally apply by restarting a running service.
+     * Замену правил по ссылке решает человек, а не страница, которая ссылку открыла: правила уходят на
+     * экран «Маршрутизация», и тот спрашивает «Заменить?», как при импорте из буфера
+     * (RoutingSettingActivity.offerLinkImport). Главная — под ним, чтобы «Назад» вело в приложение.
      */
-    private fun importRoutingRules(json: String, apply: Boolean) {
-        lifecycleScope.launch(Dispatchers.IO) {
-            val result = SettingsManager.resetRoutingRulesets(json)
-            // Same cross-process reading as `toggle` above: asked with `isRunning` this was always
-            // false, so `onadd` saved the rules and never applied them to the live core — the one
-            // thing that distinguishes it from `add`. @see CoreServiceManager.isTunnelUp
-            if (result && apply && CoreServiceManager.isTunnelUp()) {
-                MessageUtil.sendMsg2Service(this@UrlSchemeActivity, AppConfig.MSG_STATE_RESTART, "")
-            }
-            withContext(Dispatchers.Main) {
-                if (result) {
-                    toastSuccess(R.string.editor_done)
-                } else {
-                    toastError(R.string.editor_failed)
-                }
-            }
-        }
+    private fun openRoutingImport(json: String, restart: Boolean) {
+        handedOff = true
+        startActivities(
+            arrayOf(
+                Intent(this, MainActivity::class.java),
+                Intent(this, RoutingSettingActivity::class.java)
+                    .putExtra(RoutingSettingActivity.EXTRA_IMPORT_RULESETS, json)
+                    .putExtra(RoutingSettingActivity.EXTRA_IMPORT_RESTART, restart),
+            )
+        )
     }
 
     private fun parseUri(uriString: String?, fragment: String?) {

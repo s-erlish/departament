@@ -10,6 +10,8 @@ import com.v2ray.ang.AppConfig
 import com.v2ray.ang.AppConfig.WEBDAV_BACKUP_FILE_NAME
 import com.v2ray.ang.BuildConfig
 import com.v2ray.ang.R
+import com.v2ray.ang.auth.AuthTokenStore
+import com.v2ray.ang.auth.KeystoreKeyProvider
 import com.v2ray.ang.databinding.ActivityBackupBinding
 import com.v2ray.ang.databinding.DialogWebdavBinding
 import com.v2ray.ang.dto.entities.WebDavConfig
@@ -156,6 +158,20 @@ class BackupActivity : HelperBaseActivity() {
             .show()
     }
 
+    /**
+     * Вход в аккаунт в резервную копию не идёт и из неё не восстанавливается. Он зашифрован секретом,
+     * запечатанным ключом Keystore этого телефона, а ключи Keystore не переносятся: восстановленный на
+     * другом телефоне или после переустановки вход не открывался, и войти заново было нельзя, пока не
+     * стереть данные приложения (KeystoreKeyProvider теперь переживает и это). После восстановления
+     * человек просто входит в аккаунт ещё раз.
+     */
+    private fun dropSignIn(dir: String) {
+        listOf(AuthTokenStore.ID, KeystoreKeyProvider.HOLDER_ID).forEach { id ->
+            File(dir, id).delete()
+            File(dir, "$id.crc").delete()
+        }
+    }
+
     // ------------------------------------------------------------- local
 
     private fun backupConfigurationToCache(): Pair<Boolean, String> {
@@ -167,6 +183,7 @@ class BackupActivity : HelperBaseActivity() {
 
         val count = MMKV.backupAllToDirectory(backupDir)
         if (count <= 0) return Pair(false, "")
+        dropSignIn(backupDir)
 
         return if (ZipUtil.zipFromFolder(backupDir, outputZipFilePath)) {
             Pair(true, outputZipFilePath)
@@ -178,6 +195,8 @@ class BackupActivity : HelperBaseActivity() {
     private fun restoreConfiguration(zipFile: File): Boolean {
         val backupDir = this.cacheDir.absolutePath + "/${System.currentTimeMillis()}"
         if (!ZipUtil.unzipToFolder(zipFile, backupDir)) return false
+        // Копии, сделанные прежними версиями, вход ещё содержат.
+        dropSignIn(backupDir)
 
         val count = MMKV.restoreAllFromDirectory(backupDir)
         SettingsChangeManager.makeSetupGroupTab()

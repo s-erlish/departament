@@ -645,6 +645,9 @@ class HomeFragment : BaseFragment<FragmentHomeBinding>() {
             // the attempt in flight, so the object sat on «Подключение…» and then reported
             // «Не удалось подключиться» for something the user chose to do.
             connectInProgress = false
+            //  Отказ посреди перезапуска: старое ядро уже остановлено, нового не будет — переключение
+            //  кончилось здесь, и следующее «не запущено» уже итог, а не его шаг.
+            switching = false
             tunnelError = false
             cancelConnectWatchdog()
             applyRunningState(isLoading = false, isRunning = false)
@@ -975,18 +978,29 @@ class HomeFragment : BaseFragment<FragmentHomeBinding>() {
             MmkvManager.setSelectServer(guid)
             onSelectedServerChanged(selected, guid)
         }
+        restartConnection()
+    }
+
+    /** @see MainHost.toggleConnection */
+    fun toggleConnection() = handleConnectAction()
+
+    /**
+     * @see MainHost.restartConnection
+     *
+     * Перезапуск после смены настроек — той же дорогой, что переключение сервера: со сторожем, который
+     * назовёт отказом запуск, не ответивший за [CONNECT_TIMEOUT_MS], и с разрешением Android на VPN, если
+     * его ещё нет ([restartV2Ray] запускает через [startVpnWithPermission]). Раньше здесь был голый
+     * restartV2Ray(): пока идёт переключение, «не запущено» не считается итогом, сторожа не было, и
+     * неудачный запуск терялся — Главная навсегда оставалась «Подключено» без туннеля. Например, после
+     * перехода из «Только прокси» в TUN на телефоне, где VPN ещё ни разу не разрешали.
+     */
+    fun restartConnection() {
         connectInProgress = true
         tunnelError = false
         if (isBindingInitialized) applyRunningState(isLoading = true, isRunning = true)
         scheduleConnectWatchdog()
         restartV2Ray()
     }
-
-    /** @see MainHost.toggleConnection */
-    fun toggleConnection() = handleConnectAction()
-
-    /** @see MainHost.restartConnection */
-    fun restartConnection() = restartV2Ray()
 
     /**
      * @see MainHost.showStatus
@@ -1798,10 +1812,15 @@ class HomeFragment : BaseFragment<FragmentHomeBinding>() {
     private fun refreshServerList(index: Int) {
         val all = mainViewModel.serversCache
         val pageSubId = homeMetaSubIds.getOrNull(homeMetaPage)
+        //  Свои серверы (без подписки — добавленные вручную или ссылкой) ни одной карточке не
+        //  принадлежат, поэтому идут под каждой, после серверов подписки. Раньше при любой подписке их
+        //  не было видно вовсе: ни выбрать, ни изменить, ни удалить, а выбранный такой сервер был
+        //  «невидимым».
         val shown = if (pageSubId.isNullOrEmpty()) {
             all
         } else {
-            all.filter { it.profile.subscriptionId == pageSubId }
+            all.filter { it.profile.subscriptionId == pageSubId } +
+                all.filter { it.profile.subscriptionId.isNullOrEmpty() }
         }
         // `index` addresses a row in the UNFILTERED cache (it is the position the ViewModel just
         // touched), so translate it before handing it on — an index resolved against a different
@@ -4450,7 +4469,7 @@ class HomeFragment : BaseFragment<FragmentHomeBinding>() {
      */
     private fun restartV2Ray() {
         if (mainViewModel.isRunning.value != true) {
-            startV2Ray()
+            startVpnWithPermission()
             return
         }
         // THE INTENT, DECLARED BEFORE THE DAEMON IS ASKED TO STOP. From here until one of the three
@@ -4471,7 +4490,9 @@ class HomeFragment : BaseFragment<FragmentHomeBinding>() {
                 if (isBindingInitialized) applyRunningState(isLoading = false, isRunning = true)
                 return@launch
             }
-            startV2Ray()
+            //  С разрешением на VPN, а не голым запуском: сменился ли режим на TUN, решают настройки, и
+            //  без разрешения Android ядро сразу отвечает отказом.
+            startVpnWithPermission()
         }
     }
 

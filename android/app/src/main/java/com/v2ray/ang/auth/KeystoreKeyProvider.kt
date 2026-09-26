@@ -4,8 +4,11 @@ import android.security.keystore.KeyGenParameterSpec
 import android.security.keystore.KeyProperties
 import android.util.Base64
 import com.tencent.mmkv.MMKV
+import com.v2ray.ang.AppConfig
+import com.v2ray.ang.util.LogUtil
 import java.security.KeyStore
 import java.security.SecureRandom
+import javax.crypto.AEADBadTagException
 import javax.crypto.Cipher
 import javax.crypto.KeyGenerator
 import javax.crypto.SecretKey
@@ -30,7 +33,7 @@ object KeystoreKeyProvider {
 
     private const val ANDROID_KEYSTORE = "AndroidKeyStore"
     private const val KEY_ALIAS = "departament_auth_aes"
-    private const val HOLDER_ID = "departament_keyholder"
+    internal const val HOLDER_ID = "departament_keyholder"
     private const val K_IV = "iv"
     private const val K_CIPHER = "cipher"
     private const val TRANSFORMATION = "AES/GCM/NoPadding"
@@ -82,29 +85,69 @@ object KeystoreKeyProvider {
         val cipherB64 = sealedMaterial.second
 
         if (!ivB64.isNullOrBlank() && !cipherB64.isNullOrBlank()) {
+            val key = try {
+                existingKey()
+            } catch (e: Throwable) {
+                return CryptKeyState.Unsealable(e)
+            }
+            //  Секрет запечатан, а ключа в Keystore нет: приложение восстановили из резервной копии,
+            //  перенесли на другой телефон или стёрли его данные. Ключи Keystore не переносятся никуда,
+            //  так что этот секрет уже не откроется никогда.
+            key ?: return startOver(holder, "the Keystore key is gone")
             return try {
                 val iv = Base64.decode(ivB64, Base64.NO_WRAP)
                 val cipher = Base64.decode(cipherB64, Base64.NO_WRAP)
-                CryptKeyState.Available(unseal(getOrCreateKey(), iv, cipher))
+                CryptKeyState.Available(unseal(key, iv, cipher))
+            } catch (e: AEADBadTagException) {
+                //  Ключ есть, но секрет им не открывается. Так бывает после прежней версии этого кода:
+                //  она создавала новый ключ поверх восстановленного секрета. Тоже навсегда.
+                startOver(holder, "the Keystore key does not open the sealed secret")
             } catch (e: Throwable) {
                 CryptKeyState.Unsealable(e)
             }
         }
 
         return try {
-            val secret = randomSecret()
-            val sealed = seal(getOrCreateKey(), secret)
-            holder.encode(K_IV, Base64.encodeToString(sealed.first, Base64.NO_WRAP))
-            holder.encode(K_CIPHER, Base64.encodeToString(sealed.second, Base64.NO_WRAP))
-            CryptKeyState.Available(secret)
+            CryptKeyState.Available(sealNewSecret(holder))
         } catch (e: Throwable) {
             CryptKeyState.Absent
         }
     }
 
-    private fun getOrCreateKey(): SecretKey {
+    /**
+     * Запечатанный секрет не откроется больше никогда (см. [cryptKey]). Раньше это было
+     * [CryptKeyState.Unsealable] навсегда: вход сообщал об успехе, но сессия молча не сохранялась,
+     * каждый запрос уходил без токена и получал 401, выход тоже не работал — помогало только
+     * «Очистить данные». Теперь хранилище входа, которое этим секретом зашифровано и уже не читается,
+     * удаляется, и запечатывается новый секрет: человек просто входит заново.
+     */
+    private fun startOver(holder: MMKV, reason: String): CryptKeyState {
+        LogUtil.w(AppConfig.TAG, "Auth store cannot be unsealed ($reason): starting a new one")
+        return try {
+            holder.removeValueForKey(K_IV)
+            holder.removeValueForKey(K_CIPHER)
+            MMKV.removeStorage(AuthTokenStore.ID)
+            CryptKeyState.Available(sealNewSecret(holder))
+        } catch (e: Throwable) {
+            CryptKeyState.Unsealable(e)
+        }
+    }
+
+    private fun sealNewSecret(holder: MMKV): String {
+        val secret = randomSecret()
+        val sealed = seal(getOrCreateKey(), secret)
+        holder.encode(K_IV, Base64.encodeToString(sealed.first, Base64.NO_WRAP))
+        holder.encode(K_CIPHER, Base64.encodeToString(sealed.second, Base64.NO_WRAP))
+        return secret
+    }
+
+    private fun existingKey(): SecretKey? {
         val ks = KeyStore.getInstance(ANDROID_KEYSTORE).apply { load(null) }
-        (ks.getEntry(KEY_ALIAS, null) as? KeyStore.SecretKeyEntry)?.let { return it.secretKey }
+        return (ks.getEntry(KEY_ALIAS, null) as? KeyStore.SecretKeyEntry)?.secretKey
+    }
+
+    private fun getOrCreateKey(): SecretKey {
+        existingKey()?.let { return it }
         val generator = KeyGenerator.getInstance(KeyProperties.KEY_ALGORITHM_AES, ANDROID_KEYSTORE)
         val spec = KeyGenParameterSpec.Builder(
             KEY_ALIAS,

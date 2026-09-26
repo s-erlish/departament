@@ -12,6 +12,7 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import com.v2ray.ang.AppConfig
 import com.v2ray.ang.R
 import com.v2ray.ang.contracts.BaseAdapterListener
+import com.v2ray.ang.core.CoreServiceManager
 import com.v2ray.ang.databinding.ActivityRoutingSettingBinding
 import com.v2ray.ang.extension.toast
 import com.v2ray.ang.extension.toastError
@@ -26,6 +27,7 @@ import com.v2ray.ang.ui.component.SubPage
 import com.v2ray.ang.ui.component.ToolbarBinder
 import com.v2ray.ang.util.JsonUtil
 import com.v2ray.ang.util.LogUtil
+import com.v2ray.ang.util.MessageUtil
 import com.v2ray.ang.util.Utils
 import com.v2ray.ang.viewmodel.RoutingSettingsViewModel
 import kotlinx.coroutines.Dispatchers
@@ -84,6 +86,38 @@ class RoutingSettingActivity : HelperBaseActivity() {
 
         bindDomainStrategyRow()
         bindActionRows()
+        if (savedInstanceState == null) offerLinkImport()
+    }
+
+    /**
+     * Правила из ссылки depv://routing/add|onadd (UrlSchemeActivity). Раньше ссылка меняла их сама, без
+     * вопроса: любая страница в браузере одним нажатием отправляла весь трафик мимо VPN, а на экране
+     * оставалось «Подключено». Теперь ссылка открывает этот экран, и правила меняются только после
+     * того же «Заменить?», что у импорта из буфера. onadd после замены перезапускает подключение.
+     */
+    private fun offerLinkImport() {
+        val payload = intent.getStringExtra(EXTRA_IMPORT_RULESETS)?.takeIf { it.isNotBlank() } ?: return
+        val restart = intent.getBooleanExtra(EXTRA_IMPORT_RESTART, false)
+        confirmReplace {
+            lifecycleScope.launch(Dispatchers.IO) {
+                val ok = SettingsManager.resetRoutingRulesets(payload)
+                if (ok && restart && CoreServiceManager.isTunnelUp()) {
+                    MessageUtil.sendMsg2Service(this@RoutingSettingActivity, AppConfig.MSG_STATE_RESTART, "")
+                }
+                withContext(Dispatchers.Main) {
+                    refreshData()
+                    if (ok) toastSuccess(R.string.routing_import_done) else toastError(R.string.routing_import_failed)
+                }
+            }
+        }
+    }
+
+    companion object {
+        /** Правила из ссылки: экран спросит, заменять ли ими текущие. */
+        const val EXTRA_IMPORT_RULESETS = "import_rulesets"
+
+        /** depv://routing/onadd: после замены перезапустить подключение, если оно поднято. */
+        const val EXTRA_IMPORT_RESTART = "import_restart"
     }
 
     override fun onResume() {

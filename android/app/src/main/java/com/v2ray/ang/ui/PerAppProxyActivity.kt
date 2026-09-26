@@ -154,11 +154,34 @@ class PerAppProxyActivity : BaseActivity() {
         else -> Mode.SELECTED
     }
 
-    private fun applyMode(mode: Mode) {
+    private fun applyMode(mode: Mode, reconcilePreset: Boolean = true) {
+        val previous = currentMode()
         MmkvManager.encodeSettings(AppConfig.PREF_PER_APP_PROXY, mode != Mode.ALL)
         MmkvManager.encodeSettings(AppConfig.PREF_BYPASS_APPS, mode == Mode.EXCEPT)
+        if (reconcilePreset && mode != previous) {
+            reconcilePresetWithMode(mode)
+        }
         SettingsChangeManager.makeRestartService()
         bindModeRow()
+    }
+
+    /**
+     * Набор «Российские приложения» включён, а режим сменился. Набор значит «российские приложения —
+     * мимо туннеля», а выбранные значат в режимах противоположное: в «Кроме выбранных» они идут мимо,
+     * в «Только выбранные» — через. Раньше смена режима оставляла набор в выбранных как есть, и в
+     * «Только выбранные» через заграничный сервер уходили как раз банки и Госуслуги, а всё остальное
+     * — мимо VPN. Теперь набор следует за режимом (RussianAppsPreset.applyTo / excludeFrom).
+     */
+    private fun reconcilePresetWithMode(mode: Mode) {
+        if (!RussianAppsPreset.isApplied()) return
+        val current = viewModel.getAll()
+        when (mode) {
+            Mode.SELECTED -> viewModel.applyPresetQuietly(added = emptySet(), removed = RussianAppsPreset.excludeFrom(current))
+            Mode.EXCEPT -> viewModel.applyPresetQuietly(added = RussianAppsPreset.applyTo(current), removed = emptySet())
+            Mode.ALL -> Unit
+        }
+        adapter.refreshSelection()
+        updateMeta()
     }
 
     /**
@@ -258,8 +281,16 @@ class PerAppProxyActivity : BaseActivity() {
     private fun togglePreset(on: Boolean) {
         val current = viewModel.getAll()
         if (on) {
-            viewModel.applyPresetQuietly(added = RussianAppsPreset.applyTo(current), removed = emptySet())
-            if (currentMode() == Mode.ALL) applyMode(Mode.EXCEPT)
+            val mode = currentMode()
+            //  «Только выбранные», где выбрано что-то кроме российских: набор убирает российские из
+            //  выбранных, и они идут мимо туннеля вместе со всеми невыбранными. Без такого выбора
+            //  (пусто — значит через туннель всё) набор работает, как в «Кроме выбранных».
+            if (mode == Mode.SELECTED && current.any { !RussianAppsPreset.contains(it) }) {
+                viewModel.applyPresetQuietly(added = emptySet(), removed = RussianAppsPreset.excludeFrom(current))
+            } else {
+                viewModel.applyPresetQuietly(added = RussianAppsPreset.applyTo(current), removed = emptySet())
+                if (mode != Mode.EXCEPT) applyMode(Mode.EXCEPT, reconcilePreset = false)
+            }
             toastSuccess(R.string.perapp_ru_preset_pending)
         } else {
             viewModel.applyPresetQuietly(added = emptySet(), removed = RussianAppsPreset.removeFrom())
@@ -485,10 +516,26 @@ class PerAppProxyActivity : BaseActivity() {
         }
     }
 
+    /**
+     * Импорт списка из буфера. Свой экспорт ([exportProxyApp]) — это строка режима («true» — «Кроме
+     * выбранных», «false» — «Только выбранные») и под ней сами выбранные. Раньше строка режима
+     * не читалась, а список проходил через разбор готового списка «что пускать через прокси»
+     * ([selectProxyApp]), который в «Кроме выбранных» выбирает всё, чего в списке НЕТ: импорт
+     * своего же экспорта выворачивал выбор наизнанку. Список без строки режима разбирается как раньше.
+     */
     private fun importProxyApp() {
         val content = Utils.getClipboard(applicationContext)
         if (TextUtils.isEmpty(content)) return
-        selectProxyApp(content, force = false)
+        val lines = content.lines().map { it.trim() }.filter { it.isNotEmpty() }
+        val header = lines.firstOrNull()?.lowercase()
+        if (header == "true" || header == "false") {
+            viewModel.clear()
+            viewModel.addAll(lines.drop(1))
+            applyMode(if (header == "true") Mode.EXCEPT else Mode.SELECTED, reconcilePreset = false)
+            reconcilePresetWithMode(currentMode())
+        } else {
+            selectProxyApp(content, force = false)
+        }
         afterBulkChange()
         toastSuccess(R.string.editor_done)
     }

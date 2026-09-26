@@ -53,6 +53,17 @@ class CoreProxyOnlyService : Service(), ServiceControl {
         // Every other start command is a connect, «Возобновить» in the shade included.
         CoreServiceManager.clearPaused()
 
+        // На передний план — первым делом, до любого исхода, как в CoreVpnService: этого требует срок
+        // startForegroundService. Раньше здесь сразу запускалось ядро, и неудачный запуск звал
+        // stopSelf(), так и не вызвав startForeground(), — Android отвечает на это падением процесса
+        // («did not then call Service.startForeground()»), и с ним уходит всё, что в нём работало.
+        if (!NotificationManager.showNotification(null)) {
+            LogUtil.e(AppConfig.TAG, "StartCore-Proxy: Failed to enter foreground; aborting start")
+            MessageUtil.sendMsg2UI(this, AppConfig.MSG_STATE_START_FAILURE, "")
+            stopSelf()
+            return START_NOT_STICKY
+        }
+
         // A DUPLICATE START IS NOT A FAILED ONE, and telling them apart is what keeps a live
         // connection alive. `startCoreLoop` answers false to both — "a core is already running" and
         // "the core would not start" — and the branch below treats false as failure and stops the

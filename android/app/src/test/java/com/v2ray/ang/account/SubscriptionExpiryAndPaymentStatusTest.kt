@@ -1,6 +1,7 @@
 package com.v2ray.ang.account
 
 import com.v2ray.ang.auth.dto.PaymentOutcome
+import com.v2ray.ang.auth.dto.PaymentResultDto
 import com.v2ray.ang.auth.dto.paymentOutcomeOf
 import com.v2ray.ang.util.SubscriptionUserInfo
 import org.junit.Assert.assertEquals
@@ -112,6 +113,26 @@ class SubscriptionExpiryAndPaymentStatusTest {
     fun `an unrecognised or absent status is UNKNOWN, and the caller decides`() {
         assertEquals(PaymentOutcome.UNKNOWN, paymentOutcomeOf(""))
         assertEquals(PaymentOutcome.UNKNOWN, paymentOutcomeOf("held_for_review"))
+    }
+
+    // endregion
+
+    // region the balance reply
+
+    @Test
+    fun `a balance reply is a payment only when it shows the debit`() {
+        // The backend's own success shape carries no status at all: {message, paymentId, newBalance}.
+        assertEquals(PaymentOutcome.SETTLED, PaymentResultDto(newBalance = 120.0).balanceOutcome())
+        assertEquals(PaymentOutcome.SETTLED, PaymentResultDto(paymentId = "p-1").balanceOutcome())
+        assertEquals(PaymentOutcome.SETTLED, PaymentResultDto(status = "paid").balanceOutcome())
+    }
+
+    @Test
+    fun `a reply that shows no debit is never reported as paid`() {
+        assertEquals(PaymentOutcome.PENDING, PaymentResultDto().balanceOutcome())
+        assertEquals(PaymentOutcome.PENDING, PaymentResultDto(message = "ok").balanceOutcome())
+        assertEquals(PaymentOutcome.PENDING, PaymentResultDto(status = "held_for_review").balanceOutcome())
+        assertEquals(PaymentOutcome.FAILED, PaymentResultDto(status = "insufficient_funds").balanceOutcome())
     }
 
     // endregion
