@@ -179,6 +179,11 @@ object Utils {
                 addr = addr.drop(8).replace("]", "")
             }
 
+            // [IPv6]:port — the address is what is inside the brackets.
+            if (addr.startsWith("[") && addr.contains("]:")) {
+                addr = addr.substring(1, addr.indexOf("]"))
+            }
+
             val octets = addr.split('.')
             if (octets.size == 4) {
                 if (octets[3].contains(":")) {

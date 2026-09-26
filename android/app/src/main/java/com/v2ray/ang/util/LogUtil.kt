@@ -41,7 +41,15 @@ object LogUtil {
             if (current != CACHE_UNSET) {
                 current
             } else {
-                parsePriority(MmkvManager.decodeSettingsString(AppConfig.PREF_LOGLEVEL, DEFAULT_LEVEL)).also {
+                //  Уровень лежит в MMKV, а журнал пишут и раньше MMKV.initialize — в самом начале запуска
+                //  и в тестах на JVM. Там MMKV бросает, и запись в журнал роняла того, кто писал. Тогда —
+                //  уровень по умолчанию, и он не запоминается: прочтётся, когда MMKV будет готов.
+                val stored = try {
+                    MmkvManager.decodeSettingsString(AppConfig.PREF_LOGLEVEL, DEFAULT_LEVEL)
+                } catch (e: IllegalStateException) {
+                    return@synchronized parsePriority(DEFAULT_LEVEL)
+                }
+                parsePriority(stored).also {
                     cachedMinPriority = it
                 }
             }
@@ -55,13 +63,19 @@ object LogUtil {
     private fun log(priority: Int, tag: String, message: String, throwable: Throwable? = null) {
         if (!isEnabled(priority)) return
 
-        when {
-            throwable == null -> Log.println(priority, tag, message)
-            priority >= Log.ERROR -> Log.e(tag, message, throwable)
-            priority == Log.WARN -> Log.w(tag, message, throwable)
-            priority == Log.INFO -> Log.i(tag, message, throwable)
-            priority == Log.DEBUG -> Log.d(tag, message, throwable)
-            else -> Log.v(tag, message, throwable)
+        //  Журнал никого не роняет. Вне Android (тесты на JVM) android.util.Log — заглушка, которая
+        //  бросает на каждый вызов, и строка журнала в ветке ошибки превращала «вернуть false» в падение.
+        try {
+            when {
+                throwable == null -> Log.println(priority, tag, message)
+                priority >= Log.ERROR -> Log.e(tag, message, throwable)
+                priority == Log.WARN -> Log.w(tag, message, throwable)
+                priority == Log.INFO -> Log.i(tag, message, throwable)
+                priority == Log.DEBUG -> Log.d(tag, message, throwable)
+                else -> Log.v(tag, message, throwable)
+            }
+        } catch (e: RuntimeException) {
+            // nothing to report it to
         }
     }
 
