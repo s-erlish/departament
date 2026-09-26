@@ -249,7 +249,11 @@ public static class CoreConfigHandler
         // outbound at runtime (Tier 2 make-before-break) without touching this config's inbounds,
         // routing, TUN adapter or the sing-box pre-service. The template's own outbounds/routing/dns
         // stay AS-AUTHORED — we only add an api inbound, the api block and the api dispatch rule.
-        GraftXrayApi(root);
+        // Only while that tier is on: the api has no authentication (CoreManager.EnableHotSwapTier).
+        if (CoreManager.EnableHotSwapTier)
+        {
+            GraftXrayApi(root);
+        }
     }
 
     /// <summary>

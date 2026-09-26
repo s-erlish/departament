@@ -280,6 +280,19 @@ public class ProfilesViewModel : MyReactiveObject
         ReloadRequested.Publish();
     }
 
+    /// <summary>
+    /// Перезапуск с новыми данными сервера — только если туннель поднят. Правка или удаление
+    /// выбранного сервера при выключенном VPN звали Reload(), а он подключает: VPN включался сам,
+    /// без щита и без вопроса, и щит даже не показывал подключение.
+    /// </summary>
+    private void ReloadIfRunning()
+    {
+        if (AppManager.Instance.IsRunningCore(ECoreType.Xray) || AppManager.Instance.IsRunningCore(ECoreType.sing_box))
+        {
+            Reload();
+        }
+    }
+
     public async Task SetSpeedTestResult(SpeedTestResult result)
     {
         if (result.IndexId.IsNullOrEmpty())
@@ -533,7 +546,7 @@ public class ProfilesViewModel : MyReactiveObject
             await RefreshServers();
             if (item.IndexId == _config.IndexId)
             {
-                Reload();
+                ReloadIfRunning();
             }
         }
     }
@@ -560,7 +573,7 @@ public class ProfilesViewModel : MyReactiveObject
         await RefreshServers();
         if (exists)
         {
-            Reload();
+            ReloadIfRunning();
         }
     }
 
@@ -575,7 +588,7 @@ public class ProfilesViewModel : MyReactiveObject
         if (tuple.Item1 > 0 || tuple.Item2 > 0)
         {
             await RefreshServers();
-            Reload();
+            ReloadIfRunning();
         }
         NoticeManager.Instance.Enqueue(string.Format(ResUI.RemoveDuplicateServerResult, tuple.Item1, tuple.Item2));
     }

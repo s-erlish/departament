@@ -235,6 +235,9 @@ begin
   if MsgBox(CustomMessage('RemoveUserData'), mbConfirmation, MB_YESNO or MB_DEFBUTTON2) = IDYES then
   begin
     DelTree(ExpandConstant('{app}\guiConfigs'), True, True, True);
+    { Резервные копии — обычный zip со входом в аккаунт и адресами подписок: «удалить данные»
+      оставлял их на диске. }
+    DelTree(ExpandConstant('{app}\guiBackups'), True, True, True);
     DelTree(ExpandConstant('{app}\guiLogs'), True, True, True);
     DelTree(ExpandConstant('{app}\guiTemps'), True, True, True);
     DelTree(ExpandConstant('{app}\binConfigs'), True, True, True);

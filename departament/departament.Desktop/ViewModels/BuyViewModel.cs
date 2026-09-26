@@ -480,6 +480,13 @@ public class BuyViewModel : MyReactiveObject
 
     public async Task PickMethod(BuyPaymentMethodItem method)
     {
+        //  Только из открытого листа. Закрытый лист лишь прозрачен и не ловит мышь: его строки остаются
+        //  на месте, и фокус клавиатуры возвращался на них (переключение окон, Tab). Enter после
+        //  «Подписка оплачена» платил ещё раз — с того же баланса или вторым заказом.
+        if (!IsSheetOpen)
+        {
+            return;
+        }
         IsSheetOpen = false;
         var tariff = _selectedTariff;
         var option = _selectedOption;
@@ -560,7 +567,7 @@ public class BuyViewModel : MyReactiveObject
         // Checked, not assumed: ProcUtils.ProcessStart swallows its failures, so the catch this
         // replaces could never fire — a machine with no browser handler was told «завершите оплату
         // в браузере» and then polled for forty seconds for a payment nobody could make.
-        if (!ProcUtils.TryProcessStart(url))
+        if (!ProcUtils.TryOpenLink(url))
         {
             ShowNotice(Common.L.T("Common_CouldntOpenPayment"));
             return;

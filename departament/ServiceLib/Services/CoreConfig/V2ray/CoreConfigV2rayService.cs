@@ -56,7 +56,10 @@ public partial class CoreConfigV2rayService(CoreConfigContext context)
 
             GenStatistic();
 
-            GenApi();
+            if (CoreManager.EnableHotSwapTier)
+            {
+                GenApi();
+            }
 
             if (_config.CoreBasicItem.EnableFragment)
             {

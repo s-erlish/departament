@@ -499,7 +499,14 @@ public partial class SubscriptionMetaView : UserControl
 
     private void ApplyExpiry(long expire)
     {
-        if (expire <= 0)
+        //  Записанное прежними версиями могло оказаться миллисекундами (SubscriptionHandler теперь
+        //  переводит их при чтении заголовка), а FromUnixTimeSeconds на таком числе бросает — прямо в
+        //  раскладке окна, то есть падением программы на каждом запуске.
+        if (expire > SubscriptionHandler.MaxUnixSeconds)
+        {
+            expire /= 1000;
+        }
+        if (expire <= 0 || expire > SubscriptionHandler.MaxUnixSeconds)
         {
             ExpiryText.Text = "∞";
             ExpiryText.Foreground = _muted;
@@ -576,7 +583,7 @@ public partial class SubscriptionMetaView : UserControl
     private static string FormatSubtitle(SubItem sub, bool withInterval)
     {
         var parts = new List<string>();
-        if (sub.UpdateTime > 0)
+        if (sub.UpdateTime is > 0 and <= SubscriptionHandler.MaxUnixSeconds)
         {
             var dt = DateTimeOffset.FromUnixTimeSeconds(sub.UpdateTime).LocalDateTime;
             parts.Add(dt.ToString("dd.MM.yyyy HH:mm"));
@@ -762,7 +769,7 @@ public partial class SubscriptionMetaView : UserControl
     {
         if (_supportUrl.IsNotEmpty())
         {
-            ProcUtils.ProcessStart(_supportUrl);
+            ProcUtils.TryOpenLink(_supportUrl);
         }
     }
 
@@ -770,7 +777,7 @@ public partial class SubscriptionMetaView : UserControl
     {
         if (_webPageUrl.IsNotEmpty())
         {
-            ProcUtils.ProcessStart(_webPageUrl);
+            ProcUtils.TryOpenLink(_webPageUrl);
         }
     }
 

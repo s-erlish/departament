@@ -938,17 +938,21 @@ public class AccountViewModel : MyReactiveObject
         }
     }
 
-    /// <summary>Parses a ₽ amount in either invariant or the current culture (handles "1490" and "1 490,00").</summary>
+    /// <summary>
+    /// Сумма пополнения в рублях: «1490», «1 490», «1490,50», «1490.50» — запятая и точка всегда отделяют
+    /// копейки. Раньше строка сначала разбиралась по-английски, где запятая разделяет тысячи, и «500,00»
+    /// читалось как 50 000: открывалась оплата на 50 000 ₽. Два разделителя, больше двух знаков после
+    /// запятой или буквы — не сумма, а не догадка.
+    /// </summary>
     private static bool TryParseAmount(string? raw, out double amount)
     {
         amount = 0;
-        var t = raw?.Trim();
-        if (t.IsNullOrEmpty())
+        var t = new string((raw ?? string.Empty).Where(c => !char.IsWhiteSpace(c)).ToArray()).Replace(',', '.');
+        if (!System.Text.RegularExpressions.Regex.IsMatch(t, @"^\d+(\.\d{1,2})?$"))
         {
             return false;
         }
-        return double.TryParse(t, NumberStyles.Any, CultureInfo.InvariantCulture, out amount)
-            || double.TryParse(t, NumberStyles.Any, CultureInfo.CurrentCulture, out amount);
+        return double.TryParse(t, NumberStyles.AllowDecimalPoint, CultureInfo.InvariantCulture, out amount);
     }
 
     /// <summary>Re-derives <see cref="CanTopUp"/> from the typed amount AND the availability of a usable
@@ -1120,7 +1124,7 @@ public class AccountViewModel : MyReactiveObject
         var url = $"{SiteLoginUrl}?return={AppScheme}://auth";
         // TryProcessStart, not the void overload: that one swallows the failure, so this catch could
         // never fire and a machine with no browser handler silently did nothing at all.
-        if (!ProcUtils.TryProcessStart(url))
+        if (!ProcUtils.TryOpenLink(url))
         {
             RunOnUi(() => AppEvents.SendSnackMsgRequested.Publish(L.T("Common_SomethingWrong")));
         }
@@ -1247,7 +1251,7 @@ public class AccountViewModel : MyReactiveObject
             case LoginState.AwaitingTelegram awaiting:
                 TelegramDeepLink = awaiting.DeepLink;
                 // Open the Telegram deep link in the default browser so the user can confirm.
-                ProcUtils.ProcessStart(awaiting.DeepLink);
+                ProcUtils.TryOpenLink(awaiting.DeepLink);
                 break;
             case LoginState.Success success:
                 _ = OnAuthenticated(success.Profile);
@@ -1709,7 +1713,7 @@ public class AccountViewModel : MyReactiveObject
                     // The browser launch has to be CHECKED, not assumed: promising «завершите оплату
                     // в браузере» and starting a poll over a browser that never opened is the worst
                     // possible answer — the user waits for a page that is not there.
-                    if (ProcUtils.TryProcessStart(url))
+                    if (ProcUtils.TryOpenLink(url))
                     {
                         AppEvents.SendSnackMsgRequested.Publish(L.T("Common_CompletePaymentInBrowser"));
                         TopUpAmount = string.Empty;
@@ -1848,7 +1852,7 @@ public class AccountViewModel : MyReactiveObject
                         AppEvents.SendSnackMsgRequested.Publish(L.T("Common_CouldntOpenPayment"));
                         return;
                     }
-                    if (ProcUtils.TryProcessStart(url))
+                    if (ProcUtils.TryOpenLink(url))
                     {
                         AppEvents.SendSnackMsgRequested.Publish(L.T("Common_CompletePaymentInBrowser"));
                         ScheduleRenewPoll(card, init);
@@ -2066,7 +2070,7 @@ public class AccountViewModel : MyReactiveObject
             AppEvents.SendSnackMsgRequested.Publish(L.T("Common_CouldntOpenPayment"));
             return;
         }
-        if (!ProcUtils.TryProcessStart(url))
+        if (!ProcUtils.TryOpenLink(url))
         {
             clearBusy();
             AppEvents.SendSnackMsgRequested.Publish(L.T("Common_CouldntOpenPayment"));
@@ -2218,7 +2222,7 @@ public class AccountViewModel : MyReactiveObject
         }
         try
         {
-            ProcUtils.ProcessStart($"https://t.me/{_linkBotUsername.TrimStart('@')}");
+            ProcUtils.TryOpenLink($"https://t.me/{_linkBotUsername.TrimStart('@')}");
         }
         catch
         {
@@ -2468,7 +2472,7 @@ public class AccountViewModel : MyReactiveObject
                         AppEvents.SendSnackMsgRequested.Publish(L.T("Common_SomethingWrong"));
                         return;
                     }
-                    if (!ProcUtils.TryProcessStart(url))
+                    if (!ProcUtils.TryOpenLink(url))
                     {
                         AppEvents.SendSnackMsgRequested.Publish(L.T("Common_SomethingWrong"));
                     }

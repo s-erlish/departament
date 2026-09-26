@@ -46,6 +46,13 @@ public sealed class SubscriptionSyncManager
     /// </summary>
     private static readonly SemaphoreSlim _importGate = new(1, 1);
 
+    /// <summary>
+    /// Номер сеанса аккаунта. Выход из аккаунта (<see cref="RemoveAllManaged"/>) его меняет, и импорт,
+    /// начатый до выхода, ничего не записывает. Раньше выход удалял подписки, пока импорт ещё ждал
+    /// ответа сервера, а импорт, дождавшись, возвращал их вместе с серверами — у вышедшего аккаунта.
+    /// </summary>
+    private static int _accountEpoch;
+
     private readonly IDepartamentApiClient _api;
 
     public SubscriptionSyncManager(IDepartamentApiClient? api = null)
@@ -63,7 +70,7 @@ public sealed class SubscriptionSyncManager
         await _importGate.WaitAsync();
         try
         {
-            return await ImportAllCore();
+            return await ImportAllCore(Volatile.Read(ref _accountEpoch));
         }
         finally
         {
@@ -71,7 +78,7 @@ public sealed class SubscriptionSyncManager
         }
     }
 
-    private async Task<List<string>> ImportAllCore()
+    private async Task<List<string>> ImportAllCore(int epoch)
     {
         // The PRIMARY summary is the authoritative source of the real connect URL. A "no active
         // subscription" account returns a 200 with an empty subscription (not an error), so the
@@ -118,6 +125,12 @@ public sealed class SubscriptionSyncManager
         if (primary?.HasActiveSubscription() == true && primary.Raw()?.SubscriptionUrl.IsNullOrEmpty() != false)
         {
             authoritative = false;
+        }
+
+        //  Пока шли запросы, из аккаунта могли выйти: тогда записывать нечего и некому.
+        if (Volatile.Read(ref _accountEpoch) != epoch)
+        {
+            return [];
         }
 
         var profile = AuthTokenStore.GetUser();
@@ -400,16 +413,28 @@ public sealed class SubscriptionSyncManager
     /// </summary>
     public async Task RemoveAllManaged()
     {
-        var config = AppManager.Instance.Config;
-        var managed = AuthTokenStore.GetManagedGuids();
-        foreach (var kv in managed)
+        //  Сначала новый номер сеанса: импорт, который ещё ждёт ответа сервера, увидит его и ничего не
+        //  запишет. Потом та же очередь, что у импорта: импорт, который уже пишет, допишет, и удаление
+        //  ниже снимет и то, что он успел.
+        Interlocked.Increment(ref _accountEpoch);
+        await _importGate.WaitAsync();
+        try
         {
-            if (kv.Value.IsNotEmpty())
+            var config = AppManager.Instance.Config;
+            var managed = AuthTokenStore.GetManagedGuids();
+            foreach (var kv in managed)
             {
-                await ConfigHandler.DeleteSubItem(config, kv.Value);
+                if (kv.Value.IsNotEmpty())
+                {
+                    await ConfigHandler.DeleteSubItem(config, kv.Value);
+                }
             }
+            AuthTokenStore.SetManagedGuids(new Dictionary<string, string>());
         }
-        AuthTokenStore.SetManagedGuids(new Dictionary<string, string>());
+        finally
+        {
+            _importGate.Release();
+        }
     }
 
     private static string FirstNonBlank(params string?[] values)

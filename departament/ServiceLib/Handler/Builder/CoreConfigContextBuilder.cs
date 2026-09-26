@@ -46,7 +46,7 @@ public class CoreConfigContextBuilder
             SimpleDnsItem = config.SimpleDNSItem,
             ProtectDomainList = [],
             RawDnsItem = await AppManager.Instance.GetDNSItem(coreType),
-            RoutingItem = await ConfigHandler.GetDefaultRouting(config),
+            RoutingItem = PerAppRouting.WithCatchAllAfterInclude(await ConfigHandler.GetDefaultRouting(config)),
             IsWindows = Utils.IsWindows(),
             IsMacOS = Utils.IsMacOS(),
         };
@@ -94,11 +94,12 @@ public class CoreConfigContextBuilder
                 context.AllProxiesMap[$"remark:{ruleItem.OutboundTag}"] = actRuleNode;
             }
         }
-        if (context.IsTunEnabled && context.AppConfig.TunModeItem.RouteExcludeAddress is { Count: > 0 })
+        var bypassLan = context.IsTunEnabled && context.AppConfig.TunModeItem.BypassLan;
+        if (context.IsTunEnabled && (context.AppConfig.TunModeItem.RouteExcludeAddress is { Count: > 0 } || bypassLan))
         {
             var appConfig = JsonUtils.DeepCopy(config);
             var routeExcludeAddressList = new List<string>();
-            foreach (var addr in context.AppConfig.TunModeItem.RouteExcludeAddress)
+            foreach (var addr in context.AppConfig.TunModeItem.RouteExcludeAddress ?? [])
             {
                 try
                 {
@@ -110,7 +111,13 @@ public class CoreConfigContextBuilder
                     validatorResult.Warnings.Add(string.Format(ResUI.MsgTunRouteExcludeInvalidAddress, addr));
                 }
             }
-            appConfig.TunModeItem.RouteExcludeAddress = routeExcludeAddressList;
+            if (bypassLan)
+            {
+                routeExcludeAddressList.AddRange(LanRouteExcludes());
+            }
+            //  Контекст второго ядра туннеля строится из уже готового AppConfig (BuildPreSocksIfNeeded),
+            //  и локальные сети пришли бы в список дважды.
+            appConfig.TunModeItem.RouteExcludeAddress = routeExcludeAddressList.Distinct().ToList();
             context = context with { AppConfig = appConfig };
         }
         if (!context.AppConfig.CoreBasicItem.SendThrough.IsNullOrEmpty()
@@ -226,6 +233,54 @@ public class CoreConfigContextBuilder
         }
 
         return null;
+    }
+
+    /// <summary>
+    /// Что «Обход локальной сети» выводит из туннеля: локальные сети, как на Android (там маршруты VPN
+    /// строятся без них). Кроме адресов DNS-серверов в этих сетях — обычно это роутер. Windows спрашивает
+    /// DNS у всех подключений сразу, и без туннеля запросы к роутеру уходили бы мимо VPN: провайдер
+    /// видел бы, какие сайты открываются, и подменял ответы для заблокированных. В туннеле их, как и
+    /// раньше, перехватывает ядро.
+    /// </summary>
+    private static List<string> LanRouteExcludes()
+    {
+        string[] lan = ["10.0.0.0/8", "172.16.0.0/12", "192.168.0.0/16", "169.254.0.0/16", "fc00::/7", "fe80::/10"];
+        var dnsServers = new List<IPNetwork2>();
+        try
+        {
+            foreach (var nic in NetworkInterface.GetAllNetworkInterfaces())
+            {
+                if (nic.OperationalStatus != OperationalStatus.Up)
+                {
+                    continue;
+                }
+                foreach (var dns in nic.GetIPProperties().DnsAddresses)
+                {
+                    //  Без зоны (fe80::1%12): маска считается по самому адресу.
+                    var address = new IPAddress(dns.GetAddressBytes());
+                    var bits = address.AddressFamily == AddressFamily.InterNetwork ? 32 : 128;
+                    dnsServers.Add(IPNetwork2.Parse($"{address}/{bits}"));
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            Logging.SaveLog("LanRouteExcludes", ex);
+        }
+
+        var result = new List<string>();
+        foreach (var cidr in lan)
+        {
+            var parts = new List<IPNetwork2> { IPNetwork2.Parse(cidr) };
+            foreach (var dns in dnsServers)
+            {
+                parts = parts.SelectMany(p => p.AddressFamily == dns.AddressFamily && p.Contains(dns)
+                    ? p.Subtract(dns)
+                    : [p]).ToList();
+            }
+            result.AddRange(parts.Select(p => p.ToString()));
+        }
+        return result;
     }
 
     /// <summary>

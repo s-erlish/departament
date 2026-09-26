@@ -221,7 +221,10 @@ internal static class AppHandoffChannel
         {
             try
             {
-                using var server = new NamedPipeServerStream(name, PipeDirection.In, 1, PipeTransmissionMode.Byte, PipeOptions.None);
+                //  Только свой пользователь (CurrentUserOnly — права на канал у одного его). Канал с
+                //  предсказуемым именем открывал любой процесс компьютера, в том числе чужого
+                //  пользователя: мог прислать «выйти» и закрыть VPN или подсунуть свою ссылку входа.
+                using var server = new NamedPipeServerStream(name, PipeDirection.In, 1, PipeTransmissionMode.Byte, PipeOptions.CurrentUserOnly);
                 server.WaitForConnection();
                 using var reader = new StreamReader(server, Encoding.UTF8);
                 var url = reader.ReadToEnd()?.Trim();
@@ -243,7 +246,9 @@ internal static class AppHandoffChannel
     {
         try
         {
-            using var client = new NamedPipeClientStream(".", PipeName(), PipeDirection.Out);
+            //  CurrentUserOnly и здесь: канал, созданный ДРУГИМ пользователем раньше программы, не
+            //  примется — иначе код входа из ссылки ушёл бы тому, кто занял имя.
+            using var client = new NamedPipeClientStream(".", PipeName(), PipeDirection.Out, PipeOptions.CurrentUserOnly);
             client.Connect(2000);
             using var writer = new StreamWriter(client, new UTF8Encoding(false)) { AutoFlush = true };
             writer.Write(url);

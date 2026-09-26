@@ -92,7 +92,7 @@ public sealed class DepartamentApiClient : IDepartamentApiClient
             request.Headers.TryAddWithoutValidation(HeaderHwid, AuthTokenStore.DeviceId());
             request.Headers.TryAddWithoutValidation(HeaderDeviceOs, CurrentDeviceOs());
             request.Headers.TryAddWithoutValidation(HeaderVerOs, Environment.OSVersion.Version.ToString());
-            request.Headers.TryAddWithoutValidation(HeaderDeviceModel, Environment.MachineName);
+            request.Headers.TryAddWithoutValidation(HeaderDeviceModel, Utils.DeviceNameForHeader());
 
             return await base.SendAsync(request, cancellationToken);
         }

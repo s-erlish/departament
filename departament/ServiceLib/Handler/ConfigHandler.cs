@@ -173,6 +173,15 @@ public static class ConfigHandler
             IcmpRouting = Global.TunIcmpRoutingPolicies.First(),
             EnableLegacyProtect = false,
         };
+        //  «Обход локальной сети» раньше включал AllowLANConn: основной вход прокси слушал 0.0.0.0 без
+        //  пароля, и любой в той же сети (кафе, офис) пользовался VPN этого человека. Другого способа
+        //  включить AllowLANConn в программе нет, значит включённый — включённый этим переключателем:
+        //  переносим туда, что переключатель теперь значит (TunModeItem.BypassLan), а сеть закрываем.
+        if (config.Inbound.FirstOrDefault() is { AllowLANConn: true } lanInbound)
+        {
+            lanInbound.AllowLANConn = false;
+            config.TunModeItem.BypassLan = true;
+        }
         config.GuiItem ??= new();
         if (!Global.RootCertProviders.Contains(config.GuiItem.RootCertProvider))
         {

@@ -280,8 +280,14 @@ public static class SubscriptionHandler
         var ret = await ConfigHandler.AddBatchServers(config, body, subItem.Id, true);
         if (ret <= 0)
         {
-            Logging.SaveLog("FailedImportSubscription");
-            Logging.SaveLog(body);
+            //  Само содержимое в журнал не пишется: в нём ключи всех серверов подписки, а журнал лежит
+            //  открытым текстом. Для разбора хватает размера и того, на что ответ похож.
+            var head = body.TrimStart();
+            var kind = head.StartsWith('{') || head.StartsWith('[') ? "JSON"
+                : head.Contains("://") ? "ссылки"
+                : head.StartsWith('<') ? "HTML"
+                : "другое";
+            Logging.SaveLog($"FailedImportSubscription: {body.Length} символов, похоже на {kind}");
         }
         else
         {
@@ -476,8 +482,23 @@ public static class SubscriptionHandler
             }
         }
 
+        //  Срок — секунды от 1970 года, но бывают и миллисекунды. Такое число больше любой даты, которую
+        //  понимает .NET, и программа, записав его, падала на каждом запуске, рисуя карточку подписки.
+        //  Миллисекунды переводятся в секунды; что не влезает и тогда — «без срока».
+        if (expire > MaxUnixSeconds)
+        {
+            expire /= 1000;
+        }
+        if (expire is < 0 or > MaxUnixSeconds)
+        {
+            expire = 0;
+        }
+
         return any ? (upload, download, total, expire) : null;
     }
+
+    /// <summary>31.12.9999 — последняя секунда, которую понимает DateTimeOffset.</summary>
+    public const long MaxUnixSeconds = 253402300799;
 
     /// <summary>
     /// Decodes a Happ/Incy subscription directive header value. Returns null when the header is

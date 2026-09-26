@@ -1032,6 +1032,73 @@ public class Utils
         return null;
     }
 
+    private static string? _deviceNameForHeader;
+
+    /// <summary>
+    /// Имя компьютера для заголовка <c>x-device-model</c>: панель показывает его в списке устройств.
+    ///
+    /// Заголовки HTTP — только ASCII, и .NET отказывается отправлять запрос с любой другой буквой в
+    /// заголовке ещё до первого байта. Имя компьютера шло в заголовок как есть, и на компьютере с
+    /// русским именем («ИВАН-ПК») не уходил ни один запрос: ни вход, ни аккаунт, ни загрузка подписки —
+    /// программа не работала совсем. Кириллица переводится в латиницу (ИВАН-ПК → IVAN-PK), у остальных
+    /// букв снимаются надстрочные знаки, прочее выбрасывается; пустое имя — «PC».
+    /// </summary>
+    public static string DeviceNameForHeader()
+    {
+        return _deviceNameForHeader ??= ToHeaderAscii(Environment.MachineName, "PC");
+    }
+
+    private static readonly Dictionary<char, string> _cyrillicToLatin = new()
+    {
+        ['а'] = "a", ['б'] = "b", ['в'] = "v", ['г'] = "g", ['д'] = "d", ['е'] = "e", ['ё'] = "e",
+        ['ж'] = "zh", ['з'] = "z", ['и'] = "i", ['й'] = "y", ['к'] = "k", ['л'] = "l", ['м'] = "m",
+        ['н'] = "n", ['о'] = "o", ['п'] = "p", ['р'] = "r", ['с'] = "s", ['т'] = "t", ['у'] = "u",
+        ['ф'] = "f", ['х'] = "kh", ['ц'] = "ts", ['ч'] = "ch", ['ш'] = "sh", ['щ'] = "shch", ['ъ'] = "",
+        ['ы'] = "y", ['ь'] = "", ['э'] = "e", ['ю'] = "yu", ['я'] = "ya",
+        ['є'] = "ye", ['і'] = "i", ['ї'] = "yi", ['ґ'] = "g", ['ў'] = "u",
+    };
+
+    /// <summary>Строка, которую можно отправить в заголовке HTTP: печатный ASCII, без переводов строк.</summary>
+    public static string ToHeaderAscii(string? value, string fallback)
+    {
+        if (value.IsNullOrEmpty())
+        {
+            return fallback;
+        }
+        var latin = new StringBuilder(value.Length);
+        for (var i = 0; i < value.Length; i++)
+        {
+            var ch = value[i];
+            if (!_cyrillicToLatin.TryGetValue(char.ToLowerInvariant(ch), out var mapped))
+            {
+                latin.Append(ch);
+                continue;
+            }
+            if (mapped.Length == 0 || !char.IsUpper(ch))
+            {
+                latin.Append(mapped);
+                continue;
+            }
+            //  Имя из заглавных (а имя компьютера в Windows всегда такое) остаётся заглавным целиком:
+            //  «ЖЕНЯ» → «ZHENYA», а не «ZhENYA».
+            var next = i + 1 < value.Length ? value[i + 1] : ' ';
+            latin.Append(!char.IsLetter(next) || char.IsUpper(next)
+                ? mapped.ToUpperInvariant()
+                : char.ToUpperInvariant(mapped[0]) + mapped[1..]);
+        }
+
+        var result = new StringBuilder(latin.Length);
+        foreach (var ch in latin.ToString().Normalize(NormalizationForm.FormD))
+        {
+            if (ch is >= ' ' and <= '~')
+            {
+                result.Append(ch);
+            }
+        }
+        var text = result.ToString().Trim();
+        return text.Length > 0 ? text : fallback;
+    }
+
     #endregion Miscellaneous
 
     #region TempPath

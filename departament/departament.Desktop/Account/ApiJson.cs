@@ -89,6 +89,13 @@ public static class ApiJson
 /// </summary>
 public sealed class NullTolerantStringConverter : JsonConverter<string>
 {
+    /// <summary>
+    /// Без этого System.Text.Json до конвертера JSON-null не доводит вовсе: у ссылочных типов null
+    /// записывается в свойство сам, мимо Read, — и «ни одна строка DTO не null» не выполнялось.
+    /// Пустое поле от сервера («currency»: null) доходило до .Trim() и роняло пересчёт экрана.
+    /// </summary>
+    public override bool HandleNull => true;
+
     public override string Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
     {
         switch (reader.TokenType)
@@ -102,8 +109,11 @@ public sealed class NullTolerantStringConverter : JsonConverter<string>
             case JsonTokenType.False:
                 return "false";
             case JsonTokenType.Number:
-                // Preserve the raw numeric text so an id/amount typed as a JSON number still maps.
-                return reader.GetDouble().ToString(System.Globalization.CultureInfo.InvariantCulture);
+                // Preserve the raw numeric text so an id/amount typed as a JSON number still maps —
+                // the text itself, not a double: a long id would lose its last digits in a double.
+                return System.Text.Encoding.UTF8.GetString(reader.HasValueSequence
+                    ? System.Buffers.BuffersExtensions.ToArray(reader.ValueSequence)
+                    : reader.ValueSpan);
             default:
                 reader.Skip();
                 return string.Empty;

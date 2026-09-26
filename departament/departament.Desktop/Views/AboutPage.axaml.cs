@@ -100,7 +100,6 @@ public partial class AboutPage : UserControl, ISubPage
 
     private static void OpenUrl(string url)
     {
-        try { ProcUtils.ProcessStart(url); }
-        catch { }
+        ProcUtils.TryOpenLink(url);
     }
 }

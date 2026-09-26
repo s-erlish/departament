@@ -7,7 +7,7 @@ namespace departament.Desktop.ViewModels;
 /// reference <c>OptionSettingViewModel</c> / <c>StatusBarViewModel</c> / <c>ThemeSettingViewModel</c>:
 ///
 ///   • Режим            → <c>TunModeItem.EnableTun</c>            (passive — see <see cref="SetTunMode"/>);
-///   • Обход лок. сети   → <c>Inbound[0].AllowLANConn</c>          (== OptionSettingViewModel.AllowLANConn);
+///   • Обход лок. сети   → <c>TunModeItem.BypassLan</c>            (локальные сети мимо туннеля, как на Android);
 ///   • IPv6             → <c>TunModeItem.EnableIPv6Address</c>    (== OptionSettingViewModel.TunEnableIPv6Address);
 ///   • Mux              → <c>Mux4SboxItem.Protocol</c> on/off     (== OptionSettingViewModel.Mux4SboxProtocol);
 ///   • Число Mux        → <c>Mux4SboxItem.MaxConnections</c>      (окошко; строка видна только при Mux ON);
@@ -217,9 +217,7 @@ public class SettingsViewModel : MyReactiveObject
         _loading = true;
         try
         {
-            var inbound = _config.Inbound.FirstOrDefault();
-
-            BypassLan = inbound?.AllowLANConn ?? false;
+            BypassLan = _config.TunModeItem.BypassLan;
             EnableIpv6 = _config.TunModeItem.EnableIPv6Address;
             MuxEnabled = _config.Mux4SboxItem.Protocol.IsNotEmpty();
             FragmentEnabled = _config.CoreBasicItem.EnableFragment;
@@ -348,14 +346,18 @@ public class SettingsViewModel : MyReactiveObject
         }
     }
 
+    /// <summary>
+    /// «Обход локальной сети». Раньше переключатель менял Inbound.AllowLANConn — и открывал прокси всей
+    /// сети без пароля, а не обход, как написано на нём. Теперь это обход: локальные сети выводятся из
+    /// туннеля (CoreConfigContextBuilder.LanRouteExcludes), как на Android.
+    /// </summary>
     private async Task OnBypassLanChanged(bool v)
     {
-        var inbound = _config.Inbound.FirstOrDefault();
-        if (_designMode || inbound == null || inbound.AllowLANConn == v)
+        if (_designMode || _config.TunModeItem.BypassLan == v)
         {
             return;
         }
-        inbound.AllowLANConn = v;
+        _config.TunModeItem.BypassLan = v;
         await PersistAndMaybeReload();
     }
 

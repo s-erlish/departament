@@ -4,6 +4,28 @@ public static class ProcUtils
 {
     private static readonly string _tag = "ProcUtils";
 
+    /// <summary>
+    /// Открывает ссылку, пришедшую извне, — из подписки или от сервера аккаунта, — и только ссылку.
+    ///
+    /// Кнопки «Поддержка» и Telegram у подписки открывали через оболочку Windows всё, что подписка
+    /// прислала в заголовках support-url и profile-web-page-url, а программа работает с правами
+    /// администратора. Путь к файлу в сети (<c>\\сервер\папка\p.exe</c>), <c>file:///</c> или чужой
+    /// протокол запускались одним нажатием, с правами администратора и без вопроса Windows. Теперь
+    /// открываются только веб-ссылки (http, https) и ссылки Telegram (tg); остальное — строка в журнале.
+    /// </summary>
+    public static bool TryOpenLink(string? url)
+    {
+        if (!Uri.TryCreate(url?.Trim(), UriKind.Absolute, out var uri)
+            || !(uri.Scheme == Uri.UriSchemeHttps || uri.Scheme == Uri.UriSchemeHttp || uri.Scheme == "tg"))
+        {
+            Logging.SaveLog($"{_tag}: не открыта ссылка, это не веб-адрес: {url}");
+            return false;
+        }
+        //  Открывается разобранный адрес, а не исходная строка: пробелы и прочее в нём уже закодированы,
+        //  и оболочка получает ровно то, что проверено.
+        return TryProcessStart(uri.AbsoluteUri);
+    }
+
     public static void ProcessStart(string? fileName, string arguments = "")
     {
         _ = ProcessStart(fileName, arguments, null);

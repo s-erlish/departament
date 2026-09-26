@@ -40,9 +40,9 @@ namespace departament.Desktop.Views;
 public partial class PerAppProxyPage : UserControl, ISubPage
 {
     // Маркер на управляемом RulesItem — по нему находим и заменяем СВОИ правила, не трогая пользовательские.
-    private const string PerAppMarkerBypass = "__departament_perapp_bypass";
-    private const string PerAppMarkerInclude = "__departament_perapp_include";
-    private const string PerAppMarkerCatchAll = "__departament_perapp_catchall";
+    private const string PerAppMarkerBypass = PerAppRouting.MarkerBypass;
+    private const string PerAppMarkerInclude = PerAppRouting.MarkerInclude;
+    private const string PerAppMarkerCatchAll = PerAppRouting.MarkerCatchAll;
 
     // Порядок пунктов окошка = порядок этих индексов. 0 — «Кроме выбранных» (bypass).
     private const int ModeExcept = 0;
@@ -608,7 +608,8 @@ public partial class PerAppProxyPage : UserControl, ISubPage
             }
             else
             {
-                // Через прокси идут только перечисленные; всё остальное — напрямую (catch-all в конце).
+                // Через прокси идут только перечисленные; всё остальное — напрямую. «Остальное» стоит
+                // СРАЗУ за перечисленными, а не в конце набора — почему, см. PerAppRouting.
                 rules.Insert(0, new RulesItem
                 {
                     Id = Utils.GetGuid(false),
@@ -617,7 +618,7 @@ public partial class PerAppProxyPage : UserControl, ISubPage
                     Process = apps,
                     Enabled = true,
                 });
-                rules.Add(new RulesItem
+                rules.Insert(1, new RulesItem
                 {
                     Id = Utils.GetGuid(false),
                     Remarks = PerAppMarkerCatchAll,

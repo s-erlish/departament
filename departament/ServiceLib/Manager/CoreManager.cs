@@ -81,7 +81,12 @@ public class CoreManager
     // probe) against a real panel, seamless switches go through Tier 1 (restart only the Xray main core,
     // keeping sing-box + the tun adapter alive) — a genuine config reload, so the new server is
     // GUARANTEED, with no adapter flap. Flip to true only once Tier 2 is proven to move traffic.
-    private static readonly bool EnableHotSwapTier = false;
+    //
+    // The same flag gates the Xray HandlerService api itself (V2rayInboundService.GenApi,
+    // CoreConfigHandler.GraftXrayApi). That api has no authentication: while it listened on
+    // 127.0.0.1, any program on the computer — any user — could list the running outbound with its
+    // VLESS id and REALITY keys and re-point the tunnel to a server of its own. Nothing else uses it.
+    internal static readonly bool EnableHotSwapTier = false;
 
     // THE single serialization point for ALL core start/stop state transitions (LoadCoreInternal /
     // CoreStopInternal, the SwitchServer seamless tiers, and every recovery reload). It is the INNERMOST
@@ -355,6 +360,18 @@ public class CoreManager
             var preRequiredNow = preContext != null;
             var preAlive = _processPreService is { HasExited: false };
             if (preRequiredNow != preAlive)
+            {
+                await LoadCoreInternal(mainContext, preContext);
+                return false;
+            }
+
+            //  Второе ядро туннеля (sing-box) держит свой список имён, которые разрешаются мимо туннеля,
+            //  и в нём адрес сервера. Tier 1 перезапускает только Xray, и имя нового сервера в этот
+            //  список не попадало: sing-box отправлял его в удалённый DNS через туннель, которому как
+            //  раз это имя и нужно, чтобы подключиться, — петля, «Подключено» без трафика. Появились
+            //  новые имена — перезапускаем оба ядра. _lastPreContext здесь ещё прежний, запущенный.
+            if (preContext != null
+                && !preContext.ProtectDomainList.IsSubsetOf(_lastPreContext?.ProtectDomainList ?? []))
             {
                 await LoadCoreInternal(mainContext, preContext);
                 return false;
@@ -872,6 +889,10 @@ public class CoreManager
                 if (AppManager.Instance.RunningCoreType != ECoreType.departament)
                 {
                     // Recovered — LoadCoreInternal has restarted the watchdog and marked uptime.
+                    //  Системный прокси при падении сброшен (HandleUnexpectedExitAsync, шаг 3) — ставим
+                    //  обратно. Без этого после самовосстановления щит снова говорил «Подключено», а
+                    //  система ходила в интернет напрямую, мимо VPN, до следующего ручного подключения.
+                    await ReapplySysProxyAfterRecoveryAsync();
                     return;
                 }
 
@@ -888,14 +909,30 @@ public class CoreManager
         }
     }
 
+    private async Task ReapplySysProxyAfterRecoveryAsync()
+    {
+        try
+        {
+            var sysType = _config?.SystemProxyItem?.SysProxyType;
+            if (sysType is ESysProxyType.ForcedChange or ESysProxyType.Pac)
+            {
+                await SysProxyHandler.UpdateSysProxy(_config, false);
+            }
+        }
+        catch (Exception ex)
+        {
+            Logging.SaveLog(_tag, ex);
+        }
+    }
+
     /// <summary>True when an external/user stop has superseded the recovery session identified by
     /// <paramref name="startGen"/>/<paramref name="token"/>, or the app is already idle/stopping.</summary>
-    private bool ShouldAbortRecovery(int startGen, CancellationToken token) =>
+    private bool ShouldAbortRecovery(int startGen, CancellationToken token, bool requireIdle = true) =>
         _stopping
         || _userStopRequested
         || token.IsCancellationRequested
         || Volatile.Read(ref _coreStopGeneration) != startGen
-        || AppManager.Instance.RunningCoreType != ECoreType.departament;
+        || (requireIdle && AppManager.Instance.RunningCoreType != ECoreType.departament);
 
     /// <summary>
     /// Acquire the shared <see cref="_coreOpGate"/> (cancellable while waiting) and run ONE recovery
@@ -906,7 +943,7 @@ public class CoreManager
     /// Возвращает true, только если перезапуск действительно прошёл, а не был отменён: проверке
     /// здоровья нужно отличать «перезапустили и не поднялось» от «перезапуск отменили».
     /// </summary>
-    private async Task<bool> RestartLoadCoreAsync(int startGen, CancellationToken token)
+    private async Task<bool> RestartLoadCoreAsync(int startGen, CancellationToken token, bool requireIdle = true)
     {
         try
         {
@@ -918,7 +955,7 @@ public class CoreManager
         }
         try
         {
-            if (ShouldAbortRecovery(startGen, token))
+            if (ShouldAbortRecovery(startGen, token, requireIdle))
             {
                 return false;
             }
@@ -1074,8 +1111,12 @@ public class CoreManager
                 dead = !await ProbeSocksReadySustainedAsync(pre.Node.Port);
             }
 
-            if (dead && !ShouldAbortRecovery(startGen, token) && _lastMainContext != null
-                && await RestartLoadCoreAsync(startGen, token)
+            //  Проверка «можно ли восстанавливать» — без условия «ядро уже стоит» (requireIdle: false).
+            //  Автоперезапуск приходит к упавшему ядру, а здесь ядро зависло и числится запущенным:
+            //  с этим условием перезапуск не случался никогда, и мёртвый туннель так и показывался
+            //  «Подключено». После перезапуска проверка снова обычная: ядро поднялось — отказа нет.
+            if (dead && !ShouldAbortRecovery(startGen, token, requireIdle: false) && _lastMainContext != null
+                && await RestartLoadCoreAsync(startGen, token, requireIdle: false)
                 && !ShouldAbortRecovery(startGen, token))
             {
                 //  Перезапуск прошёл, ядро не поднялось, и никто извне его не отменял (иначе сработала

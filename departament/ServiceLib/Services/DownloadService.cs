@@ -250,7 +250,7 @@ public class DownloadService
             client.DefaultRequestHeaders.TryAddWithoutValidation("x-hwid", hwid);
             client.DefaultRequestHeaders.TryAddWithoutValidation("x-device-os", "Windows");
             client.DefaultRequestHeaders.TryAddWithoutValidation("x-ver-os", Environment.OSVersion.Version.ToString());
-            client.DefaultRequestHeaders.TryAddWithoutValidation("x-device-model", Environment.MachineName);
+            client.DefaultRequestHeaders.TryAddWithoutValidation("x-device-model", Utils.DeviceNameForHeader());
         }
 
         Uri uri = new(url);

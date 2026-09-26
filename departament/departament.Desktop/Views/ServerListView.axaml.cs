@@ -710,7 +710,9 @@ public partial class ServerListView : UserControl
         if (_actionTarget is { } item && DataContext is HomeViewModel { Profiles: { } profiles })
         {
             UpdateReconnect.NoteUserAction();
-            _ = profiles.SetDefaultServer(item.IndexId);
+            //  Выбор, а не подключение (как тап по строке на «Главной»): при выключенном VPN пункт
+            //  «Сделать основным» включал его сам.
+            _ = profiles.SetDefaultServer(item.IndexId, startWhenIdle: false);
         }
     }
 

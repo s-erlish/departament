@@ -197,6 +197,13 @@ public class TunModeItem
     public string IcmpRouting { get; set; }
     public bool EnableLegacyProtect { get; set; }
     public List<string>? RouteExcludeAddress { get; set; }
+
+    /// <summary>
+    /// «Обход локальной сети» в настройках: локальные сети не заходят в туннель вовсе, как на Android
+    /// (маршруты VPN без них). Выключен, пока его не включат. Раньше этот переключатель менял
+    /// Inbound.AllowLANConn и открывал прокси всей сети без пароля (ConfigHandler.LoadConfig переносит).
+    /// </summary>
+    public bool BypassLan { get; set; }
 }
 
 [Serializable]
